@@ -1,5 +1,27 @@
-# momentsshare_build
-# momentsshare_build
-# momentsshare_build
-# momentsshare_build
-# momentsshare_build
+# Focus Timer — 프레젠테이션 타이머 & 뽀모도로
+
+프레젠테이션에 최적화된 초대형 타이머 웹앱. 뽀모도로, 배경 컬러 전환, 로컬 저장, 광고 수익화까지 탑재.
+
+## 기능
+- **초대형 디지털 디스플레이** — 무대·회의실 뒤에서도 읽히는 크기, 원형 프로그레스 링
+- **컬러 전환** — 남은 시간 비율에 따라 배경이 청록 → 보라 → 주황 → 빨강으로 부드럽게 변환, 마지막 10초엔 맥동
+- **뽀모도로 모드** — 집중/짧은 휴식/긴 휴식 자동 전환, 세션 카운트, 자동 진행 옵션
+- **프레젠테이션 포커스 모드** — `F` 키로 전체화면 + UI 크롬 자동 숨김, 마우스 호버 시에만 복귀
+- **로컬 저장** — 모든 설정 및 커스텀 프리셋을 `localStorage`에 영구 저장
+- **키보드 단축키** — `Space` 시작/정지, `R` 초기화, `F` 전체화면, `M` 모드전환, `N` 다음, `S` 알림음, `1–9` 프리셋
+- **알림음 / 브라우저 알림** — Web Audio API 기반 3음 차임, 시스템 푸시 알림
+- **AdSense 배너** — 반응형 단위 슬롯 포함 (퍼블리셔 ID 교체 필요)
+
+## 실행
+정적 파일이므로 아무 정적 서버로 서비스 가능합니다.
+
+```bash
+python3 -m http.server 5173
+# http://localhost:5173
+```
+
+## AdSense 설정
+`index.html` 상단 두 곳의 `ca-pub-XXXXXXXXXXXXXXXX` 와 `data-ad-slot="XXXXXXXXXX"` 를 실제 값으로 교체하세요.
+
+## 기술
+순수 HTML/CSS/JS. Chrome에 최적화 (`color-mix`, `<dialog>`, `backdrop-filter`, `aspect-ratio` 사용).

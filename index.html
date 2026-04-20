@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f17" />
+  <meta name="description" content="프레젠테이션에 최적화된 초대형 타이머 & 뽀모도로 웹앱" />
+  <title>Focus Timer — 프레젠테이션 타이머 & 뽀모도로</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='24' fill='none' stroke='%2322d3ee' stroke-width='5'/%3E%3Cpath d='M32 20v14l9 5' stroke='%2322d3ee' stroke-width='5' stroke-linecap='round' fill='none'/%3E%3Crect x='26' y='6' width='12' height='6' rx='2' fill='%2322d3ee'/%3E%3C/svg%3E" />
+
+  <!-- Google AdSense: 승인 후 data-ad-client 를 실제 퍼블리셔 ID 로 교체하세요 -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+</head>
+<body data-mode="timer" data-phase="idle">
+  <div class="bg-layer" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="34" r="24" fill="none" stroke="currentColor" stroke-width="5"/>
+        <path d="M32 20v14l9 5" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/>
+        <rect x="26" y="6" width="12" height="6" rx="2" fill="currentColor"/>
+      </svg>
+      <span>Focus Timer</span>
+    </div>
+
+    <nav class="mode-tabs" role="tablist" aria-label="모드 선택">
+      <button class="tab is-active" data-mode="timer" role="tab" aria-selected="true">타이머</button>
+      <button class="tab" data-mode="pomodoro" role="tab" aria-selected="false">뽀모도로</button>
+    </nav>
+
+    <div class="top-actions">
+      <button class="icon-btn" id="btn-sound" title="알림음 (S)" aria-label="알림음 토글">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path class="wave" d="M16 8a5 5 0 0 1 0 8M18.5 5.5a9 9 0 0 1 0 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-settings" title="설정" aria-label="설정 열기">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-fullscreen" title="전체화면 (F)" aria-label="전체화면">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="badge-row" aria-live="polite">
+      <span class="badge" id="phase-badge">준비</span>
+      <span class="badge badge-muted" id="cycle-badge" hidden>세션 0 / 4</span>
+    </div>
+
+    <div class="timer-wrap">
+      <svg class="ring" viewBox="0 0 400 400" aria-hidden="true">
+        <circle class="ring-track" cx="200" cy="200" r="186" />
+        <circle class="ring-progress" cx="200" cy="200" r="186" />
+      </svg>
+      <div class="time-display" id="time-display" aria-live="off">
+        <span class="time-main"><span id="t-h">00</span><span class="colon">:</span><span id="t-m">25</span><span class="colon">:</span><span id="t-s">00</span></span>
+        <span class="time-sub" id="time-sub">25분 집중</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-ghost" id="btn-reset" title="초기화 (R)">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <span>초기화</span>
+      </button>
+      <button class="btn btn-primary" id="btn-start" title="시작/일시정지 (Space)">
+        <svg class="ico-play" viewBox="0 0 24 24" width="22" height="22"><path d="M7 4l13 8-13 8V4z" fill="currentColor"/></svg>
+        <svg class="ico-pause" viewBox="0 0 24 24" width="22" height="22" style="display:none"><path d="M7 4h4v16H7zM13 4h4v16h-4z" fill="currentColor"/></svg>
+        <span id="btn-start-label">시작</span>
+      </button>
+      <button class="btn btn-ghost" id="btn-skip" title="다음 (N)">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 5l10 7-10 7V5zM17 5h2v14h-2z" fill="currentColor"/></svg>
+        <span>다음</span>
+      </button>
+    </div>
+
+    <div class="presets" id="presets" aria-label="프리셋 시간">
+      <button class="preset" data-seconds="60">1분</button>
+      <button class="preset" data-seconds="180">3분</button>
+      <button class="preset" data-seconds="300">5분</button>
+      <button class="preset" data-seconds="600">10분</button>
+      <button class="preset" data-seconds="900">15분</button>
+      <button class="preset" data-seconds="1800">30분</button>
+      <button class="preset" data-seconds="2700">45분</button>
+      <button class="preset" data-seconds="3600">60분</button>
+      <button class="preset preset-custom" id="preset-custom" title="커스텀 시간 추가">＋ 직접 입력</button>
+    </div>
+
+    <p class="shortcut-hint">
+      <kbd>Space</kbd> 시작/정지 · <kbd>R</kbd> 초기화 · <kbd>F</kbd> 전체화면 · <kbd>M</kbd> 모드전환 · <kbd>1</kbd>–<kbd>9</kbd> 프리셋
+    </p>
+  </main>
+
+  <aside class="ad-slot" aria-label="광고">
+    <!-- AdSense 반응형 단위: data-ad-slot 을 실제 슬롯 ID 로 교체하세요 -->
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="XXXXXXXXXX"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+  </aside>
+
+  <!-- 설정 모달 -->
+  <dialog class="modal" id="settings-modal">
+    <form method="dialog" class="modal-inner">
+      <header class="modal-head">
+        <h2>설정</h2>
+        <button class="icon-btn" value="cancel" aria-label="닫기">✕</button>
+      </header>
+
+      <section class="modal-section" data-for="timer">
+        <h3>타이머</h3>
+        <label>기본 시간 (분)
+          <input type="number" id="opt-timer-minutes" min="1" max="600" step="1" value="25" />
+        </label>
+      </section>
+
+      <section class="modal-section" data-for="pomodoro">
+        <h3>뽀모도로</h3>
+        <div class="grid-3">
+          <label>집중 (분)<input type="number" id="opt-work" min="1" max="120" value="25" /></label>
+          <label>짧은 휴식 (분)<input type="number" id="opt-short" min="1" max="60" value="5" /></label>
+          <label>긴 휴식 (분)<input type="number" id="opt-long" min="1" max="60" value="15" /></label>
+          <label>긴 휴식 주기<input type="number" id="opt-long-every" min="2" max="12" value="4" /></label>
+          <label class="check"><input type="checkbox" id="opt-autostart" checked /> 자동 진행</label>
+        </div>
+      </section>
+
+      <section class="modal-section">
+        <h3>알림 / 표시</h3>
+        <label class="check"><input type="checkbox" id="opt-sound" checked /> 종료 알림음</label>
+        <label class="check"><input type="checkbox" id="opt-color" checked /> 배경 색상 전환</label>
+        <label class="check"><input type="checkbox" id="opt-hide-ms" /> 마지막 10초 큰 숫자 강조</label>
+      </section>
+
+      <footer class="modal-foot">
+        <button class="btn btn-ghost" value="cancel">취소</button>
+        <button class="btn btn-primary" value="save" id="btn-save">저장</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- 커스텀 프리셋 모달 -->
+  <dialog class="modal" id="custom-modal">
+    <form method="dialog" class="modal-inner">
+      <header class="modal-head">
+        <h2>커스텀 프리셋</h2>
+        <button class="icon-btn" value="cancel" aria-label="닫기">✕</button>
+      </header>
+      <section class="modal-section">
+        <div class="grid-3">
+          <label>시<input type="number" id="cp-h" min="0" max="9" value="0" /></label>
+          <label>분<input type="number" id="cp-m" min="0" max="59" value="20" /></label>
+          <label>초<input type="number" id="cp-s" min="0" max="59" value="0" /></label>
+        </div>
+        <label>이름 (선택)<input type="text" id="cp-name" maxlength="12" placeholder="예: 프레젠테이션" /></label>
+      </section>
+      <footer class="modal-foot">
+        <button class="btn btn-ghost" value="cancel">취소</button>
+        <button class="btn btn-primary" value="save" id="cp-save">추가</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
