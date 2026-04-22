@@ -22,7 +22,8 @@ window.I18N = (() => {
 
   const DICT = {
     ko: {
-      'app.title': 'ReadySetTimer — 프레젠테이션 타이머 & 뽀모도로',
+      'app.title': '무료 온라인 타이머 · 뽀모도로 · 스톱워치 | ReadySetTimer',
+      'app.tagline': '쉽고 빠른 무료 타이머',
 
       'tab.timer': '타이머',
       'tab.pomodoro': '뽀모도로',
@@ -146,7 +147,8 @@ window.I18N = (() => {
     },
 
     en: {
-      'app.title': 'ReadySetTimer — Presentation Timer & Pomodoro',
+      'app.title': 'Free Online Timer · Pomodoro · Stopwatch | ReadySetTimer',
+      'app.tagline': 'Simple, fast, free',
 
       'tab.timer': 'Timer',
       'tab.pomodoro': 'Pomodoro',
@@ -270,7 +272,8 @@ window.I18N = (() => {
     },
 
     ja: {
-      'app.title': 'ReadySetTimer — プレゼン用タイマー & ポモドーロ',
+      'app.title': '無料オンラインタイマー・ポモドーロ・ストップウォッチ | ReadySetTimer',
+      'app.tagline': 'シンプル・速い・無料',
 
       'tab.timer': 'タイマー',
       'tab.pomodoro': 'ポモドーロ',
@@ -394,7 +397,8 @@ window.I18N = (() => {
     },
 
     zh: {
-      'app.title': 'ReadySetTimer — 演示计时器与番茄钟',
+      'app.title': '免费在线计时器 · 番茄钟 · 秒表 | ReadySetTimer',
+      'app.tagline': '简单 · 快速 · 免费',
 
       'tab.timer': '计时器',
       'tab.pomodoro': '番茄钟',
@@ -518,7 +522,8 @@ window.I18N = (() => {
     },
 
     es: {
-      'app.title': 'ReadySetTimer — Temporizador de presentación y Pomodoro',
+      'app.title': 'Temporizador online gratis · Pomodoro · Cronómetro | ReadySetTimer',
+      'app.tagline': 'Sencillo, rápido, gratis',
 
       'tab.timer': 'Temporizador',
       'tab.pomodoro': 'Pomodoro',
@@ -642,7 +647,8 @@ window.I18N = (() => {
     },
 
     pt: {
-      'app.title': 'ReadySetTimer — Temporizador de apresentação e Pomodoro',
+      'app.title': 'Temporizador online grátis · Pomodoro · Cronômetro | ReadySetTimer',
+      'app.tagline': 'Simples, rápido, grátis',
 
       'tab.timer': 'Temporizador',
       'tab.pomodoro': 'Pomodoro',
@@ -766,7 +772,8 @@ window.I18N = (() => {
     },
 
     fr: {
-      'app.title': 'ReadySetTimer — Minuteur de présentation & Pomodoro',
+      'app.title': 'Minuteur en ligne gratuit · Pomodoro · Chronomètre | ReadySetTimer',
+      'app.tagline': 'Simple, rapide, gratuit',
 
       'tab.timer': 'Minuteur',
       'tab.pomodoro': 'Pomodoro',
@@ -890,7 +897,8 @@ window.I18N = (() => {
     },
 
     de: {
-      'app.title': 'ReadySetTimer — Präsentations-Timer & Pomodoro',
+      'app.title': 'Kostenloser Online-Timer · Pomodoro · Stoppuhr | ReadySetTimer',
+      'app.tagline': 'Einfach, schnell, kostenlos',
 
       'tab.timer': 'Timer',
       'tab.pomodoro': 'Pomodoro',

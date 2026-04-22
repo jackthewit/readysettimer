@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Let common AI/answer engines read too (AEO-friendly)
+User-agent: GPTBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://rstimer.kr/sitemap.xml
