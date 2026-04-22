@@ -20,17 +20,17 @@
 ## 2. Vercel로 배포 (가장 쉬운 방법)
 
 ### 2-1. GitHub에 코드 올리기
-이미 GitHub 저장소 `jackthewit/momentsshare_build`가 있으니, 이 브랜치를 `main`에 머지한 상태를 기준으로 설명합니다.
+이미 GitHub 저장소 `jackthewit/readysettimer`가 있으니, 이 브랜치를 `main`에 머지한 상태를 기준으로 설명합니다.
 
 ### 2-2. Vercel 가입·연결
 1. https://vercel.com 접속 → **Sign up** → GitHub 계정으로 로그인
 2. 대시보드에서 **Add New → Project**
-3. `momentsshare_build` 저장소 선택 → **Import**
+3. `readysettimer` 저장소 선택 → **Import**
 4. 설정 화면에서 **Framework Preset**: `Other` 그대로 두기
 5. **Build & Output Settings**는 건드리지 않음 (이 앱은 빌드 불필요)
 6. **Deploy** 클릭
 
-1~2분 뒤 `https://momentsshare-build.vercel.app` 같은 주소로 바로 접속 가능합니다.
+1~2분 뒤 `https://readysettimer.vercel.app` 같은 주소로 바로 접속 가능합니다.
 
 ### 2-3. 커스텀 도메인 (선택)
 - 도메인 구매: 가비아, 후이즈, Namecheap 등 (.com 기준 연 15,000원 내외)
