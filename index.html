@@ -4,13 +4,37 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0b0f17" />
-  <meta name="description" content="ReadySetTimer — Presentation timer, Pomodoro & stopwatch (multilingual)" />
-  <title>ReadySetTimer</title>
+  <meta name="description" content="ReadySetTimer — presentation-scale timer, Pomodoro & stopwatch. Eight languages, keyboard shortcuts, CSV export. Runs in your browser." />
+  <meta name="keywords" content="timer, pomodoro, stopwatch, presentation timer, 타이머, 뽀모도로, 스톱워치, プレゼンタイマー, 番茄钟, cronómetro, minuteur" />
+  <meta name="author" content="ReadySetTimer" />
+  <link rel="canonical" href="https://readysettimer.vercel.app/" />
+  <title>ReadySetTimer — Presentation Timer, Pomodoro & Stopwatch</title>
+
+  <!-- Open Graph (kakao/facebook/slack preview) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://readysettimer.vercel.app/" />
+  <meta property="og:title" content="ReadySetTimer" />
+  <meta property="og:description" content="프레젠테이션 타이머 · 뽀모도로 · 스톱워치 — 8개 언어 지원, 크롬 최적화" />
+  <meta property="og:site_name" content="ReadySetTimer" />
+  <meta property="og:locale" content="ko_KR" />
+  <meta property="og:locale:alternate" content="en_US" />
+  <meta property="og:locale:alternate" content="ja_JP" />
+  <meta property="og:locale:alternate" content="zh_CN" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="ReadySetTimer" />
+  <meta name="twitter:description" content="Multilingual presentation timer, Pomodoro & stopwatch" />
+
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='24' fill='none' stroke='%2322d3ee' stroke-width='5'/%3E%3Cpath d='M32 20v14l9 5' stroke='%2322d3ee' stroke-width='5' stroke-linecap='round' fill='none'/%3E%3Crect x='26' y='6' width='12' height='6' rx='2' fill='%2322d3ee'/%3E%3C/svg%3E" />
 
-  <!-- Google AdSense: replace client ID after approval -->
+  <!--
+    Google AdSense — activate after approval.
+    Replace XXXXXXXXXXXXXXXX with your real publisher ID, then uncomment this block.
+    Do the same for the <ins class="adsbygoogle"> element below.
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+  -->
 </head>
 <body data-mode="timer" data-phase="idle">
   <div class="bg-layer" aria-hidden="true"></div>
@@ -154,6 +178,11 @@
     <p class="shortcut-hint" id="hint-sw" data-i18n="hint.sw"></p>
   </main>
 
+  <!--
+    Ad slot — kept hidden until AdSense approves the site. When approved:
+    1. Uncomment this block (and the <script> in <head>)
+    2. Replace data-ad-client / data-ad-slot with real IDs
+    3. Remove the .ad-slot { display: none } rule (if present)
   <aside class="ad-slot" aria-label="Advertisement">
     <ins class="adsbygoogle"
          style="display:block"
@@ -162,6 +191,15 @@
          data-ad-format="auto"
          data-full-width-responsive="true"></ins>
   </aside>
+  -->
+
+  <footer class="site-foot">
+    <a href="/about.html">About</a>
+    <span>·</span>
+    <a href="/privacy.html">Privacy</a>
+    <span>·</span>
+    <a href="https://github.com/jackthewit/readysettimer" target="_blank" rel="noopener">GitHub</a>
+  </footer>
 
   <!-- Settings modal -->
   <dialog class="modal" id="settings-modal">
