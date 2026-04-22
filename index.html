@@ -79,6 +79,21 @@
   }
   </script>
 
+  <!-- Structured data: HowTo (Pomodoro method) — rich result candidate -->
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"HowTo","name":"ReadySetTimer로 뽀모도로 기법 활용하기","description":"25분 집중 + 5분 휴식 사이클로 생산성을 높이는 방법","totalTime":"PT2H","tool":[{"@type":"HowToTool","name":"ReadySetTimer (https://rstimer.kr/)"}],"step":[
+    {"@type":"HowToStep","position":1,"name":"뽀모도로 모드 선택","text":"상단 탭에서 '뽀모도로'를 클릭합니다."},
+    {"@type":"HowToStep","position":2,"name":"25분 집중","text":"Space 키 또는 시작 버튼을 눌러 25분 카운트다운을 시작하고, 한 가지 작업에만 몰입합니다."},
+    {"@type":"HowToStep","position":3,"name":"5분 휴식","text":"25분 종료 후 자동으로 5분 휴식 타이머가 시작됩니다. 일어나서 스트레칭하거나 창밖을 바라보세요."},
+    {"@type":"HowToStep","position":4,"name":"4사이클 반복 후 긴 휴식","text":"집중-휴식을 4번 반복하면 자동으로 15분 긴 휴식이 시작됩니다."}
+  ]}
+  </script>
+
+  <!-- Structured data: BreadcrumbList -->
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"홈","item":"https://rstimer.kr/"}]}
+  </script>
+
   <!-- Structured data: FAQ (AEO — answer engine optimization) -->
   <script type="application/ld+json">
   {
@@ -317,6 +332,26 @@
          data-full-width-responsive="true"></ins>
   </aside>
   -->
+
+  <!-- Popular timers quick links — long-tail SEO + internal linking -->
+  <section class="seo-block" aria-label="인기 타이머 바로가기">
+    <h2>인기 타이머 바로가기</h2>
+    <p>원하는 시간으로 바로 이동 — 각 페이지는 해당 시간을 미리 설정한 채 열립니다.</p>
+    <div class="popular-grid">
+      <a href="/1min.html"><strong>1분</strong><span class="pg-sub">양치·심호흡</span></a>
+      <a href="/3min.html"><strong>3분</strong><span class="pg-sub">라면·스피치</span></a>
+      <a href="/5min.html"><strong>5분</strong><span class="pg-sub">명상·요리</span></a>
+      <a href="/10min.html"><strong>10분</strong><span class="pg-sub">미니 집중</span></a>
+      <a href="/15min.html"><strong>15분</strong><span class="pg-sub">짧은 공부</span></a>
+      <a href="/20min.html"><strong>20분</strong><span class="pg-sub">파워냅</span></a>
+      <a href="/25min.html"><strong>25분</strong><span class="pg-sub">뽀모도로</span></a>
+      <a href="/30min.html"><strong>30분</strong><span class="pg-sub">홈트·회의</span></a>
+      <a href="/45min.html"><strong>45분</strong><span class="pg-sub">한 차시</span></a>
+      <a href="/60min.html"><strong>1시간</strong><span class="pg-sub">몰입 블록</span></a>
+      <a href="/pomodoro.html"><strong>뽀모도로</strong><span class="pg-sub">25/5 순환</span></a>
+      <a href="/stopwatch.html"><strong>스톱워치</strong><span class="pg-sub">랩·CSV</span></a>
+    </div>
+  </section>
 
   <!-- SEO-friendly content block: visible, readable, natural copy with target keywords -->
   <section class="seo-block" aria-label="ReadySetTimer 소개">

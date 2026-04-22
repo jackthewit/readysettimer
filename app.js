@@ -1269,8 +1269,42 @@
     });
   }
 
+  // ---------- URL param (landing pages link here with ?t=5m or ?mode=pomodoro) ----------
+  function parseUrlPreset() {
+    try {
+      const p = new URLSearchParams(location.search);
+      const modeParam = p.get('mode');
+      if (modeParam === 'pomodoro' || modeParam === 'stopwatch' || modeParam === 'timer') {
+        state.mode = modeParam;
+        state.settings.mode = modeParam;
+      }
+      const t = p.get('t');
+      if (t) {
+        // accept 5m, 300s, 300, 1h, 1h30m
+        let seconds = 0;
+        const re = /(\d+)\s*(h|m|s)?/gi;
+        let m;
+        while ((m = re.exec(t)) !== null) {
+          const num = parseInt(m[1], 10);
+          const unit = (m[2] || 's').toLowerCase();
+          seconds += num * (unit === 'h' ? 3600 : unit === 'm' ? 60 : 1);
+        }
+        if (seconds > 0 && seconds <= 36000) {
+          state.selectedPresetSec = seconds;
+          state.settings.timerMinutes = Math.max(1, Math.round(seconds / 60));
+          if (state.mode !== 'pomodoro' && state.mode !== 'stopwatch') {
+            state.mode = 'timer';
+            state.settings.mode = 'timer';
+          }
+        }
+      }
+      if (modeParam || t) saveSettings();
+    } catch {}
+  }
+
   // ---------- init ----------
   function init() {
+    parseUrlPreset();
     if (I18N) { I18N.applyI18n(); }
     rebuildLangUI();
     updateSoundButton();
@@ -1293,11 +1327,17 @@
         state.durationMs = phaseDurationMs('work');
         state.remainingMs = state.durationMs;
       } else {
-        state.durationMs = (state.settings.timerMinutes || 25) * 60 * 1000;
+        const sec = state.selectedPresetSec ?? (state.settings.timerMinutes || 25) * 60;
+        state.durationMs = sec * 1000;
         state.remainingMs = state.durationMs;
       }
       render();
-      renderHistory(); // populate hidden history too (in case user switches)
+      renderHistory();
+      // visually activate matching preset button when landing pages linked with ?t=...
+      if (state.mode === 'timer' && state.selectedPresetSec) {
+        const match = $$('.preset', el.presets).find(b => +b.dataset.seconds === state.selectedPresetSec);
+        if (match) match.classList.add('is-active');
+      }
     }
   }
 

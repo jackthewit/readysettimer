@@ -1148,6 +1148,167 @@ body.legal-page {
 .legal-foot span { color: var(--ink-faint); font-size: 13px; }
 .legal-foot p { color: var(--ink-faint); font-size: 12px; margin: 0; }
 
+/* landing page hero lead paragraph */
+.legal-main .landing-lead {
+  font-size: 17px;
+  color: var(--ink);
+  line-height: 1.7;
+  margin: 0 0 24px;
+}
+
+/* prominent CTA button linking back to the app with a preset */
+.cta-timer {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none !important;
+  padding: 18px 24px;
+  border-radius: 16px;
+  margin: 20px 0 32px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 28%, transparent), color-mix(in oklab, var(--accent) 10%, transparent));
+  border: 1px solid color-mix(in oklab, var(--accent) 50%, transparent);
+  color: var(--ink) !important;
+  transition: transform .15s var(--ease), box-shadow .2s, border-color .2s;
+  box-shadow: 0 10px 30px color-mix(in oklab, var(--accent) 18%, transparent);
+}
+.cta-timer:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 14px 40px color-mix(in oklab, var(--accent) 28%, transparent);
+  text-decoration: none !important;
+}
+.cta-timer .cta-arrow {
+  width: 46px; height: 46px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #0b0f17;
+  font-size: 18px;
+  font-weight: 700;
+}
+.cta-timer .cta-text {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.cta-timer .cta-sub {
+  grid-column: 2 / 3;
+  grid-row: 2;
+  margin-top: -4px;
+  color: var(--ink-dim);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* use case bullet rows */
+.use-cases { padding-left: 20px; }
+.use-cases li { margin-bottom: 6px; }
+.use-cases strong { color: var(--ink); }
+
+/* related timer chip nav */
+.related-timers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.related-timers a {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--line);
+  color: var(--ink-dim) !important;
+  font-size: 13px;
+  text-decoration: none !important;
+  transition: color .2s, background .2s, border-color .2s;
+}
+.related-timers a:hover {
+  color: var(--ink) !important;
+  background: rgba(255,255,255,0.08);
+  border-color: var(--line-strong);
+  text-decoration: none !important;
+}
+.related-timers a[aria-current="page"] {
+  color: var(--accent) !important;
+  border-color: color-mix(in oklab, var(--accent) 50%, transparent);
+  background: color-mix(in oklab, var(--accent) 14%, transparent);
+}
+
+/* native accordion */
+.legal-main details {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: rgba(255,255,255,0.02);
+}
+.legal-main details summary {
+  cursor: pointer;
+  list-style: none;
+  color: var(--ink);
+  font-weight: 600;
+  padding-right: 24px;
+  position: relative;
+  font-size: 14px;
+}
+.legal-main details summary::-webkit-details-marker { display: none; }
+.legal-main details summary::after {
+  content: '+';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-dim);
+  font-size: 18px;
+  font-weight: 300;
+  transition: transform .2s;
+}
+.legal-main details[open] summary::after { content: '−'; }
+.legal-main details p {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--ink-dim);
+  line-height: 1.7;
+}
+
+/* popular timers grid on homepage */
+.popular-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  max-width: 720px;
+  margin: 16px auto 0;
+  padding: 0 24px;
+}
+.popular-grid a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+  transition: border-color .2s, background .2s, transform .15s;
+}
+.popular-grid a:hover {
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 10%, transparent);
+  transform: translateY(-1px);
+}
+.popular-grid a span.pg-sub {
+  color: var(--ink-faint);
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
 /* app-page footer (links to legal pages) */
 .site-foot {
   position: relative;

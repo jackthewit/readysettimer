@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-# Let common AI/answer engines read too (AEO-friendly)
+# AI / answer engines — explicitly welcomed (AEO)
 User-agent: GPTBot
 Allow: /
 
@@ -11,7 +11,22 @@ Allow: /
 User-agent: ClaudeBot
 Allow: /
 
+User-agent: anthropic-ai
+Allow: /
+
 User-agent: Google-Extended
 Allow: /
 
+User-agent: Bytespider
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: FacebookExternalHit
+Allow: /
+
 Sitemap: https://rstimer.kr/sitemap.xml
+
+# LLM site summary (llmstxt.org spec)
+# See: https://rstimer.kr/llms.txt

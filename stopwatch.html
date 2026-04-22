@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="theme-color" content="#0b0f17" />
+  <title>온라인 스톱워치 · 랩·메모·CSV 내보내기 | ReadySetTimer</title>
+  <meta name="description" content="무료 온라인 스톱워치. 랩마다 이름/메모를 남기고 세션 전체를 CSV로 내보낼 수 있습니다. 달리기·발표 리허설·인터벌 훈련·회의 시간 측정에 사용." />
+  <meta name="keywords" content="스톱워치, 무료 스톱워치, 온라인 스톱워치, 초시계, stopwatch, 랩 타임, CSV 내보내기, 인터벌 타이머, 러닝 스톱워치" />
+  <meta name="robots" content="index, follow" /><meta name="naver-site-verification" content="6d4537c8f4de1c0fbfd5d138477fc58b0ec1c0a8" />
+  <link rel="canonical" href="https://rstimer.kr/stopwatch.html" />
+  <meta property="og:type" content="website" /><meta property="og:url" content="https://rstimer.kr/stopwatch.html" /><meta property="og:title" content="온라인 스톱워치 · 랩·메모·CSV 내보내기 | ReadySetTimer" /><meta property="og:description" content="무료 스톱워치 · 랩별 메모 · CSV 내보내기" /><meta property="og:image" content="https://rstimer.kr/og-image.png" /><meta name="twitter:card" content="summary_large_image" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"온라인 스톱워치","url":"https://rstimer.kr/stopwatch.html","inLanguage":"ko","isPartOf":{"@type":"WebSite","name":"ReadySetTimer","url":"https://rstimer.kr/"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"홈","item":"https://rstimer.kr/"},{"@type":"ListItem","position":2,"name":"스톱워치","item":"https://rstimer.kr/stopwatch.html"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+    {"@type":"Question","name":"무료 스톱워치 중에 랩 기록 남길 수 있는 게 있나요?","acceptedAnswer":{"@type":"Answer","text":"ReadySetTimer 스톱워치는 랩마다 이름·메모를 직접 입력할 수 있고, 세션 전체를 제목·노트와 함께 저장해 나중에 다시 볼 수 있습니다. 랩 기록은 CSV로 내보내 엑셀에서 바로 열립니다."}},
+    {"@type":"Question","name":"스톱워치 정확도는 어느 정도인가요?","acceptedAnswer":{"@type":"Answer","text":"브라우저의 performance.now() API 기반으로 100분의 1초(10ms) 정밀도까지 측정합니다. 화면에는 mm:ss.cs 형식으로 표시됩니다."}},
+    {"@type":"Question","name":"CSV 파일은 어떻게 받나요?","acceptedAnswer":{"@type":"Answer","text":"저장된 기록 카드를 펼친 뒤 'CSV 내보내기' 버튼을 누르면 UTF-8 BOM이 포함된 CSV가 다운로드됩니다. 엑셀에서 한글이 깨지지 않고 바로 열립니다. 여러 세션을 한 파일로 받으려면 '모두 CSV로' 버튼을 사용하세요."}},
+    {"@type":"Question","name":"스톱워치 기록이 사라졌어요","acceptedAnswer":{"@type":"Answer","text":"기록은 브라우저 localStorage에 저장됩니다. 같은 브라우저의 사이트 데이터 삭제, 시크릿 모드, 혹은 다른 기기에서 접속할 경우 기록이 보이지 않을 수 있습니다."}},
+    {"@type":"Question","name":"달리기 기록 측정에 쓸 수 있나요?","acceptedAnswer":{"@type":"Answer","text":"네. 100m/200m 인터벌 훈련, 팀 릴레이 기록 측정에 적합합니다. 랩마다 선수 이름을 메모로 남기고 세션 제목을 '5km 팀 훈련' 같이 적어두면 나중에 CSV로 한눈에 비교할 수 있습니다."}}
+  ]}</script>
+  <link rel="stylesheet" href="styles.css" /><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='24' fill='none' stroke='%2322d3ee' stroke-width='5'/%3E%3Cpath d='M32 20v14l9 5' stroke='%2322d3ee' stroke-width='5' stroke-linecap='round' fill='none'/%3E%3Crect x='26' y='6' width='12' height='6' rx='2' fill='%2322d3ee'/%3E%3C/svg%3E" />
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8257776038246961" crossorigin="anonymous"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2B3ZTR683M"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2B3ZTR683M');</script>
+</head>
+<body class="legal-page">
+  <div class="bg-layer" aria-hidden="true"></div>
+  <header class="legal-head"><a class="legal-back" href="/"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span>ReadySetTimer</span></a></header>
+  <main class="legal-main">
+    <article>
+      <h1>온라인 스톱워치 — 랩·메모·CSV 내보내기</h1>
+      <p class="landing-lead">
+        <strong>랩마다 이름·메모</strong>를 남길 수 있는 스톱워치. 달리기 기록, 팀 릴레이, 발표 리허설,
+        인터벌 훈련까지 — 세션 전체를 저장하고 <strong>CSV로 내보내</strong> 엑셀·구글 스프레드시트에서
+        분석할 수 있습니다. 가입 없이 브라우저에서 무료로 바로 사용하세요.
+      </p>
+
+      <a class="cta-timer" href="/?mode=stopwatch"><span class="cta-arrow">▶</span><span class="cta-text">스톱워치 시작하기</span><span class="cta-sub">00:00.00에서 즉시 시작</span></a>
+
+      <h2>ReadySetTimer 스톱워치의 강점</h2>
+      <ul>
+        <li><strong>1/100초 정밀도</strong> — <code>performance.now()</code> 기반, <code>mm:ss.cs</code> 표시</li>
+        <li><strong>랩 + 메모</strong> — 각 랩 옆에 이름·내용을 바로 입력 (예: "Alice", "3세트")</li>
+        <li><strong>최고/최악 랩 자동 하이라이트</strong> — 초록/빨강 색상으로 한눈에</li>
+        <li><strong>세션 저장</strong> — 제목·노트와 함께 최대 50건까지 브라우저에 영구 보관</li>
+        <li><strong>CSV 내보내기</strong> — UTF-8 BOM 포함으로 엑셀에서 한글 안 깨짐</li>
+        <li><strong>'모두 CSV로'</strong> — 여러 세션을 한 파일로 합쳐 다운로드</li>
+        <li><strong>키보드 단축키</strong> — <code>Space</code> 시작/정지, <code>L</code> 랩, <code>S</code> 저장, <code>R</code> 초기화</li>
+      </ul>
+
+      <h2>이런 사람에게 좋아요</h2>
+      <ul class="use-cases">
+        <li><strong>러너</strong> — 인터벌 훈련, 팀 릴레이, 기록 추적</li>
+        <li><strong>강사·트레이너</strong> — 수강생별 세트 시간 측정 후 CSV로 공유</li>
+        <li><strong>발표·MC</strong> — 슬라이드 구간별 타이밍 기록</li>
+        <li><strong>요리사</strong> — 레시피 단계별 소요 시간 기록·최적화</li>
+        <li><strong>엔지니어</strong> — 작업 단계별 시간 측정, 생산성 분석</li>
+      </ul>
+
+      <h2>사용법 (5단계)</h2>
+      <ol>
+        <li>위의 "스톱워치 시작하기" 또는 메인 페이지 <strong>스톱워치</strong> 탭 클릭</li>
+        <li><code>Space</code> 키로 스톱워치 시작 → 00:00.00부터 측정 시작</li>
+        <li>구간마다 <code>L</code> 키 또는 "랩" 버튼 → 행이 추가되고 메모 입력 칸 생성</li>
+        <li>메모 칸에 이름·내용 입력 (탭 이동 or 클릭)</li>
+        <li>완료 후 "기록 저장" → 세션 제목·노트 입력 → 저장 → 필요 시 CSV 내보내기</li>
+      </ol>
+
+      <h2>CSV 포맷 예시</h2>
+      <pre style="background:rgba(0,0,0,0.35);padding:14px;border-radius:10px;overflow-x:auto;font-size:12px;color:var(--ink-dim);font-family:var(--font-time)"># 기록 제목: 팀 3인 릴레이
+# 저장된 기록: 2026-04-23T01:10:25.268Z
+# Total: 00:25.18
+# 세션 메모: 첫 번째 리허설 · 실외 트랙
+
+#,랩,누적,메모
+1,00:00.40,00:00.40,Alice
+2,00:00.35,00:00.75,Bob
+3,00:00.35,00:01.11,Carol</pre>
+
+      <h2>자주 묻는 질문</h2>
+      <details><summary>백그라운드 탭에서도 정확한가요?</summary><p>네. 다른 탭으로 이동하거나 브라우저를 최소화해도 내부 시계는 그대로 흐릅니다. 복귀 시 정확한 경과 시간이 표시됩니다.</p></details>
+      <details><summary>50건 넘으면 어떻게 되나요?</summary><p>오래된 기록부터 자동 삭제됩니다. 중요한 기록은 그때그때 CSV로 내보내 보관하세요.</p></details>
+      <details><summary>다른 기기에서도 기록을 볼 수 있나요?</summary><p>기록은 브라우저 localStorage에만 저장되므로 기기 간 동기화는 되지 않습니다. CSV 내보내기 후 Dropbox·Google Drive에 올리면 어디서든 볼 수 있습니다.</p></details>
+
+      <h2>관련 기능</h2>
+      <nav class="related-timers"><a href="/">홈</a><a href="/pomodoro.html">뽀모도로</a><a href="/5min.html">5분 타이머</a><a href="/10min.html">10분 타이머</a><a href="/25min.html">25분 타이머</a></nav>
+    </article>
+  </main>
+  <footer class="legal-foot"><nav><a href="/">ReadySetTimer</a><span>·</span><a href="/about.html">About</a><span>·</span><a href="/privacy.html">Privacy</a></nav><p>© 2026 ReadySetTimer · 무료 온라인 타이머 · 뽀모도로 · 스톱워치</p></footer>
+</body>
+</html>
