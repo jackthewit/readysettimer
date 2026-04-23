@@ -99,6 +99,30 @@
   <!-- Structured data: FAQ (AEO — landing-specific) -->
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "10분 타이머 무료로 쓸 수 있나요?", "acceptedAnswer": {"@type": "Answer", "text": "네. 가입·결제·설치 없이 브라우저에서 바로 사용합니다."}}, {"@type": "Question", "name": "발표에 쓰기 좋은가요?", "acceptedAnswer": {"@type": "Answer", "text": "네. 무대 뒤에서도 읽히는 초대형 숫자, 남은 시간에 따른 색상 전환, 마지막 6초 대형 카운트다운 + F 키 풀스크린으로 발표자에게 최적화되어 있습니다."}}, {"@type": "Question", "name": "다른 시간이 필요하면요?", "acceptedAnswer": {"@type": "Answer", "text": "상단 프리셋(1~60분) 또는 \"직접 입력\"으로 시·분·초 커스텀 시간 설정 가능. 모든 설정은 브라우저에 저장됩니다."}}]}</script>
 
+  <!-- Google Consent Mode v2 defaults — MUST be set before gtag.js / AdSense loads.
+       Required by Google for EEA/UK/CH since March 2024. Deny by default; the
+       consent banner (/consent.js) flips these to 'granted' when the user agrees. -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    // EEA / UK / CH / Korea: deny until the user explicitly accepts
+    gtag('consent', 'default', {
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'denied',
+      wait_for_update: 500,
+      region: ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB','CH','KR']
+    });
+    // Rest of world: granted by default (implied consent in many jurisdictions)
+    gtag('consent', 'default', {
+      ad_storage: 'granted',
+      ad_user_data: 'granted',
+      ad_personalization: 'granted',
+      analytics_storage: 'granted'
+    });
+  </script>
+
   <!-- Google AdSense — site verification script.
        Ad units (<ins class="adsbygoogle">) are added below once AdSense approves the site. -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8257776038246961" crossorigin="anonymous"></script>
@@ -106,8 +130,6 @@
   <!-- Google Analytics (GA4) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2B3ZTR683M"></script>
   <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){ dataLayer.push(arguments); }
     gtag('js', new Date());
     gtag('config', 'G-2B3ZTR683M');
   </script>
@@ -328,6 +350,10 @@
       <span>·</span>
       <a href="/privacy.html">Privacy</a>
       <span>·</span>
+      <a href="/terms.html">Terms</a>
+      <span>·</span>
+      <a href="#" class="rst-consent-open">쿠키 설정</a>
+      <span>·</span>
       <a href="https://github.com/jackthewit/readysettimer" target="_blank" rel="noopener">GitHub</a>
     </nav>
     <p class="site-foot-tag">
@@ -461,6 +487,7 @@
   <script>window.__RST_PRESET = {"t": "10m", "lang": "ko"};</script>
   <script src="i18n.js"></script>
   <script src="app.js"></script>
+  <script defer src="/consent.js"></script>
   <script defer src="/share.js"></script>
 </body>
 </html>

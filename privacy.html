@@ -15,11 +15,22 @@
   <title>Privacy Policy · ReadySetTimer</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='24' fill='none' stroke='%2322d3ee' stroke-width='5'/%3E%3Cpath d='M32 20v14l9 5' stroke='%2322d3ee' stroke-width='5' stroke-linecap='round' fill='none'/%3E%3Crect x='26' y='6' width='12' height='6' rx='2' fill='%2322d3ee'/%3E%3C/svg%3E" />
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8257776038246961" crossorigin="anonymous"></script>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2B3ZTR683M"></script>
+  <!-- Google Consent Mode v2 defaults -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){ dataLayer.push(arguments); }
+    gtag('consent', 'default', {
+      ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
+      analytics_storage: 'denied', wait_for_update: 500,
+      region: ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB','CH','KR']
+    });
+    gtag('consent', 'default', {
+      ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted', analytics_storage: 'granted'
+    });
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8257776038246961" crossorigin="anonymous"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2B3ZTR683M"></script>
+  <script>
     gtag('js', new Date());
     gtag('config', 'G-2B3ZTR683M');
   </script>
@@ -37,7 +48,7 @@
   <main class="legal-main">
     <article>
       <h1>개인정보처리방침 · Privacy Policy</h1>
-      <p class="updated">최종 업데이트 / Last updated: 2026-04-22</p>
+      <p class="updated">최종 업데이트 / Last updated: 2026-04-24</p>
 
       <section>
         <h2>개요</h2>
@@ -106,23 +117,30 @@
       </section>
 
       <section>
-        <h2>4. 쿠키 (Cookies) · 분석 도구</h2>
+        <h2>4. 쿠키 정책 · 분석 도구</h2>
         <p>
           서비스 자체는 쿠키를 직접 설정하지 않습니다. 단, 다음 제3자 서비스가 쿠키·유사
           식별자를 사용할 수 있습니다:
         </p>
         <ul>
           <li><strong>Google Analytics (GA4)</strong> — 방문자 수·페이지뷰·체류 시간 등
-            집계 통계를 수집하기 위해 사용합니다. 개인을 식별하지 않는 형태로 처리되며,
-            자세한 내용은
+            집계 통계를 수집. 개인을 식별하지 않는 형태로 처리되며,
             <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google 개인정보처리방침</a>을
-            참고하세요. 이용자는
+            따릅니다. 이용자는
             <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">
               Google Analytics 옵트아웃 부가기능
             </a>을 설치해 추적을 거부할 수 있습니다.
           </li>
           <li><strong>Google AdSense</strong> — 3항 참조.</li>
         </ul>
+        <p><strong>쿠키 동의 관리 (Google Consent Mode v2)</strong></p>
+        <p>
+          ReadySetTimer는 Google Consent Mode v2를 구현했습니다. 한국·EEA·UK·CH 지역
+          방문자에게는 광고·분석 쿠키가 기본 거부 상태로 시작되며, 첫 방문 시 표시되는 동의
+          배너를 통해 "모두 동의" 또는 "필수만 허용"을 선택할 수 있습니다. 이 선택은 브라우저
+          localStorage에 저장되며, 하단 푸터의 <a href="#" class="rst-consent-open">쿠키 설정</a>
+          링크를 눌러 언제든 다시 변경할 수 있습니다.
+        </p>
         <p>
           브라우저 설정에서 언제든 쿠키를 비활성화하거나 삭제할 수 있습니다.
         </p>
@@ -164,7 +182,7 @@
       <hr />
 
       <h1>Privacy Policy (English)</h1>
-      <p class="updated">Last updated: 2026-04-22</p>
+      <p class="updated">Last updated: 2026-04-24</p>
 
       <section>
         <h2>Overview</h2>
@@ -222,10 +240,10 @@
       </section>
 
       <section>
-        <h2>4. Cookies &amp; Analytics</h2>
+        <h2>4. Cookie Policy &amp; Analytics</h2>
         <p>
           The Service itself does not set cookies. However the following third-party
-          services may set cookies or use similar identifiers:
+          services may set cookies or similar identifiers:
         </p>
         <ul>
           <li><strong>Google Analytics (GA4)</strong> — aggregate visitor statistics
@@ -239,8 +257,17 @@
           </li>
           <li><strong>Google AdSense</strong> — see Section 3.</li>
         </ul>
+        <p><strong>Consent management (Google Consent Mode v2)</strong></p>
         <p>
-          You can disable or clear cookies at any time via your browser settings.
+          ReadySetTimer implements Google Consent Mode v2. For visitors in Korea, the EEA,
+          the UK, and Switzerland, advertising and analytics cookies start in a denied state.
+          A consent banner is shown on the first visit with "Accept all" and "Essential only"
+          options. Your choice is stored in your browser's localStorage and can be changed at
+          any time via the <a href="#" class="rst-consent-open">Cookie settings</a> link in
+          the footer.
+        </p>
+        <p>
+          You can also disable or clear cookies at any time via your browser settings.
         </p>
       </section>
 
@@ -284,9 +311,14 @@
       <a href="/about.html">About</a>
       <span>·</span>
       <a href="/privacy.html">Privacy</a>
+      <span>·</span>
+      <a href="/terms.html">Terms</a>
+      <span>·</span>
+      <a href="#" class="rst-consent-open">쿠키 설정 / Cookie settings</a>
     </nav>
     <p>© 2026 ReadySetTimer</p>
   </footer>
+  <script defer src="/consent.js"></script>
   <script defer src="/share.js"></script>
 </body>
 </html>

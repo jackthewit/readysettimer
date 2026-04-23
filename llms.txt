@@ -51,6 +51,7 @@ Each pillar page has its own keyword-targeted title, meta description, FAQ schem
 
 - [About 소개](https://rstimer.kr/about.html)
 - [Privacy 개인정보처리방침](https://rstimer.kr/privacy.html)
+- [Terms of Service 이용약관](https://rstimer.kr/terms.html)
 - Source: [GitHub jackthewit/readysettimer](https://github.com/jackthewit/readysettimer)
 - Contact: jjackyoon@gmail.com
 
