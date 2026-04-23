@@ -1,22 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- Primary (Korean, default) -->
   <url>
     <loc>https://rstimer.kr/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="ko" href="https://rstimer.kr/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://rstimer.kr/"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://rstimer.kr/"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://rstimer.kr/"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://rstimer.kr/"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://rstimer.kr/"/>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://rstimer.kr/"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://rstimer.kr/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rstimer.kr/en/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://rstimer.kr/ja/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://rstimer.kr/zh/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://rstimer.kr/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://rstimer.kr/pt/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://rstimer.kr/fr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://rstimer.kr/de/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://rstimer.kr/"/>
   </url>
+
+  <!-- Language pillar pages -->
+  <url><loc>https://rstimer.kr/en/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://rstimer.kr/ja/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://rstimer.kr/zh/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://rstimer.kr/es/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://rstimer.kr/pt/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://rstimer.kr/fr/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://rstimer.kr/de/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+
+  <!-- Mode landing pages (Korean) -->
   <url><loc>https://rstimer.kr/pomodoro.html</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://rstimer.kr/stopwatch.html</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+
+  <!-- Duration landing pages -->
   <url><loc>https://rstimer.kr/1min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://rstimer.kr/3min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://rstimer.kr/5min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
@@ -27,6 +41,8 @@
   <url><loc>https://rstimer.kr/30min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://rstimer.kr/45min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://rstimer.kr/60min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
+  <!-- Meta -->
   <url><loc>https://rstimer.kr/about.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://rstimer.kr/privacy.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>

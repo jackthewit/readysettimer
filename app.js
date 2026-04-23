@@ -1269,10 +1269,15 @@
     });
   }
 
-  // ---------- URL param (landing pages link here with ?t=5m or ?mode=pomodoro) ----------
+  // ---------- URL param (landing pages link here with ?t=5m, ?mode=pomodoro, ?lang=en) ----------
   function parseUrlPreset() {
     try {
       const p = new URLSearchParams(location.search);
+      // language override (from per-language pillar pages)
+      const langParam = p.get('lang');
+      if (langParam && I18N && I18N.DICT && I18N.DICT[langParam]) {
+        I18N.setLang(langParam);
+      }
       const modeParam = p.get('mode');
       if (modeParam === 'pomodoro' || modeParam === 'stopwatch' || modeParam === 'timer') {
         state.mode = modeParam;

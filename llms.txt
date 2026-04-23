@@ -16,6 +16,19 @@ ReadySetTimer(rstimer.kr)는 한국에서 만든 **무료 온라인 타이머** 
 - **Local persistence** — 설정·커스텀 프리셋·스톱워치 기록을 브라우저에 영구 저장
 - **i18n** — 8개 언어 전환 (ko/en/ja/zh/es/pt/fr/de)
 
+## Per-language landing pages (indexable in local search engines)
+
+- 한국어 (Korean, default): https://rstimer.kr/
+- English: https://rstimer.kr/en/
+- 日本語 (Japanese): https://rstimer.kr/ja/
+- 中文 (Chinese Simplified): https://rstimer.kr/zh/
+- Español (Spanish): https://rstimer.kr/es/
+- Português (Portuguese): https://rstimer.kr/pt/
+- Français (French): https://rstimer.kr/fr/
+- Deutsch (German): https://rstimer.kr/de/
+
+Each pillar page has its own keyword-targeted title, meta description, FAQ schema, and hreflang cross-links. The app itself auto-detects browser language or accepts `?lang=xx` URL parameters.
+
 ## Duration quick links
 
 - [1분 타이머](https://rstimer.kr/1min.html)

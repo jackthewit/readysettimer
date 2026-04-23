@@ -1061,6 +1061,30 @@ body.legal-page {
   padding: 18px 24px;
   border-bottom: 1px solid var(--line);
   background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.lang-switch {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.lang-switch a {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--ink-faint);
+  text-decoration: none;
+  transition: color .2s, background .2s;
+}
+.lang-switch a:hover { color: var(--ink); background: rgba(255,255,255,0.06); }
+.lang-switch a[aria-current="page"] {
+  color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+  font-weight: 600;
 }
 .legal-back {
   display: inline-flex;
