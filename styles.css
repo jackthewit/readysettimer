@@ -34,13 +34,15 @@
 
 /* reset */
 *, *::before, *::after { box-sizing: border-box; }
-html, body { height: 100%; }
+html, body { min-height: 100%; }
 body {
   margin: 0;
   font-family: var(--font-ui);
   color: var(--ink);
   background: var(--bg-0);
-  overflow: hidden;
+  /* no overflow:hidden — page must be scrollable so users can reach
+     the SEO content + footer (About · Privacy · Terms · Cookie settings)
+     below the app. Fullscreen/focus mode hides those elements via CSS. */
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   letter-spacing: -0.01em;
@@ -190,12 +192,14 @@ body[data-alert="1"] .bg-layer { animation: pulse-bg 1s ease-in-out infinite; }
 
 /* ===== main stage ===== */
 .stage {
-  height: 100%;
+  /* fill at least the first viewport so the app is front-and-center on load,
+     but allow content (SEO block + footer) below to be reached by scrolling */
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 110px 24px 160px;
+  padding: 110px 24px 80px;
   gap: 22px;
   position: relative;
 }
