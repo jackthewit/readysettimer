@@ -1180,7 +1180,8 @@ body.legal-page {
   margin: 0 0 24px;
 }
 
-/* ===== inline hero timer (injected by landing-timer.js) ===== */
+/* ===== (deprecated) hero-timer styles — kept minimal in case of cache;
+   the landing pages now render the full app instead of an inline mini timer ===== */
 .hero-timer {
   display: flex;
   flex-direction: column;

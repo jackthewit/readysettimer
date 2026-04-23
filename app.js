@@ -15,6 +15,13 @@
   const t = (k, p) => I18N ? I18N.t(k, p) : k;
   function currentLang() { return I18N ? I18N.getLang() : 'en'; }
 
+  // Capture the HTML <title> BEFORE any i18n logic runs. Landing pages
+  // (5min.html, pomodoro.html, /en/, etc.) set window.__RST_PRESET so
+  // their SEO-tuned <title> should be preserved instead of being replaced
+  // by the generic app.title translation.
+  const __IS_LANDING = !!(window.__RST_PRESET && (window.__RST_PRESET.t || window.__RST_PRESET.mode || window.__RST_PRESET.lang));
+  const __PAGE_TITLE = document.title;
+
   // ---------- constants ----------
   const LS_KEY = 'focus-timer:v1';
   const LS_HISTORY = 'focus-timer:sw-history:v1';
@@ -276,9 +283,9 @@
     // title tick
     if (state.running || state.phase === 'done') {
       const prefix = state.phase === 'done' ? '✓ ' : '';
-      document.title = `${prefix}${h ? pad(h) + ':' : ''}${pad(m)}:${pad(s)} · ReadySetTimer`;
+      document.title = `${prefix}${h ? pad(h) + ':' : ''}${pad(m)}:${pad(s)} · ${__PAGE_TITLE}`;
     } else {
-      document.title = t('app.title');
+      document.title = __IS_LANDING ? __PAGE_TITLE : t('app.title');
     }
 
     // ring progress
@@ -630,8 +637,8 @@
     el.swLap.disabled = !state.sw.running;
     el.swSave.disabled = ms < 10;
 
-    if (state.sw.running) document.title = `${pad(m)}:${pad(s)} · ${t('tab.stopwatch')}`;
-    else if (state.mode === 'stopwatch') document.title = `ReadySetTimer — ${t('tab.stopwatch')}`;
+    if (state.sw.running) document.title = `${pad(m)}:${pad(s)} · ${__PAGE_TITLE}`;
+    else if (state.mode === 'stopwatch') document.title = __IS_LANDING ? __PAGE_TITLE : (`ReadySetTimer — ${t('tab.stopwatch')}`);
 
     renderLaps();
     updateTone();
@@ -1269,21 +1276,23 @@
     });
   }
 
-  // ---------- URL param (landing pages link here with ?t=5m, ?mode=pomodoro, ?lang=en) ----------
+  // ---------- URL param + window.__RST_PRESET (landing pages pre-set via global) ----------
   function parseUrlPreset() {
     try {
       const p = new URLSearchParams(location.search);
-      // language override (from per-language pillar pages)
-      const langParam = p.get('lang');
+      const preset = window.__RST_PRESET || {};
+
+      // language override (from per-language pillar pages or preset)
+      const langParam = p.get('lang') || preset.lang;
       if (langParam && I18N && I18N.DICT && I18N.DICT[langParam]) {
         I18N.setLang(langParam);
       }
-      const modeParam = p.get('mode');
+      const modeParam = p.get('mode') || preset.mode;
       if (modeParam === 'pomodoro' || modeParam === 'stopwatch' || modeParam === 'timer') {
         state.mode = modeParam;
         state.settings.mode = modeParam;
       }
-      const t = p.get('t');
+      const t = p.get('t') || preset.t;
       if (t) {
         // accept 5m, 300s, 300, 1h, 1h30m
         let seconds = 0;
@@ -1303,7 +1312,7 @@
           }
         }
       }
-      if (modeParam || t) saveSettings();
+      if (modeParam || t || langParam) saveSettings();
     } catch {}
   }
 

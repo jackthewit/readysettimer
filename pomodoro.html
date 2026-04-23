@@ -1,95 +1,481 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="theme-color" content="#0b0f17" />
-  <title>뽀모도로 타이머 · 무료 온라인 25/5/15 | ReadySetTimer</title>
-  <meta name="description" content="무료 온라인 뽀모도로 타이머. 25분 집중 + 5분 휴식 + 4회마다 15분 긴 휴식 자동 순환. 세션 카운트, 자동 진행, 분 단위 커스텀. 가입 없이 브라우저에서 바로 시작." />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f17" />
+
+  <title>뽀모도로 타이머 · 25/5/15 자동 순환 | ReadySetTimer</title>
+  <meta name="description" content="25분 집중 + 5분 휴식 + 4회마다 긴 휴식을 자동 순환시키는 무료 뽀모도로 타이머. 프레젠테이션급 대형 숫자, 세션 카운트, 분 단위 커스터마이즈, 자동 진행 옵션." />
   <meta name="keywords" content="뽀모도로, 뽀모도로 타이머, 무료 뽀모도로, 온라인 뽀모도로, pomodoro, pomodoro timer, 25분 집중 5분 휴식, 집중 타이머, 뽀모도로 기법" />
-  <meta name="robots" content="index, follow" /><meta name="naver-site-verification" content="6d4537c8f4de1c0fbfd5d138477fc58b0ec1c0a8" />
+  <meta name="author" content="ReadySetTimer" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="naver-site-verification" content="6d4537c8f4de1c0fbfd5d138477fc58b0ec1c0a8" />
   <link rel="canonical" href="https://rstimer.kr/pomodoro.html" />
-  <meta property="og:type" content="website" /><meta property="og:url" content="https://rstimer.kr/pomodoro.html" /><meta property="og:title" content="뽀모도로 타이머 · 무료 온라인 25/5/15 | ReadySetTimer" /><meta property="og:description" content="25분 집중 + 5분 휴식 자동 순환. 무료 뽀모도로 타이머." /><meta property="og:image" content="https://rstimer.kr/og-image.png" /><meta name="twitter:card" content="summary_large_image" />
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"뽀모도로 타이머","url":"https://rstimer.kr/pomodoro.html","inLanguage":"ko","isPartOf":{"@type":"WebSite","name":"ReadySetTimer","url":"https://rstimer.kr/"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"홈","item":"https://rstimer.kr/"},{"@type":"ListItem","position":2,"name":"뽀모도로","item":"https://rstimer.kr/pomodoro.html"}]}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"뽀모도로 기법으로 집중하는 방법","description":"ReadySetTimer 뽀모도로 모드를 사용해 25분 집중 + 5분 휴식 사이클을 순환시키는 방법.","step":[{"@type":"HowToStep","name":"뽀모도로 모드 켜기","text":"상단 탭에서 '뽀모도로'를 선택합니다."},{"@type":"HowToStep","name":"시작 버튼 누르기","text":"Space 키 또는 화면의 시작 버튼을 눌러 25분 집중 타이머를 시작합니다."},{"@type":"HowToStep","name":"집중","text":"25분 동안 한 가지 작업에만 몰입합니다. 알림이 오면 중단하지 말고 끝까지."},{"@type":"HowToStep","name":"짧은 휴식","text":"25분 종료 후 자동으로 5분 짧은 휴식 타이머가 시작됩니다. 의자에서 일어나거나 스트레칭하세요."},{"@type":"HowToStep","name":"반복 및 긴 휴식","text":"집중-휴식 사이클을 4회 반복한 뒤에는 15분 긴 휴식이 자동으로 시작됩니다."}]}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-    {"@type":"Question","name":"뽀모도로 기법이 뭔가요?","acceptedAnswer":{"@type":"Answer","text":"1980년대 말 이탈리아 개발자 프란체스코 치릴로가 고안한 시간 관리 기법입니다. 25분 집중 + 5분 휴식을 한 사이클(뽀모도로)로 삼고, 4사이클마다 15~30분 긴 휴식을 취합니다. 이름은 이탈리아어로 '토마토'라는 뜻이며, 치릴로가 대학 시절 사용한 토마토 모양 주방 타이머에서 따왔습니다."}},
-    {"@type":"Question","name":"ReadySetTimer 뽀모도로는 무료인가요?","acceptedAnswer":{"@type":"Answer","text":"네. 회원가입·결제·설치 없이 브라우저에서 바로 사용하는 무료 뽀모도로 타이머입니다."}},
-    {"@type":"Question","name":"25/5가 아닌 다른 주기로 바꿀 수 있나요?","acceptedAnswer":{"@type":"Answer","text":"네. 설정에서 집중(분), 짧은 휴식(분), 긴 휴식(분), 긴 휴식 주기를 자유롭게 변경할 수 있습니다. 인기 변형은 50/10, 20/5, 45/15 등입니다."}},
-    {"@type":"Question","name":"집중 세션이 자동으로 휴식으로 넘어가나요?","acceptedAnswer":{"@type":"Answer","text":"네. 설정에서 '자동 진행'을 켜두면 집중 → 짧은 휴식 → 집중 → ... 순서로 자동 전환됩니다. 끄면 사용자가 매번 시작 버튼을 누르는 방식이 됩니다."}},
-    {"@type":"Question","name":"세션 카운트는 어디서 확인하나요?","acceptedAnswer":{"@type":"Answer","text":"타이머 화면 상단에 '집중 N / 4' 배지가 표시됩니다. 4사이클을 마치면 자동으로 긴 휴식이 시작되고 다시 1부터 카운트됩니다."}}
-  ]}</script>
-  <link rel="stylesheet" href="styles.css" /><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='24' fill='none' stroke='%2322d3ee' stroke-width='5'/%3E%3Cpath d='M32 20v14l9 5' stroke='%2322d3ee' stroke-width='5' stroke-linecap='round' fill='none'/%3E%3Crect x='26' y='6' width='12' height='6' rx='2' fill='%2322d3ee'/%3E%3C/svg%3E" />
+
+  <!-- Language alternates — each locale has a dedicated pillar page -->
+  <link rel="alternate" hreflang="ko" href="https://rstimer.kr/" />
+  <link rel="alternate" hreflang="en" href="https://rstimer.kr/en/" />
+  <link rel="alternate" hreflang="ja" href="https://rstimer.kr/ja/" />
+  <link rel="alternate" hreflang="zh" href="https://rstimer.kr/zh/" />
+  <link rel="alternate" hreflang="es" href="https://rstimer.kr/es/" />
+  <link rel="alternate" hreflang="pt" href="https://rstimer.kr/pt/" />
+  <link rel="alternate" hreflang="fr" href="https://rstimer.kr/fr/" />
+  <link rel="alternate" hreflang="de" href="https://rstimer.kr/de/" />
+  <link rel="alternate" hreflang="x-default" href="https://rstimer.kr/" />
+
+  <!-- Open Graph (kakao/facebook/slack preview) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://rstimer.kr/pomodoro.html" />
+  <meta property="og:title" content="뽀모도로 타이머 · 25/5/15 자동 순환 | ReadySetTimer" />
+  <meta property="og:description" content="25분 집중 + 5분 휴식 + 4사이클마다 긴 휴식을 자동 순환시키는 무료 뽀모도로 타이머." />
+  <meta property="og:site_name" content="ReadySetTimer" />
+  <meta property="og:locale" content="ko_KR" />
+  <meta property="og:locale:alternate" content="en_US" />
+  <meta property="og:locale:alternate" content="ja_JP" />
+  <meta property="og:locale:alternate" content="zh_CN" />
+  <meta property="og:image" content="https://rstimer.kr/og-image.png" />
+  <meta property="og:image:secure_url" content="https://rstimer.kr/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="ReadySetTimer — 무료 온라인 타이머 화면" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="뽀모도로 타이머 · 25/5/15 자동 순환 | ReadySetTimer" />
+  <meta name="twitter:description" content="25분 집중 + 5분 휴식 + 4사이클마다 긴 휴식을 자동 순환시키는 무료 뽀모도로 타이머." />
+  <meta name="twitter:image" content="https://rstimer.kr/og-image.png" />
+  <meta name="twitter:image:alt" content="ReadySetTimer — 무료 온라인 타이머 화면" />
+
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='24' fill='none' stroke='%2322d3ee' stroke-width='5'/%3E%3Cpath d='M32 20v14l9 5' stroke='%2322d3ee' stroke-width='5' stroke-linecap='round' fill='none'/%3E%3Crect x='26' y='6' width='12' height='6' rx='2' fill='%2322d3ee'/%3E%3C/svg%3E" />
+
+  <!-- Structured data: WebApplication (free timer app) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "ReadySetTimer",
+    "alternateName": ["프레젠테이션 타이머", "발표 타이머", "Presentation Timer", "Speech Timer", "뽀모도로 타이머", "스톱워치"],
+    "url": "https://rstimer.kr/",
+    "description": "발표·프레젠테이션에 특화된 무료 온라인 타이머. 무대 뒤에서도 보이는 초대형 숫자, 남은 시간에 따라 변하는 배경색, 마지막 6초 대형 카운트다운, 풀스크린 모드. 뽀모도로·스톱워치까지 한 앱에.",
+    "applicationCategory": "ProductivityApplication",
+    "applicationSubCategory": "Presentation Timer",
+    "operatingSystem": "Any (Web)",
+    "browserRequirements": "Requires JavaScript. Recommended: Chrome latest.",
+    "inLanguage": ["ko", "en", "ja", "zh", "es", "pt", "fr", "de"],
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" },
+    "audience": { "@type": "Audience", "audienceType": "Presenters, speakers, teachers, MCs, pitch contestants" },
+    "featureList": [
+      "무대 뒤에서도 읽히는 초대형 디지털 표시",
+      "남은 시간에 따른 배경색 전환 (청록 → 주황 → 빨강)",
+      "마지막 6초 대형 카운트다운 — 발표 마무리 긴장감",
+      "풀스크린 프레젠테이션 모드 (F키)",
+      "뽀모도로 자동 순환 (집중/휴식)",
+      "랩 메모와 CSV 내보내기가 가능한 스톱워치",
+      "로컬 저장 · 가입 불필요",
+      "8개 언어 (한국어/English/日本語/中文/Español/Português/Français/Deutsch)"
+    ]
+  }
+  </script>
+
+  <!-- Structured data: HowTo (Pomodoro method) — rich result candidate -->
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"HowTo","name":"ReadySetTimer로 뽀모도로 기법 활용하기","description":"25분 집중 + 5분 휴식 사이클로 생산성을 높이는 방법","totalTime":"PT2H","tool":[{"@type":"HowToTool","name":"ReadySetTimer (https://rstimer.kr/)"}],"step":[
+    {"@type":"HowToStep","position":1,"name":"뽀모도로 모드 선택","text":"상단 탭에서 '뽀모도로'를 클릭합니다."},
+    {"@type":"HowToStep","position":2,"name":"25분 집중","text":"Space 키 또는 시작 버튼을 눌러 25분 카운트다운을 시작하고, 한 가지 작업에만 몰입합니다."},
+    {"@type":"HowToStep","position":3,"name":"5분 휴식","text":"25분 종료 후 자동으로 5분 휴식 타이머가 시작됩니다. 일어나서 스트레칭하거나 창밖을 바라보세요."},
+    {"@type":"HowToStep","position":4,"name":"4사이클 반복 후 긴 휴식","text":"집중-휴식을 4번 반복하면 자동으로 15분 긴 휴식이 시작됩니다."}
+  ]}
+  </script>
+
+  <!-- Structured data: BreadcrumbList -->
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"홈","item":"https://rstimer.kr/"}]}
+  </script>
+
+  <!-- Structured data: FAQ (AEO — landing-specific) -->
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "뽀모도로 기법이 뭔가요?", "acceptedAnswer": {"@type": "Answer", "text": "이탈리아 개발자 프란체스코 치릴로가 1980년대 말 고안한 시간 관리 기법입니다. 25분 집중 + 5분 휴식을 한 사이클로, 4사이클마다 15분 긴 휴식. ReadySetTimer가 이 주기를 자동으로 순환시킵니다."}}, {"@type": "Question", "name": "ReadySetTimer 뽀모도로는 무료인가요?", "acceptedAnswer": {"@type": "Answer", "text": "네, 회원가입·결제·설치 없이 브라우저에서 바로 사용하는 무료 뽀모도로 타이머입니다."}}, {"@type": "Question", "name": "25/5가 아닌 다른 주기로 바꿀 수 있나요?", "acceptedAnswer": {"@type": "Answer", "text": "설정에서 집중·짧은 휴식·긴 휴식·긴 휴식 주기를 분 단위로 자유롭게 변경할 수 있습니다. 50/10, 20/5, 45/15 등 인기 변형을 바로 적용 가능합니다."}}, {"@type": "Question", "name": "집중 세션이 자동으로 휴식으로 넘어가나요?", "acceptedAnswer": {"@type": "Answer", "text": "네. 설정에서 ‘자동 진행’을 켜두면 집중 → 짧은 휴식 → 집중 → ... 순서로 자동 전환됩니다. 끄면 매번 시작 버튼을 눌러 이어가는 방식입니다."}}]}</script>
+
+  <!-- Google AdSense — site verification script.
+       Ad units (<ins class="adsbygoogle">) are added below once AdSense approves the site. -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8257776038246961" crossorigin="anonymous"></script>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2B3ZTR683M"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2B3ZTR683M');</script>
+
+  <!-- Google Analytics (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2B3ZTR683M"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-2B3ZTR683M');
+  </script>
 </head>
-<body class="legal-page">
+<body data-mode="timer" data-phase="idle">
   <div class="bg-layer" aria-hidden="true"></div>
-  <header class="legal-head"><a class="legal-back" href="/"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span>ReadySetTimer</span></a></header>
-  <main class="legal-main">
-    <article>
-      <h1>뽀모도로 타이머 — 무료 온라인 25/5/15</h1>
-      <p class="landing-lead">
-        <strong>뽀모도로 타이머</strong>는 25분 집중 + 5분 휴식 + 4회마다 15분 긴 휴식을
-        자동 순환시키는 시간 관리 도구입니다. ReadySetTimer 뽀모도로는 세션 카운트·자동
-        진행·분 단위 커스텀까지 지원하며 가입 없이 브라우저에서 즉시 시작됩니다.
-      </p>
+  <div class="vignette" aria-hidden="true"></div>
 
-      <a class="cta-timer" href="/?mode=pomodoro"><span class="cta-arrow">▶</span><span class="cta-text">뽀모도로 시작하기</span><span class="cta-sub">집중 25분부터 자동 순환</span></a>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="34" r="24" fill="none" stroke="currentColor" stroke-width="5"/>
+        <path d="M32 20v14l9 5" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/>
+        <rect x="26" y="6" width="12" height="6" rx="2" fill="currentColor"/>
+      </svg>
+      <span class="brand-name">ReadySetTimer</span>
+      <span class="brand-tagline" data-i18n="app.tagline">쉽고 빠른 무료 타이머</span>
+    </div>
 
-      <h2>뽀모도로 기법이란?</h2>
-      <p>
-        이탈리아 개발자 <em>프란체스코 치릴로(Francesco Cirillo)</em>가 1980년대 말 대학 시절에 고안한
-        시간 관리 기법입니다. 핵심은 단순합니다 — <strong>25분 몰입 + 5분 쉼</strong>을 한 사이클로
-        정해 놓고, 그 25분 동안은 한 가지 일에만 집중합니다. 4사이클을 채우면 15~30분 긴 휴식.
-        이름 "Pomodoro"는 이탈리아어로 "토마토" — 치릴로가 사용하던 토마토 모양 주방 타이머에서
-        유래했습니다.
-      </p>
+    <nav class="mode-tabs" role="tablist" aria-label="Mode">
+      <button class="tab is-active" data-mode="timer" role="tab" aria-selected="true" data-i18n="tab.timer" data-i18n-attr="title:tab.timer">Timer</button>
+      <button class="tab" data-mode="pomodoro" role="tab" aria-selected="false" data-i18n="tab.pomodoro" data-i18n-attr="title:tab.pomodoro">Pomodoro</button>
+      <button class="tab" data-mode="stopwatch" role="tab" aria-selected="false" data-i18n="tab.stopwatch" data-i18n-attr="title:tab.stopwatch">Stopwatch</button>
+    </nav>
 
-      <h2>왜 25/5인가요?</h2>
-      <ul>
-        <li><strong>짧지만 의미 있는 집중 단위</strong> — 25분은 과몰입 없이 유지 가능한 최대치에 가깝습니다.</li>
-        <li><strong>완벽주의 방지</strong> — "끝낼 때까지 안 쉰다"는 부담을 제거해 시작 저항을 낮춥니다.</li>
-        <li><strong>휴식이 필수</strong> — 5분 휴식은 강제 리셋 역할. 의자에서 일어나기, 물 마시기, 창밖 보기.</li>
-        <li><strong>4사이클 긴 휴식</strong> — 2시간 블록 뒤에 15~30분 충전 시간을 확보합니다.</li>
-      </ul>
+    <div class="top-actions">
+      <button class="icon-btn" id="btn-lang" data-i18n-attr="title:settings.lang,aria-label:settings.lang" title="Language" aria-label="Language">
+        <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-sound" data-i18n-attr="title:action.sound,aria-label:action.soundAria" title="Sound" aria-label="Toggle sound">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path class="wave" d="M16 8a5 5 0 0 1 0 8M18.5 5.5a9 9 0 0 1 0 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-settings" data-i18n-attr="title:action.settings,aria-label:action.settingsAria" title="Settings" aria-label="Open settings">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-fullscreen" data-i18n-attr="title:action.fullscreen,aria-label:action.fullscreenAria" title="Fullscreen" aria-label="Fullscreen">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+      </button>
+    </div>
+  </header>
 
-      <h2>ReadySetTimer 뽀모도로의 특장점</h2>
-      <ul>
-        <li><strong>세션 카운트 배지</strong> — "집중 3 / 4" 처럼 현재 사이클을 한눈에</li>
-        <li><strong>자동 진행 on/off</strong> — 연속 몰입 모드 vs 수동 확인 모드 선택</li>
-        <li><strong>분 단위 커스텀</strong> — 집중/짧은 휴식/긴 휴식/주기를 자유롭게 조정 (예: 50/10)</li>
-        <li><strong>남은 시간 색상 변화</strong> — 집중 보라, 휴식 초록, 마지막 6초 빨강 대형 카운트다운</li>
-        <li><strong>풀스크린 모드</strong> — <code>F</code> 키로 UI 숨기고 몰입 극대화</li>
-        <li><strong>로컬 저장</strong> — 내 설정과 세션 상태가 브라우저에 영구 저장</li>
-      </ul>
+  <!-- Language popover -->
+  <div class="lang-menu" id="lang-menu" hidden role="menu" aria-label="Language"></div>
 
-      <h2>사용법 (3단계)</h2>
-      <ol>
-        <li>아래 "뽀모도로 시작하기" 버튼 또는 메인 페이지 <strong>뽀모도로</strong> 탭 클릭</li>
-        <li><code>Space</code> 키 또는 시작 버튼으로 25분 집중 타이머 시작</li>
-        <li>25분 후 자동으로 5분 휴식 타이머로 전환 (자동 진행이 켜져 있을 때)</li>
-      </ol>
+  <!-- Big final countdown overlay -->
+  <div class="big-countdown" id="big-countdown" aria-hidden="true">
+    <span id="big-num">6</span>
+  </div>
 
-      <h2>인기 변형 주기</h2>
-      <ul>
-        <li><strong>50/10</strong> — 딥 워크 추종자들이 선호</li>
-        <li><strong>20/5</strong> — 짧은 집중, 가벼운 업무</li>
-        <li><strong>45/15</strong> — 학교 시간표와 같은 리듬</li>
-        <li><strong>25/5</strong> — 클래식 (기본값)</li>
-      </ul>
+  <main class="stage timer-view">
+    <!-- SEO: semantic heading + short description crawlers can use -->
+    <h1 class="sr-only">프레젠테이션 타이머 · 발표용 타이머 · 뽀모도로 · 스톱워치 — ReadySetTimer</h1>
+    <p class="sr-only">
+      ReadySetTimer는 발표·프레젠테이션에 특화된 무료 온라인 타이머입니다. 무대 뒤에서도 잘
+      읽히는 초대형 디지털 숫자, 남은 시간에 따라 부드럽게 변하는 배경색, 마지막 6초 동안
+      화면을 가득 채우는 대형 카운트다운, 그리고 F 키 한 번으로 전환되는 풀스크린 모드로
+      강연·피칭·토론·웨비나·결혼식 사회 등 모든 발표 상황에서 시간을 놓치지 않도록 돕습니다.
+      25분 집중과 5분 휴식을 자동 순환하는 뽀모도로, 랩마다 메모를 남기고 CSV로 내보낼 수
+      있는 스톱워치까지 한 앱에 담았습니다. 크롬·사파리·아이폰·갤럭시에서 가입 없이 바로
+      사용할 수 있으며, 한국어·영어·일본어·중국어 등 8개 언어를 지원합니다.
+    </p>
 
-      <h2>자주 묻는 질문</h2>
-      <details><summary>자동 진행이 싫어요 — 매번 확인 후 시작하고 싶습니다</summary><p>설정 > 뽀모도로 섹션의 "자동 진행" 체크박스를 해제하면 각 사이클 종료 시 시작 버튼을 직접 눌러야 다음 단계로 넘어갑니다.</p></details>
-      <details><summary>집중 중에 전화/알림이 와서 중단됐어요</summary><p>정지 버튼 또는 Space 키로 일시정지 후 대응, 복귀 후 다시 Space로 이어서 진행할 수 있습니다. 기록상 해당 사이클이 완료된 것으로 치지 말지는 본인 판단.</p></details>
-      <details><summary>휴식 시간에 뭘 하면 좋을까요?</summary><p>물 마시기, 일어나서 스트레칭, 창밖 보기, 먼 곳 응시하기(눈 피로 회복) 등 몸을 움직이는 활동을 권장합니다. 휴대폰 SNS는 오히려 피로를 가중시킵니다.</p></details>
-      <details><summary>밤에 집중이 더 잘 되는데 주기도 달라지나요?</summary><p>개인차가 큽니다. 일부는 저녁엔 50/10 긴 사이클이 더 잘 맞고, 아침엔 20/5 짧은 사이클이 편한 경우도 있습니다. 본인에게 맞는 길이를 찾아 커스터마이즈하세요.</p></details>
+    <div class="badge-row" aria-live="polite">
+      <span class="badge" id="phase-badge">Ready</span>
+      <span class="badge badge-muted" id="cycle-badge" hidden>0 / 4</span>
+    </div>
 
-      <h2>뽀모도로 기본 주기로 바로 가기</h2>
-      <nav class="related-timers"><a href="/25min.html">25분 (집중)</a><a href="/5min.html">5분 (짧은 휴식)</a><a href="/15min.html">15분 (긴 휴식)</a><a href="/20min.html">20분 변형</a><a href="/45min.html">45분 변형</a><a href="/stopwatch.html">스톱워치</a></nav>
-    </article>
+    <div class="timer-wrap">
+      <svg class="ring" viewBox="0 0 400 400" aria-hidden="true">
+        <circle class="ring-track" cx="200" cy="200" r="186" />
+        <circle class="ring-progress" cx="200" cy="200" r="186" />
+      </svg>
+      <div class="time-display" id="time-display" aria-live="off">
+        <span class="time-main"><span id="t-h">00</span><span class="colon">:</span><span id="t-m">25</span><span class="colon">:</span><span id="t-s">00</span></span>
+        <span class="time-sub" id="time-sub"></span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-ghost" id="btn-reset" data-i18n-attr="title:btn.reset">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <span data-i18n="btn.reset">Reset</span>
+      </button>
+      <button class="btn btn-primary" id="btn-start" data-i18n-attr="title:btn.start">
+        <svg class="ico-play" viewBox="0 0 24 24" width="22" height="22"><path d="M7 4l13 8-13 8V4z" fill="currentColor"/></svg>
+        <svg class="ico-pause" viewBox="0 0 24 24" width="22" height="22" style="display:none"><path d="M7 4h4v16H7zM13 4h4v16h-4z" fill="currentColor"/></svg>
+        <span id="btn-start-label" data-i18n="btn.start">Start</span>
+      </button>
+      <button class="btn btn-ghost" id="btn-skip" data-i18n-attr="title:btn.skip">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 5l10 7-10 7V5zM17 5h2v14h-2z" fill="currentColor"/></svg>
+        <span data-i18n="btn.skip">Skip</span>
+      </button>
+    </div>
+
+    <div class="presets" id="presets" aria-label="Presets">
+      <button class="preset" data-seconds="60">1 min</button>
+      <button class="preset" data-seconds="180">3 min</button>
+      <button class="preset" data-seconds="300">5 min</button>
+      <button class="preset" data-seconds="600">10 min</button>
+      <button class="preset" data-seconds="900">15 min</button>
+      <button class="preset" data-seconds="1800">30 min</button>
+      <button class="preset" data-seconds="2700">45 min</button>
+      <button class="preset" data-seconds="3600">60 min</button>
+      <button class="preset preset-custom" id="preset-custom" data-i18n="btn.customInput">＋ Custom</button>
+    </div>
+
+    <p class="shortcut-hint" id="hint-timer" data-i18n="hint.timer"></p>
   </main>
-  <footer class="legal-foot"><nav><a href="/">ReadySetTimer</a><span>·</span><a href="/about.html">About</a><span>·</span><a href="/privacy.html">Privacy</a></nav><p>© 2026 ReadySetTimer · 무료 온라인 타이머 · 뽀모도로 · 스톱워치</p></footer>
-  <script defer src="/landing-timer.js"></script>
+
+  <!-- Stopwatch view -->
+  <main class="stage stopwatch-view" hidden>
+    <div class="sw-display">
+      <div class="sw-time">
+        <span id="sw-m">00</span><span class="colon">:</span><span id="sw-s">00</span><span class="sw-frac">.<span id="sw-cs">00</span></span>
+      </div>
+      <div class="sw-sub" id="sw-sub">Ready</div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-ghost" id="sw-reset">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <span data-i18n="btn.reset">Reset</span>
+      </button>
+      <button class="btn btn-primary" id="sw-start">
+        <svg class="ico-play" viewBox="0 0 24 24" width="22" height="22"><path d="M7 4l13 8-13 8V4z" fill="currentColor"/></svg>
+        <svg class="ico-pause" viewBox="0 0 24 24" width="22" height="22" style="display:none"><path d="M7 4h4v16H7zM13 4h4v16h-4z" fill="currentColor"/></svg>
+        <span id="sw-start-label" data-i18n="btn.start">Start</span>
+      </button>
+      <button class="btn btn-ghost" id="sw-lap">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span data-i18n="btn.lap">Lap</span>
+      </button>
+      <button class="btn btn-ghost" id="sw-save">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 5v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7l-4-4H7a2 2 0 0 0-2 2z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M8 3v4h8V3M8 13h8v8H8z" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        <span data-i18n="btn.saveRecord">Save run</span>
+      </button>
+    </div>
+
+    <div class="sw-columns">
+      <section class="sw-laps">
+        <h3><span data-i18n="sw.titleLaps">Laps</span> <span class="sw-count" id="sw-lap-count">0</span></h3>
+        <ol id="sw-lap-list" class="sw-list"></ol>
+        <p class="sw-empty" id="sw-lap-empty" data-i18n="sw.emptyLaps"></p>
+      </section>
+      <section class="sw-history">
+        <h3><span data-i18n="sw.titleHistory">Saved runs</span> <span class="sw-count" id="sw-hist-count">0</span>
+          <span class="sw-actions">
+            <button class="sw-clear-all" id="sw-export-all" data-i18n="sw.exportAll">Export all CSV</button>
+            <button class="sw-clear-all danger" id="sw-clear-all" data-i18n="btn.clearAll">Clear all</button>
+          </span>
+        </h3>
+        <ol id="sw-hist-list" class="sw-list"></ol>
+        <p class="sw-empty" id="sw-hist-empty" data-i18n="sw.emptyHistory"></p>
+      </section>
+    </div>
+
+    <p class="shortcut-hint" id="hint-sw" data-i18n="hint.sw"></p>
+  </main>
+
+  <!--
+    Ad slot — kept hidden until AdSense approves the site. When approved:
+    1. Uncomment this block (and the <script> in <head>)
+    2. Replace data-ad-client / data-ad-slot with real IDs
+    3. Remove the .ad-slot { display: none } rule (if present)
+  <aside class="ad-slot" aria-label="Advertisement">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="XXXXXXXXXX"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+  </aside>
+  -->
+
+  <!-- Popular timers quick links — long-tail SEO + internal linking -->
+  <section class="seo-block" aria-label="인기 타이머 바로가기">
+    <h2>인기 타이머 바로가기</h2>
+    <p>원하는 시간으로 바로 이동 — 각 페이지는 해당 시간을 미리 설정한 채 열립니다.</p>
+    <div class="popular-grid">
+      <a href="/1min.html"><strong>1분</strong><span class="pg-sub">양치·심호흡</span></a>
+      <a href="/3min.html"><strong>3분</strong><span class="pg-sub">라면·스피치</span></a>
+      <a href="/5min.html"><strong>5분</strong><span class="pg-sub">명상·요리</span></a>
+      <a href="/10min.html"><strong>10분</strong><span class="pg-sub">미니 집중</span></a>
+      <a href="/15min.html"><strong>15분</strong><span class="pg-sub">짧은 공부</span></a>
+      <a href="/20min.html"><strong>20분</strong><span class="pg-sub">파워냅</span></a>
+      <a href="/25min.html"><strong>25분</strong><span class="pg-sub">뽀모도로</span></a>
+      <a href="/30min.html"><strong>30분</strong><span class="pg-sub">홈트·회의</span></a>
+      <a href="/45min.html"><strong>45분</strong><span class="pg-sub">한 차시</span></a>
+      <a href="/60min.html"><strong>1시간</strong><span class="pg-sub">몰입 블록</span></a>
+      <a href="/pomodoro.html"><strong>뽀모도로</strong><span class="pg-sub">25/5 순환</span></a>
+      <a href="/stopwatch.html"><strong>스톱워치</strong><span class="pg-sub">랩·CSV</span></a>
+    </div>
+  </section>
+
+  <!-- SEO-friendly content block: visible, readable, natural copy with target keywords -->
+  <section class="seo-block" aria-label="뽀모도로 타이머 소개">
+    <h2>뽀모도로 타이머 · 25/5/15 자동 순환</h2>
+    <p class="landing-lead">
+      ReadySetTimer <strong>뽀모도로</strong>는 25분 집중 + 5분 짧은 휴식 + 4사이클마다 15분 긴 휴식을
+      자동 순환시키는 시간 관리 타이머입니다. 세션 카운트 배지, 자동 진행 옵션, 분 단위 커스텀까지 —
+      가입·설치 없이 브라우저에서 바로.
+    </p>
+
+    <h3>뽀모도로 기법이란?</h3>
+    <p>
+      이탈리아 개발자 <em>프란체스코 치릴로</em>가 1980년대 말 대학 시절 고안한 시간 관리 기법.
+      <strong>25분 몰입 + 5분 쉼</strong>을 한 사이클로, 4사이클 후 15~30분 긴 휴식. 토마토 모양
+      주방 타이머에서 이름("뽀모도로" = 이탈리아어 "토마토")이 유래했습니다.
+    </p>
+
+    <h3>ReadySetTimer 뽀모도로의 특장점</h3>
+    <ul>
+      <li><strong>세션 카운트 배지</strong> — “집중 3 / 4” 처럼 현재 사이클을 한눈에</li>
+      <li><strong>자동 진행 on/off</strong> — 연속 몰입 vs 수동 확인 모드 선택</li>
+      <li><strong>분 단위 커스텀</strong> — 집중/짧은 휴식/긴 휴식/주기 자유롭게 조정 (예: 50/10)</li>
+      <li><strong>남은 시간 색상 변화</strong> — 집중 보라, 휴식 초록</li>
+      <li><strong>풀스크린 모드</strong> — F 키로 UI 숨김, 몰입 극대화</li>
+      <li><strong>로컬 저장</strong> — 설정과 상태가 브라우저에 영구 저장</li>
+    </ul>
+
+    <h3>인기 변형 주기</h3>
+    <ul>
+      <li><strong>50/10</strong> — 딥 워크 추종자들이 선호</li>
+      <li><strong>20/5</strong> — 짧은 집중, 가벼운 업무</li>
+      <li><strong>45/15</strong> — 학교 시간표와 같은 리듬</li>
+      <li><strong>25/5</strong> — 클래식 기본값</li>
+    </ul>
+  </section>
+
+  <footer class="site-foot">
+    <nav class="site-foot-nav" aria-label="Footer">
+      <a href="/about.html">About</a>
+      <span>·</span>
+      <a href="/privacy.html">Privacy</a>
+      <span>·</span>
+      <a href="https://github.com/jackthewit/readysettimer" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <p class="site-foot-tag">
+      <strong>ReadySetTimer</strong> — 무료 온라인 타이머 · 뽀모도로 · 스톱워치 ·
+      Free online timer, Pomodoro &amp; stopwatch
+    </p>
+  </footer>
+
+  <!-- Settings modal -->
+  <dialog class="modal" id="settings-modal">
+    <form method="dialog" class="modal-inner">
+      <header class="modal-head">
+        <h2 data-i18n="settings.title">Settings</h2>
+        <button class="icon-btn" type="button" id="btn-close-settings" data-i18n-attr="aria-label:btn.close">✕</button>
+      </header>
+
+      <section class="modal-section">
+        <h3 data-i18n="settings.lang">Language</h3>
+        <label><span data-i18n="settings.lang">Language</span>
+          <select id="opt-lang"></select>
+        </label>
+      </section>
+
+      <section class="modal-section">
+        <h3 data-i18n="settings.timer">Timer</h3>
+        <label><span data-i18n="settings.timerDefault">Default duration (min)</span>
+          <input type="number" id="opt-timer-minutes" min="1" max="600" step="1" value="25" />
+        </label>
+      </section>
+
+      <section class="modal-section">
+        <h3 data-i18n="settings.pomo">Pomodoro</h3>
+        <div class="grid-3">
+          <label><span data-i18n="settings.pomoWork">Focus (min)</span><input type="number" id="opt-work" min="1" max="120" value="25" /></label>
+          <label><span data-i18n="settings.pomoShort">Short break (min)</span><input type="number" id="opt-short" min="1" max="60" value="5" /></label>
+          <label><span data-i18n="settings.pomoLong">Long break (min)</span><input type="number" id="opt-long" min="1" max="60" value="15" /></label>
+          <label><span data-i18n="settings.pomoEvery">Long break every</span><input type="number" id="opt-long-every" min="2" max="12" value="4" /></label>
+          <label class="check"><input type="checkbox" id="opt-autostart" checked /> <span data-i18n="settings.pomoAuto">Auto-advance</span></label>
+        </div>
+      </section>
+
+      <section class="modal-section">
+        <h3 data-i18n="settings.sound">Sound</h3>
+        <label class="check"><input type="checkbox" id="opt-sound" checked /> <span data-i18n="settings.soundUse">Play sound on finish</span></label>
+        <div class="grid-3">
+          <label><span data-i18n="settings.soundType">Sound</span>
+            <select id="opt-sound-type">
+              <option value="chime" data-i18n="sound.chime">Chime</option>
+              <option value="bell" data-i18n="sound.bell">Bell</option>
+              <option value="beep" data-i18n="sound.beep">Beep</option>
+              <option value="soft" data-i18n="sound.soft">Soft</option>
+              <option value="digital" data-i18n="sound.digital">Digital</option>
+            </select>
+          </label>
+          <label><span data-i18n="settings.soundRepeat">Repeat</span>
+            <input type="number" id="opt-sound-repeat" min="1" max="10" value="1" />
+          </label>
+          <label class="range-label"><span data-i18n="settings.soundVolume">Volume</span> <span id="opt-vol-val">70%</span>
+            <input type="range" id="opt-sound-volume" min="0" max="100" value="70" />
+          </label>
+          <button type="button" class="btn btn-ghost sound-test" id="btn-test-sound" data-i18n="btn.preview">Preview</button>
+        </div>
+      </section>
+
+      <section class="modal-section">
+        <h3 data-i18n="settings.display">Display / Final countdown</h3>
+        <label class="check"><input type="checkbox" id="opt-color" checked /> <span data-i18n="settings.color">Color transition</span></label>
+        <label class="check"><input type="checkbox" id="opt-hide-ms" checked /> <span data-i18n="settings.big">Show big number in final stretch</span></label>
+        <label><span data-i18n="settings.bigSec">Big number threshold (sec)</span>
+          <input type="number" id="opt-bigfinal-sec" min="1" max="60" value="6" />
+        </label>
+      </section>
+
+      <footer class="modal-foot">
+        <button class="btn btn-ghost" type="button" id="btn-cancel-settings" data-i18n="btn.cancel">Cancel</button>
+        <button class="btn btn-primary" value="save" id="btn-save" data-i18n="btn.save">Save</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Stopwatch save modal -->
+  <dialog class="modal" id="sw-save-modal">
+    <form method="dialog" class="modal-inner">
+      <header class="modal-head">
+        <h2 data-i18n="swsave.title">Save run</h2>
+        <button class="icon-btn" type="button" id="btn-close-sw" data-i18n-attr="aria-label:btn.close">✕</button>
+      </header>
+      <section class="modal-section">
+        <div class="sw-save-preview">
+          <span class="sw-save-time" id="sw-save-time">00:00.00</span>
+          <span class="sw-save-meta" id="sw-save-meta"></span>
+        </div>
+        <label><span data-i18n="swsave.name">Session title</span>
+          <input type="text" id="sw-save-label" maxlength="60" data-i18n-attr="placeholder:swsave.namePh" autocomplete="off" required />
+        </label>
+        <label><span data-i18n="swsave.note">Session note (optional)</span>
+          <textarea id="sw-save-note" maxlength="240" rows="2" data-i18n-attr="placeholder:swsave.notePh"></textarea>
+        </label>
+      </section>
+      <footer class="modal-foot">
+        <button class="btn btn-ghost" type="button" id="btn-cancel-sw" data-i18n="btn.cancel">Cancel</button>
+        <button class="btn btn-primary" value="save" id="sw-save-confirm" data-i18n="btn.save">Save</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Custom preset modal -->
+  <dialog class="modal" id="custom-modal">
+    <form method="dialog" class="modal-inner">
+      <header class="modal-head">
+        <h2 data-i18n="cp.title">Custom preset</h2>
+        <button class="icon-btn" type="button" id="btn-close-custom" data-i18n-attr="aria-label:btn.close">✕</button>
+      </header>
+      <section class="modal-section">
+        <div class="grid-3">
+          <label><span data-i18n="cp.hour">Hours</span><input type="number" id="cp-h" min="0" max="9" value="0" /></label>
+          <label><span data-i18n="cp.min">Min</span><input type="number" id="cp-m" min="0" max="59" value="20" /></label>
+          <label><span data-i18n="cp.sec">Sec</span><input type="number" id="cp-s" min="0" max="59" value="0" /></label>
+        </div>
+        <label><span data-i18n="cp.name">Name (optional)</span><input type="text" id="cp-name" maxlength="16" data-i18n-attr="placeholder:cp.namePh" /></label>
+      </section>
+      <footer class="modal-foot">
+        <button class="btn btn-ghost" type="button" id="btn-cancel-custom" data-i18n="btn.cancel">Cancel</button>
+        <button class="btn btn-primary" value="save" id="cp-save" data-i18n="btn.add">Add</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>window.__RST_PRESET = {"mode": "pomodoro", "lang": "ko"};</script>
+  <script src="i18n.js"></script>
+  <script src="app.js"></script>
   <script defer src="/share.js"></script>
 </body>
 </html>

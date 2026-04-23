@@ -22,8 +22,8 @@ window.I18N = (() => {
 
   const DICT = {
     ko: {
-      'app.title': '무료 온라인 타이머 · 뽀모도로 · 스톱워치 | ReadySetTimer',
-      'app.tagline': '쉽고 빠른 무료 타이머',
+      'app.title': '프레젠테이션 타이머 · 발표용 타이머 · 뽀모도로 | ReadySetTimer',
+      'app.tagline': '발표에 특화된 무료 타이머',
 
       'tab.timer': '타이머',
       'tab.pomodoro': '뽀모도로',
@@ -147,8 +147,8 @@ window.I18N = (() => {
     },
 
     en: {
-      'app.title': 'Free Online Timer · Pomodoro · Stopwatch | ReadySetTimer',
-      'app.tagline': 'Simple, fast, free',
+      'app.title': 'Presentation Timer · Speech Timer · Pomodoro | ReadySetTimer',
+      'app.tagline': 'Free timer built for speakers',
 
       'tab.timer': 'Timer',
       'tab.pomodoro': 'Pomodoro',
@@ -272,8 +272,8 @@ window.I18N = (() => {
     },
 
     ja: {
-      'app.title': '無料オンラインタイマー・ポモドーロ・ストップウォッチ | ReadySetTimer',
-      'app.tagline': 'シンプル・速い・無料',
+      'app.title': 'プレゼンタイマー・発表用タイマー・ポモドーロ | ReadySetTimer',
+      'app.tagline': '発表のための無料タイマー',
 
       'tab.timer': 'タイマー',
       'tab.pomodoro': 'ポモドーロ',
@@ -397,8 +397,8 @@ window.I18N = (() => {
     },
 
     zh: {
-      'app.title': '免费在线计时器 · 番茄钟 · 秒表 | ReadySetTimer',
-      'app.tagline': '简单 · 快速 · 免费',
+      'app.title': '演讲计时器 · 演示计时器 · 番茄钟 | ReadySetTimer',
+      'app.tagline': '为演讲者打造的免费计时器',
 
       'tab.timer': '计时器',
       'tab.pomodoro': '番茄钟',
@@ -522,8 +522,8 @@ window.I18N = (() => {
     },
 
     es: {
-      'app.title': 'Temporizador online gratis · Pomodoro · Cronómetro | ReadySetTimer',
-      'app.tagline': 'Sencillo, rápido, gratis',
+      'app.title': 'Temporizador para presentaciones · Discursos · Pomodoro | ReadySetTimer',
+      'app.tagline': 'Temporizador gratis para oradores',
 
       'tab.timer': 'Temporizador',
       'tab.pomodoro': 'Pomodoro',
@@ -647,8 +647,8 @@ window.I18N = (() => {
     },
 
     pt: {
-      'app.title': 'Temporizador online grátis · Pomodoro · Cronômetro | ReadySetTimer',
-      'app.tagline': 'Simples, rápido, grátis',
+      'app.title': 'Temporizador para apresentações · Palestras · Pomodoro | ReadySetTimer',
+      'app.tagline': 'Temporizador grátis para apresentadores',
 
       'tab.timer': 'Temporizador',
       'tab.pomodoro': 'Pomodoro',
@@ -772,8 +772,8 @@ window.I18N = (() => {
     },
 
     fr: {
-      'app.title': 'Minuteur en ligne gratuit · Pomodoro · Chronomètre | ReadySetTimer',
-      'app.tagline': 'Simple, rapide, gratuit',
+      'app.title': 'Minuteur pour présentations · Discours · Pomodoro | ReadySetTimer',
+      'app.tagline': 'Minuteur gratuit pour présentateurs',
 
       'tab.timer': 'Minuteur',
       'tab.pomodoro': 'Pomodoro',
@@ -897,8 +897,8 @@ window.I18N = (() => {
     },
 
     de: {
-      'app.title': 'Kostenloser Online-Timer · Pomodoro · Stoppuhr | ReadySetTimer',
-      'app.tagline': 'Einfach, schnell, kostenlos',
+      'app.title': 'Präsentations-Timer · Redner-Timer · Pomodoro | ReadySetTimer',
+      'app.tagline': 'Kostenloser Timer für Vortragende',
 
       'tab.timer': 'Timer',
       'tab.pomodoro': 'Pomodoro',
@@ -1053,7 +1053,13 @@ window.I18N = (() => {
   function applyI18n(root = document) {
     // set lang attribute for hyphenation, etc.
     document.documentElement.setAttribute('lang', getLang());
-    document.title = t('app.title');
+    // Preserve the per-page HTML <title> on landing pages — they have
+    // unique SEO-tuned titles that must not be overwritten by the
+    // generic app.title translation.
+    const isLanding = !!(window.__RST_PRESET && (window.__RST_PRESET.t || window.__RST_PRESET.mode || window.__RST_PRESET.lang));
+    if (!isLanding) {
+      document.title = t('app.title');
+    }
 
     root.querySelectorAll('[data-i18n]').forEach(node => {
       const key = node.getAttribute('data-i18n');
