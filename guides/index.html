@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b0f17" />
+
+  <title>가이드 — 발표·집중·운동에 타이머를 활용하는 모든 노하우 | ReadySetTimer</title>
+  <meta name="description" content="ReadySetTimer 가이드 모음 — 뽀모도로 기법 완전 가이드, 발표 시간 관리법, 타이머로 공부 효율 2배 만들기, 인터벌 트레이닝, 시간 인식의 과학, 키보드 단축키까지." />
+  <meta name="keywords" content="타이머 가이드, 뽀모도로 가이드, 발표 가이드, 시간 관리 가이드, 공부법 가이드, 인터벌 트레이닝 가이드" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <link rel="canonical" href="https://rstimer.kr/guides/" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://rstimer.kr/guides/" />
+  <meta property="og:title" content="가이드 — 발표·집중·운동에 타이머를 활용하는 모든 노하우" />
+  <meta property="og:description" content="ReadySetTimer 가이드 모음" />
+  <meta property="og:image" content="https://rstimer.kr/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://rstimer.kr/og-image.png" />
+
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"CollectionPage","name":"ReadySetTimer 가이드","url":"https://rstimer.kr/guides/","description":"발표·집중·운동에 타이머를 활용하는 노하우를 정리한 가이드 모음","inLanguage":"ko","isPartOf":{"@type":"WebSite","name":"ReadySetTimer","url":"https://rstimer.kr/"}}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+    {"@type":"ListItem","position":1,"name":"홈","item":"https://rstimer.kr/"},
+    {"@type":"ListItem","position":2,"name":"가이드","item":"https://rstimer.kr/guides/"}
+  ]}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"ItemList","itemListElement":[
+    {"@type":"ListItem","position":1,"url":"https://rstimer.kr/guides/pomodoro-guide.html","name":"뽀모도로 기법 완전 가이드"},
+    {"@type":"ListItem","position":2,"url":"https://rstimer.kr/guides/presentation-timing.html","name":"발표 시간 관리의 모든 것"},
+    {"@type":"ListItem","position":3,"url":"https://rstimer.kr/guides/study-with-timer.html","name":"타이머로 공부 효율 2배"},
+    {"@type":"ListItem","position":4,"url":"https://rstimer.kr/guides/interval-training.html","name":"인터벌 트레이닝과 스톱워치"},
+    {"@type":"ListItem","position":5,"url":"https://rstimer.kr/guides/timer-science.html","name":"시간 인식의 과학"},
+    {"@type":"ListItem","position":6,"url":"https://rstimer.kr/guides/keyboard-shortcuts.html","name":"키보드 단축키 완전 정리"}
+  ]}
+  </script>
+
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='24' fill='none' stroke='%2322d3ee' stroke-width='5'/%3E%3Cpath d='M32 20v14l9 5' stroke='%2322d3ee' stroke-width='5' stroke-linecap='round' fill='none'/%3E%3Crect x='26' y='6' width='12' height='6' rx='2' fill='%2322d3ee'/%3E%3C/svg%3E" />
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500,region:['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB','CH','KR']});gtag('consent','default',{ad_storage:'granted',ad_user_data:'granted',ad_personalization:'granted',analytics_storage:'granted'});</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8257776038246961" crossorigin="anonymous"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2B3ZTR683M"></script>
+  <script>gtag('js',new Date());gtag('config','G-2B3ZTR683M');</script>
+  <style>
+    .guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 24px 0; }
+    .guide-card {
+      display: block; padding: 22px; border-radius: 16px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--line);
+      text-decoration: none; color: var(--ink); transition: all .2s;
+    }
+    .guide-card:hover { background: rgba(255,255,255,0.06); border-color: var(--accent); transform: translateY(-2px); }
+    .guide-card .gc-tag {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+      background: color-mix(in oklab, var(--accent) 20%, transparent);
+      color: var(--accent); margin-bottom: 10px;
+    }
+    .guide-card h3 { font-size: 17px; margin: 0 0 8px; color: var(--ink); }
+    .guide-card p { font-size: 14px; color: var(--ink-dim); line-height: 1.6; margin: 0; }
+    .guide-card .gc-meta { font-size: 12px; color: var(--ink-faint); margin-top: 12px; }
+  </style>
+</head>
+<body class="legal-page">
+  <div class="bg-layer" aria-hidden="true"></div>
+  <header class="legal-head">
+    <a class="legal-back" href="/"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg><span>ReadySetTimer</span></a>
+  </header>
+
+  <main class="legal-main">
+    <article>
+      <h1>가이드 — 타이머를 더 잘 쓰는 법</h1>
+      <p class="landing-lead">
+        ReadySetTimer를 단순히 시계로 쓰는 것을 넘어 <strong>발표·집중·운동·학습</strong>에서 진짜 가치 있게
+        활용할 수 있도록 정리한 가이드 모음입니다. 학습 과학·심리학 연구를 기반으로 한 실전 노하우를 담았습니다.
+      </p>
+
+      <div class="guide-grid">
+        <a class="guide-card" href="/guides/pomodoro-guide.html">
+          <span class="gc-tag">생산성</span>
+          <h3>뽀모도로 기법 완전 가이드</h3>
+          <p>25/5 사이클의 유래·과학적 근거, 분야별 변형 추천, 실전에서 부딪히는 8가지 함정까지 1500자 종합 가이드.</p>
+          <div class="gc-meta">8분 읽기 · 2026.04.24</div>
+        </a>
+
+        <a class="guide-card" href="/guides/presentation-timing.html">
+          <span class="gc-tag">발표</span>
+          <h3>발표 시간 관리의 모든 것</h3>
+          <p>TED·강의·피칭에서 시간을 정확히 통제하는 법. 슬라이드당 적정 시간 계산, 무대 타이머 운용, 분야별 함정 체크리스트.</p>
+          <div class="gc-meta">8분 읽기 · 2026.04.24</div>
+        </a>
+
+        <a class="guide-card" href="/guides/study-with-timer.html">
+          <span class="gc-tag">학습</span>
+          <h3>타이머로 공부 효율 2배</h3>
+          <p>액티브 리콜·분산학습·인터리빙 같은 학습 과학 원리를 타이머와 결합. 수능·자격증·대학 시험에 즉시 적용.</p>
+          <div class="gc-meta">8분 읽기 · 2026.04.24</div>
+        </a>
+
+        <a class="guide-card" href="/guides/interval-training.html">
+          <span class="gc-tag">운동</span>
+          <h3>인터벌 트레이닝과 스톱워치</h3>
+          <p>HIIT·타바타·EMOM·AMRAP·피라미드 등 대표 프로토콜을 정확히 실행하는 스톱워치 활용법과 운동 종목별 추천.</p>
+          <div class="gc-meta">8분 읽기 · 2026.04.24</div>
+        </a>
+
+        <a class="guide-card" href="/guides/timer-science.html">
+          <span class="gc-tag">심리학</span>
+          <h3>시간 인식의 과학</h3>
+          <p>시간감각의 왜곡, Zeigarnik 효과, 파킨슨의 법칙. 보이는 카운트다운이 왜 단순한 시계 이상의 도구인지 행동심리학으로 풀어봅니다.</p>
+          <div class="gc-meta">8분 읽기 · 2026.04.24</div>
+        </a>
+
+        <a class="guide-card" href="/guides/keyboard-shortcuts.html">
+          <span class="gc-tag">사용법</span>
+          <h3>키보드 단축키 완전 정리</h3>
+          <p>발표 중 마우스 없이 ReadySetTimer를 통제하는 모든 단축키. 발표 시나리오·인쇄용 카드까지 포함.</p>
+          <div class="gc-meta">5분 읽기 · 2026.04.24</div>
+        </a>
+      </div>
+
+      <h2>가이드는 누가 쓰나요?</h2>
+      <p>
+        가이드는 ReadySetTimer 운영팀이 자체 작성합니다. 발표 코칭·학습 과학·운동 트레이닝 분야의 공개 연구
+        문헌과 실전 경험을 바탕으로 검증된 정보만 담으려 노력합니다. 외부 기고를 환영하니
+        <a href="mailto:jjackyoon@gmail.com">jjackyoon@gmail.com</a>으로 제안 주세요.
+      </p>
+
+      <h2>도구로 바로 가기</h2>
+      <nav class="related-timers">
+        <a href="/">ReadySetTimer 홈</a>
+        <a href="/pomodoro.html">뽀모도로</a>
+        <a href="/stopwatch.html">스톱워치</a>
+        <a href="/25min.html">25분 타이머</a>
+        <a href="/15min.html">15분 타이머</a>
+        <a href="/5min.html">5분 타이머</a>
+      </nav>
+    </article>
+  </main>
+
+  <footer class="legal-foot">
+    <nav>
+      <a href="/">ReadySetTimer</a><span>·</span><a href="/guides/">가이드</a><span>·</span>
+      <a href="/about.html">About</a><span>·</span><a href="/privacy.html">Privacy</a><span>·</span>
+      <a href="/terms.html">Terms</a>
+    </nav>
+    <p>© 2026 ReadySetTimer · 무료 온라인 타이머 · 뽀모도로 · 스톱워치</p>
+  </footer>
+
+  <script defer src="/share.js"></script>
+</body>
+</html>
