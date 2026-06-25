@@ -30,17 +30,10 @@
   <url><loc>https://rstimer.kr/pomodoro.html</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://rstimer.kr/stopwatch.html</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
 
-  <!-- Duration landing pages -->
-  <url><loc>https://rstimer.kr/1min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://rstimer.kr/3min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://rstimer.kr/5min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://rstimer.kr/10min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://rstimer.kr/15min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://rstimer.kr/20min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://rstimer.kr/25min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://rstimer.kr/30min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://rstimer.kr/45min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://rstimer.kr/60min.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <!-- Duration landing pages: intentionally omitted from sitemap and marked
+       noindex,follow at the page level. They remain accessible by direct URL
+       (e.g., shared bookmarks) but are excluded from search results to keep
+       site-wide content quality high (avoid "thin/templated content" signal). -->
 
   <!-- Long-form guides (substantial original content for AdSense compliance) -->
   <url><loc>https://rstimer.kr/guides/</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
