@@ -1007,6 +1007,71 @@
       });
       return 0.5;
     },
+    gong(ctx, vol, t0) {
+      // Deep meditative gong — low fundamental + harmonics, long resonant decay
+      const freqs = [82.4, 165, 247.5, 330];
+      const amps = [0.55, 0.3, 0.18, 0.1];
+      const decays = [3.2, 2.7, 2.2, 1.8];
+      freqs.forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = f;
+        osc.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(amps[i] * vol, t0 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + decays[i]);
+        osc.start(t0); osc.stop(t0 + decays[i] + 0.1);
+      });
+      return 3.3;
+    },
+    ding(ctx, vol, t0) {
+      // Clean single "ding" — elevator-style, one bright sine
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 1760;   // A6
+      osc.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.32 * vol, t0 + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.55);
+      osc.start(t0); osc.stop(t0 + 0.6);
+      return 0.65;
+    },
+    arpeggio(ctx, vol, t0) {
+      // Cheerful ascending C major arpeggio — C E G C
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = f;
+        osc.connect(g); g.connect(ctx.destination);
+        const s = t0 + i * 0.11;
+        g.gain.setValueAtTime(0.0001, s);
+        g.gain.exponentialRampToValueAtTime(0.22 * vol, s + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, s + 0.4);
+        osc.start(s); osc.stop(s + 0.45);
+      });
+      return 0.9;
+    },
+    cuckoo(ctx, vol, t0) {
+      // Playful two-tone descending like a cuckoo clock — G then E
+      [783.99, 659.25].forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = f;
+        osc.connect(g); g.connect(ctx.destination);
+        const s = t0 + i * 0.30;
+        g.gain.setValueAtTime(0.0001, s);
+        g.gain.exponentialRampToValueAtTime(0.26 * vol, s + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.14 * vol, s + 0.16);
+        g.gain.exponentialRampToValueAtTime(0.0001, s + 0.25);
+        osc.start(s); osc.stop(s + 0.28);
+      });
+      return 0.75;
+    },
   };
 
   // kind: 'end' (default) or 'warn'
