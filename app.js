@@ -36,8 +36,14 @@
     autostart: true,
     sound: true,
     soundType: 'chime',    // 'chime' | 'bell' | 'beep' | 'soft' | 'digital'
-    soundVolume: 70,       // 0-100
+    soundVolume: 70,       // 0-100 (shared with warning)
     soundRepeat: 1,        // 1-10
+    // Heads-up alert before the timer ends — plays a different-toned sound
+    // when remaining time crosses `warnAtSec` from above.
+    warnEnabled: true,
+    warnAtSec: 60,         // seconds before end; 0 disables even if enabled
+    warnSoundType: 'soft', // gentler default than the finish chime
+    warnSoundRepeat: 1,    // 1-10
     color: true,
     bigFinal: true,
     bigFinalSec: 6,
@@ -57,6 +63,8 @@
     rafId: 0,
     cycle: 0,
     selectedPresetSec: null,
+    warned: false,          // heads-up warning fired for the current run/phase
+    warnTimer: 0,           // setTimeout id for the scheduled heads-up warning
 
     // stopwatch
     sw: {
@@ -130,11 +138,16 @@
     optSoundRepeat: $('#opt-sound-repeat'),
     optSoundVolume: $('#opt-sound-volume'),
     optVolVal: $('#opt-vol-val'),
+    optWarn: $('#opt-warn'),
+    optWarnAt: $('#opt-warn-at'),
+    optWarnSoundType: $('#opt-warn-sound-type'),
+    optWarnSoundRepeat: $('#opt-warn-sound-repeat'),
     optColor: $('#opt-color'),
     optBigFinal: $('#opt-hide-ms'),
     optBigFinalSec: $('#opt-bigfinal-sec'),
     btnSave: $('#btn-save'),
     btnTestSound: $('#btn-test-sound'),
+    btnTestWarn: $('#btn-test-warn'),
 
     customModal: $('#custom-modal'),
     cpH: $('#cp-h'), cpM: $('#cp-m'), cpS: $('#cp-s'), cpName: $('#cp-name'),
@@ -327,9 +340,49 @@
     updateTone();
   }
 
+  // Cancel any pending scheduled heads-up warning.
+  function clearWarnTimer() {
+    if (state.warnTimer) { clearTimeout(state.warnTimer); state.warnTimer = 0; }
+  }
+
+  // Schedule the heads-up warning based on the current remaining time.
+  // Primary path — reliable even when requestAnimationFrame is throttled
+  // by the browser (e.g. the tab is backgrounded).
+  function scheduleWarn() {
+    clearWarnTimer();
+    const s = state.settings;
+    const thresh = (s.warnAtSec | 0) * 1000;
+    if (!s.warnEnabled || state.warned || thresh <= 0) return;
+    if (state.durationMs <= thresh) return;               // total too short
+    if (state.remainingMs <= thresh) return;              // already past the threshold
+    const delay = state.remainingMs - thresh;
+    state.warnTimer = setTimeout(() => {
+      state.warnTimer = 0;
+      if (!state.running || state.warned) return;
+      state.warned = true;
+      playSound('warn');
+    }, delay);
+  }
+
   function tick() {
     const now = performance.now();
+    const prev = state.remainingMs;
     state.remainingMs = Math.max(0, state.endAt - now);
+
+    // Heads-up warning as we cross the threshold from above.
+    // Guarded so it never fires for timers whose total length is
+    // already shorter than the warning distance.
+    const s = state.settings;
+    const thresh = (s.warnAtSec | 0) * 1000;
+    if (
+      s.warnEnabled && !state.warned && thresh > 0 &&
+      state.durationMs > thresh &&
+      prev > thresh && state.remainingMs <= thresh && state.remainingMs > 0
+    ) {
+      state.warned = true;
+      playSound('warn');
+    }
+
     render();
     if (state.remainingMs <= 0) { finishPhase(); return; }
     state.rafId = requestAnimationFrame(tick);
@@ -344,13 +397,19 @@
         ? phaseDurationMs('work')
         : (state.selectedPresetSec ?? state.settings.timerMinutes * 60) * 1000;
       state.remainingMs = state.durationMs;
+      state.warned = false;
     } else if (state.mode === 'pomodoro' && state.phase === 'idle') {
       // first-ever pomodoro start: enter the work phase
       state.phase = 'work';
+      state.warned = false;
+    } else if (state.remainingMs === state.durationMs) {
+      // fresh start from the beginning of a run
+      state.warned = false;
     }
     state.running = true;
     state.endAt = performance.now() + state.remainingMs;
     state.rafId = requestAnimationFrame(tick);
+    scheduleWarn();
     render();
     maybeUnlockAudio();
     requestNotify();
@@ -360,6 +419,7 @@
     if (!state.running) return;
     state.running = false;
     cancelAnimationFrame(state.rafId);
+    clearWarnTimer();
     state.remainingMs = Math.max(0, state.endAt - performance.now());
     render();
   }
@@ -369,8 +429,10 @@
   function reset(toDefault = false) {
     state.running = false;
     cancelAnimationFrame(state.rafId);
+    clearWarnTimer();
     el.body.dataset.alert = '0';
     el.body.dataset.big = '0';
+    state.warned = false;
     if (toDefault) state.cycle = 0;
     if (state.mode === 'pomodoro') setPhase('idle', true);
     else {
@@ -401,7 +463,7 @@
       const secs = state.selectedPresetSec ?? (state.settings.timerMinutes * 60);
       state.durationMs = secs * 1000;
     }
-    if (resetTime) state.remainingMs = state.durationMs;
+    if (resetTime) { state.remainingMs = state.durationMs; state.warned = false; clearWarnTimer(); }
     render();
   }
 
@@ -417,6 +479,7 @@
   function finishPhase() {
     state.running = false;
     cancelAnimationFrame(state.rafId);
+    clearWarnTimer();
     playSound();
     notify();
 
@@ -425,6 +488,7 @@
       state.phase = next;
       state.durationMs = phaseDurationMs(next);
       state.remainingMs = state.durationMs;
+      state.warned = false;
       render();
       const tk = next === 'work' ? 'toast.focusStart' : next === 'long' ? 'toast.longBreak' : 'toast.shortBreak';
       toast(t(tk));
@@ -440,11 +504,13 @@
   function skip() {
     if (state.mode !== 'pomodoro') { reset(); return; }
     cancelAnimationFrame(state.rafId);
+    clearWarnTimer();
     state.running = false;
     const next = nextPomodoroPhase();
     state.phase = next;
     state.durationMs = phaseDurationMs(next);
     state.remainingMs = state.durationMs;
+    state.warned = false;
     render();
     if (state.settings.autostart) start();
   }
@@ -943,13 +1009,22 @@
     },
   };
 
-  function playSound(force = false) {
-    if (!force && !state.settings.sound) return;
+  // kind: 'end' (default) or 'warn'
+  function playSound(kind = 'end', force = false) {
+    // Accept legacy positional (force) form: playSound(true)
+    if (typeof kind === 'boolean') { force = kind; kind = 'end'; }
+    const s = state.settings;
+    if (!force) {
+      if (!s.sound) return;
+      if (kind === 'warn' && !s.warnEnabled) return;
+    }
     maybeUnlockAudio();
     if (!audioCtx) return;
-    const variant = SOUND_PRESETS[state.settings.soundType] || SOUND_PRESETS.chime;
-    const vol = clamp((state.settings.soundVolume ?? 70) / 100, 0, 1);
-    const repeat = clamp(state.settings.soundRepeat || 1, 1, 10);
+    const typeKey = kind === 'warn' ? (s.warnSoundType || 'soft') : (s.soundType || 'chime');
+    const repeatN = kind === 'warn' ? (s.warnSoundRepeat || 1) : (s.soundRepeat || 1);
+    const variant = SOUND_PRESETS[typeKey] || SOUND_PRESETS.chime;
+    const vol = clamp((s.soundVolume ?? 70) / 100, 0, 1);
+    const repeat = clamp(repeatN, 1, 10);
     let t = audioCtx.currentTime + 0.02;
     for (let i = 0; i < repeat; i++) {
       const dur = variant(audioCtx, vol, t);
@@ -998,6 +1073,10 @@
     el.optSoundRepeat.value = s.soundRepeat || 1;
     el.optSoundVolume.value = s.soundVolume ?? 70;
     el.optVolVal.textContent = `${s.soundVolume ?? 70}%`;
+    el.optWarn.checked = !!s.warnEnabled;
+    el.optWarnAt.value = s.warnAtSec ?? 60;
+    el.optWarnSoundType.value = s.warnSoundType || 'soft';
+    el.optWarnSoundRepeat.value = s.warnSoundRepeat || 1;
     el.optColor.checked = !!s.color;
     el.optBigFinal.checked = !!s.bigFinal;
     el.optBigFinalSec.value = s.bigFinalSec || 6;
@@ -1016,6 +1095,10 @@
     s.soundType    = el.optSoundType.value;
     s.soundRepeat  = clamp(+el.optSoundRepeat.value || 1, 1, 10);
     s.soundVolume  = clamp(+el.optSoundVolume.value || 70, 0, 100);
+    s.warnEnabled  = el.optWarn.checked;
+    s.warnAtSec    = clamp(+el.optWarnAt.value || 60, 5, 600);
+    s.warnSoundType= el.optWarnSoundType.value;
+    s.warnSoundRepeat = clamp(+el.optWarnSoundRepeat.value || 1, 1, 10);
     s.color        = el.optColor.checked;
     s.bigFinal     = el.optBigFinal.checked;
     s.bigFinalSec  = clamp(+el.optBigFinalSec.value || 6, 1, 60);
@@ -1030,6 +1113,9 @@
         state.remainingMs = state.durationMs;
       }
     }
+    // If a timer is currently running, re-align the heads-up warning
+    // with the (possibly changed) warn settings.
+    if (state.running) scheduleWarn();
     render();
     toast(t('toast.settingsSaved'));
   }
@@ -1068,7 +1154,7 @@
     state.settings.sound = !state.settings.sound;
     saveSettings();
     updateSoundButton();
-    if (state.settings.sound) { maybeUnlockAudio(); playSound(true); }
+    if (state.settings.sound) { maybeUnlockAudio(); playSound('end', true); }
     toast(t(state.settings.sound ? 'toast.soundOn' : 'toast.soundOff'));
   });
 
@@ -1100,8 +1186,18 @@
     state.settings.soundVolume = +el.optSoundVolume.value;
     state.settings.soundRepeat = +el.optSoundRepeat.value;
     maybeUnlockAudio();
-    playSound(true);
+    playSound('end', true);
     state.settings = prev; // restore (saveSettingsFromForm will persist on save)
+  });
+  el.btnTestWarn?.addEventListener('click', () => {
+    const prev = { ...state.settings };
+    state.settings.warnEnabled = true;
+    state.settings.warnSoundType = el.optWarnSoundType.value;
+    state.settings.warnSoundRepeat = +el.optWarnSoundRepeat.value;
+    state.settings.soundVolume = +el.optSoundVolume.value;
+    maybeUnlockAudio();
+    playSound('warn', true);
+    state.settings = prev;
   });
   el.optSoundVolume.addEventListener('input', () => {
     el.optVolVal.textContent = `${el.optSoundVolume.value}%`;

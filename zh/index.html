@@ -342,7 +342,7 @@
       </section>
 
       <section class="modal-section">
-        <h3 data-i18n="settings.sound">Sound</h3>
+        <h3 data-i18n="settings.soundFinish">End sound</h3>
         <label class="check"><input type="checkbox" id="opt-sound" checked /> <span data-i18n="settings.soundUse">Play sound on finish</span></label>
         <div class="grid-3">
           <label><span data-i18n="settings.soundType">Sound</span>
@@ -361,6 +361,29 @@
             <input type="range" id="opt-sound-volume" min="0" max="100" value="70" />
           </label>
           <button type="button" class="btn btn-ghost sound-test" id="btn-test-sound" data-i18n="btn.preview">Preview</button>
+        </div>
+      </section>
+
+      <section class="modal-section">
+        <h3 data-i18n="settings.soundWarn">Heads-up alert</h3>
+        <label class="check"><input type="checkbox" id="opt-warn" checked /> <span data-i18n="settings.warnUse">Play alert before the timer ends</span></label>
+        <div class="grid-3">
+          <label><span data-i18n="settings.warnAt">Alert at (sec left)</span>
+            <input type="number" id="opt-warn-at" min="5" max="600" step="5" value="60" />
+          </label>
+          <label><span data-i18n="settings.warnSoundType">Alert sound</span>
+            <select id="opt-warn-sound-type">
+              <option value="chime" data-i18n="sound.chime">Chime</option>
+              <option value="bell" data-i18n="sound.bell">Bell</option>
+              <option value="beep" data-i18n="sound.beep">Beep</option>
+              <option value="soft" data-i18n="sound.soft">Soft</option>
+              <option value="digital" data-i18n="sound.digital">Digital</option>
+            </select>
+          </label>
+          <label><span data-i18n="settings.warnRepeat">Repeat</span>
+            <input type="number" id="opt-warn-sound-repeat" min="1" max="10" value="1" />
+          </label>
+          <button type="button" class="btn btn-ghost sound-test" id="btn-test-warn" data-i18n="btn.preview">Preview</button>
         </div>
       </section>
 
