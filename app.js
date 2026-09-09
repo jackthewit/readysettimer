@@ -25,7 +25,10 @@
   // ---------- constants ----------
   const LS_KEY = 'focus-timer:v1';
   const LS_HISTORY = 'focus-timer:sw-history:v1';
-  const RING_CIRC = 2 * Math.PI * 186;
+  // Progress path total — matches pathLength="1000" on the SVG rect,
+  // so a rectangular (or any) stroke animates with the same [0..1000] range
+  // that the old r=186 circle used.
+  const RING_CIRC = 1000;
 
   const DEFAULTS = {
     timerMinutes: 25,
@@ -301,8 +304,11 @@
       document.title = __IS_LANDING ? __PAGE_TITLE : t('app.title');
     }
 
-    // ring progress
+    // Progress fill — the bottom-up phase-colored fill on the background
+    // grows as time drains. --progress runs 0 (just started) → 1 (done).
     const ratio = state.durationMs > 0 ? ms / state.durationMs : 0;
+    el.body.style.setProperty('--progress', (1 - ratio).toFixed(4));
+    // Legacy SVG ring (kept hidden, but still updated for backward compat).
     el.ring.style.strokeDashoffset = (RING_CIRC * (1 - ratio)).toFixed(2);
 
     // phase label
