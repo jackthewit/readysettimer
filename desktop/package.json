@@ -1,0 +1,73 @@
+{
+  "name": "readysettimer-desktop",
+  "productName": "ReadySetTimer",
+  "version": "1.0.0",
+  "description": "발표·프레젠테이션에 특화된 오프라인 타이머 — Pomodoro + Stopwatch + 다국어 지원",
+  "main": "main.js",
+  "author": {
+    "name": "ReadySetTimer",
+    "email": "jjackyoon@gmail.com"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "icon": "node build/make-icon.js",
+    "build:web": "node build/build.js",
+    "prestart": "npm run build:web",
+    "start": "electron .",
+    "prepack": "npm run build:web && npm run icon",
+    "pack": "electron-builder --dir",
+    "predist": "npm run build:web && npm run icon",
+    "dist": "electron-builder -mw",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^32.0.0",
+    "electron-builder": "^25.0.0",
+    "sharp": "^0.33.0"
+  },
+  "build": {
+    "appId": "kr.rstimer.desktop",
+    "productName": "ReadySetTimer",
+    "copyright": "© 2026 ReadySetTimer",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        { "target": "dmg", "arch": ["universal"] },
+        { "target": "zip", "arch": ["universal"] }
+      ],
+      "icon": "build/icon.png",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null
+    },
+    "dmg": {
+      "title": "ReadySetTimer ${version}"
+    },
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ReadySetTimer"
+    }
+  }
+}
