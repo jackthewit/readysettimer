@@ -27,3 +27,7 @@ python3 -m http.server 5173
 
 ## 기술
 순수 HTML/CSS/JS. Chrome에 최적화 (`color-mix`, `<dialog>`, `backdrop-filter`, `aspect-ratio` 사용).
+
+## 짹짹이짐 ONLINE (`jjackgym/`)
+짹짹이 바른자세 스튜디오 캐릭터로 만든 동시접속 온라인 헬스장 — 필라테스샵/웨이트샵, 쉬는 시간 전용 채팅, AI PT 부리부리 쌤.
+Node + WebSocket 서버가 필요해서 이 정적 사이트와 따로 배포합니다. 자세한 내용은 [jjackgym/README.md](jjackgym/README.md).

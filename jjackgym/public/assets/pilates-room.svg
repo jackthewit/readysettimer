@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMax slice">
+  <defs>
+    <pattern id="slats" width="28" height="10" patternUnits="userSpaceOnUse">
+      <rect width="28" height="10" fill="#E5A65E"/>
+      <line x1="27" y1="0" x2="27" y2="10" stroke="#B8763A" stroke-width="3"/>
+    </pattern>
+    <pattern id="speck" width="60" height="60" patternUnits="userSpaceOnUse">
+      <rect width="60" height="60" fill="#EBCB98"/>
+      <circle cx="12" cy="18" r="1.6" fill="#D6AF78"/>
+      <circle cx="44" cy="40" r="1.4" fill="#D6AF78"/>
+      <circle cx="30" cy="8" r="1.2" fill="#F5DDB5"/>
+    </pattern>
+  </defs>
+  <g stroke="#2B2B2B" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <!-- wall + ceiling -->
+    <rect x="-10" y="-10" width="1620" height="640" fill="#FFF4D8"/>
+    <rect x="-10" y="-10" width="1620" height="100" fill="#FBE8BE"/>
+    <g fill="#FFFFFF">
+      <circle cx="260" cy="45" r="13"/><circle cx="620" cy="45" r="13"/>
+      <circle cx="980" cy="45" r="13"/><circle cx="1340" cy="45" r="13"/>
+    </g>
+    <!-- wood slat panel -->
+    <rect x="1170" y="90" width="440" height="530" fill="url(#slats)"/>
+    <!-- mirror -->
+    <rect x="50" y="150" width="310" height="420" rx="6" fill="#DDF0F4"/>
+    <g stroke="#FFFFFF" stroke-width="8">
+      <line x1="110" y1="230" x2="190" y2="170"/><line x1="120" y1="290" x2="250" y2="190"/>
+    </g>
+    <!-- window -->
+    <rect x="450" y="160" width="500" height="320" rx="4" fill="#A9DBEE"/>
+    <line x1="700" y1="160" x2="700" y2="480"/>
+    <line x1="450" y1="330" x2="950" y2="330"/>
+    <g stroke="#FFFFFF" stroke-width="7">
+      <line x1="490" y1="300" x2="560" y2="200"/><line x1="530" y1="310" x2="610" y2="200"/>
+      <line x1="740" y1="300" x2="810" y2="200"/>
+    </g>
+    <rect x="430" y="480" width="540" height="22" fill="#FFFFFF"/>
+    <!-- wall shelf with rings / balls -->
+    <line x1="990" y1="300" x2="1150" y2="300"/>
+    <circle cx="1030" cy="262" r="34" fill="none" stroke-width="10" stroke="#2B2B2B"/>
+    <circle cx="1030" cy="262" r="34" fill="none" stroke-width="5" stroke="#7FCFC3"/>
+    <rect x="1090" y="250" width="44" height="50" rx="8" fill="#F7A9B8"/>
+    <!-- floor -->
+    <polygon points="-10,620 1610,620 1610,1010 -10,1010" fill="url(#speck)"/>
+    <g stroke="#D4AE79" stroke-width="3">
+      <line x1="800" y1="620" x2="-400" y2="1000"/><line x1="800" y1="620" x2="0" y2="1000"/>
+      <line x1="800" y1="620" x2="400" y2="1000"/><line x1="800" y1="620" x2="800" y2="1000"/>
+      <line x1="800" y1="620" x2="1200" y2="1000"/><line x1="800" y1="620" x2="1600" y2="1000"/>
+      <line x1="800" y1="620" x2="2000" y2="1000"/>
+      <line x1="-10" y1="700" x2="1610" y2="700"/><line x1="-10" y1="810" x2="1610" y2="810"/>
+    </g>
+    <line x1="-10" y1="620" x2="1610" y2="620"/>
+    <!-- reformers along the back wall -->
+    <g id="reformer">
+      <rect x="430" y="560" width="260" height="34" rx="10" fill="#FFFFFF"/>
+      <rect x="470" y="545" width="110" height="22" rx="8" fill="#7FCFC3"/>
+      <rect x="470" y="535" width="22" height="16" rx="4" fill="#2B2B2B"/>
+      <line x1="660" y1="560" x2="690" y2="525"/>
+      <line x1="690" y1="525" x2="690" y2="560"/>
+      <line x1="450" y1="594" x2="450" y2="622"/><line x1="670" y1="594" x2="670" y2="622"/>
+    </g>
+    <use href="#reformer" x="-330"/>
+    <use href="#reformer" x="340"/>
+    <use href="#reformer" x="680"/>
+    <!-- plant -->
+    <path d="M1505 560 q-40 -90 -10 -170 q30 70 10 170z" fill="#8CC97A"/>
+    <path d="M1520 560 q10 -110 70 -150 q-10 90 -70 150z" fill="#6DB35E"/>
+    <path d="M1495 560 q-80 -50 -90 -120 q60 30 90 120z" fill="#6DB35E"/>
+    <path d="M1470 560 h90 l-12 70 h-66z" fill="#F2F2F2"/>
+    <!-- big exercise ball -->
+    <circle cx="1360" cy="580" r="48" fill="#C9B2F0"/>
+    <path d="M1325 560 q35 -30 70 0" fill="none" stroke="#FFFFFF" stroke-width="6"/>
+  </g>
+</svg>
