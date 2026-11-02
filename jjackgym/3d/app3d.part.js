@@ -1,7 +1,7 @@
-// 짹짹이짐 ONLINE 3D — claude.ai 공유 페이지 버전
+// ONLINE GYM — claude.ai 공유 페이지 버전
 // 3D 엔진·캐릭터·기구·동작: 「짹짹이 모션 스튜디오」 (window.GymEngine)
 // 규칙: 기구는 한 명씩(쓰는 중이면 줄 서기) / 누를 때마다 동작 1회 / 세트를 끝내면 1~3분 랜덤 휴식, 그때만 채팅 / PT는 체험 1회 후 이용권.
-// 접속자·기구 점유·줄·위치·몸짓은 room presence, 채팅은 room 이벤트, 부리부리 쌤은 sample(보는 사람의 Claude).
+// 접속자·기구 점유·줄·위치·몸짓은 room presence, 채팅은 room 이벤트, 부리부리 쌤은 pt-knowledge.part.js의 지식으로 답한다(AI 안 씀).
 const $ = (s, el = document) => el.querySelector(s);
 const G = window.GymEngine;
 const T = G.THREE;
@@ -9,66 +9,136 @@ const T = G.THREE;
 // ------------------------------------------------------------------ 규칙 숫자 (여기만 바꾸면 됨)
 const RULES = {
   setsPerStation: 3,
-  restMinSec: 60,
-  restMaxSec: 180,
-  trialQuestions: 3, // 체험 PT 1회 = 질문 3개
+  restMinSec: 20,
+  restMaxSec: 20,
   jjakScale: 1.4,    // 짹짹이 크기 (기구에 맞춤)
   repSpeed: 1.4,     // 동작 재생 속도
-  walkAnim: 3.0,     // 걷기 동작 재생 속도
-  moveSpeed: 1.25,   // 걷는 속도 (m/초)
+  walkAnim: 4.2,     // 걷기 동작 재생 속도
+  moveSpeed: 2.1,    // 걷는 속도 (m/초) — 방이 넓어져서 빨라짐
+  ptSessionSec: 180, // PT 한 번의 길이: 쌤이 옆에 머무는 시간
+  classEveryMin: 30, // 함께 스트레칭: 몇 분마다
+  classSec: 120,     // 함께 스트레칭 길이
+  nearAvatars: 14,   // 화면에 그리는 다른 사람 수 (가까운 순). 휴대폰은 절반
   queueStep: 0.7,    // 줄 간격 (m)
   idleHoldSec: 90,   // 줄이 있는데 이만큼 멈춰 있으면 다음 사람에게 넘김
   coachWalkSec: 30,  // 부리부리 쌤이 자리를 옮기는 간격
   gestureGapMs: 900, // 몸짓 연타 막기
 };
 
+// 후원 금액 (임시. 결제를 붙일 때 여기만 바꾸면 됨)
+const DONATIONS = [
+  { id: 'd1', name: '물 한 잔', price: '1,000원' },
+  { id: 'd3', name: '단백질 한 잔', price: '3,000원' },
+  { id: 'd10', name: '하루 치 서버비', price: '10,000원' },
+];
+// 처음 온 사람에게 붙여 주는 닉네임 (메뉴에서 바꿀 수 있음)
+// 잔잔한 이름 (예: 느린 스쿼트, 작은 덤벨)
+const NICK_A = ['느린', '작은', '꾸준한', '고요한', '다정한', '가벼운', '조용한', '천천한', '단단한', '성실한', '포근한', '오늘의'];
+const NICK_B = ['스쿼트', '덤벨', '플랭크', '런지', '매트', '케틀벨', '짐볼', '폼롤러', '스트레칭', '호흡', '어깨', '허벅지', '등근육', '발걸음'];
+const randomNick = () => `${NICK_A[Math.floor(Math.random() * NICK_A.length)]} ${NICK_B[Math.floor(Math.random() * NICK_B.length)]}`;
+
 // ------------------------------------------------------------------ 샵 · 기구
-// prop/idx: 세트 안의 기구 / add: 따로 깔아 주는 기구 / stand: 서서 하는 운동 위치(기구 기준)
+// at: 기구 종류와 자리 / stand: 서서 하는 운동 위치(기구 기준) / lift: 기구 위로 올라서는 높이
 const SHOPS = {
   pilates: {
-    id: 'pilates', set: 'pilates', name: '필라테스샵', tagline: '리포머 2대 · 매트 4장', reps: 10,
-    coachSpots: [{ x: 3.1, z: -1.5 }, { x: 0, z: -2.6 }, { x: -3.1, z: -1.2 }, { x: 3.1, z: 1.2 }], spawn: { x: 0, z: 2.2 },
+    id: 'pilates', set: 'pilatesWide', name: '필라테스샵', tagline: '', reps: 10,
+    // 쌤의 첫 자리는 안내 데스크 뒤
+    coachSpots: [{ x: 5, z: -7.7 }, { x: -3.2, z: -3.6 }, { x: -8.2, z: -2.6 }, { x: 2.6, z: 3.2 }, { x: 7.2, z: -1.6 }], spawn: { x: 7, z: -3.4 },
     stations: [
-      { id: 'rf1', prop: 'reformer', idx: 0, name: '리포머 1', ex: '풋워크', preset: 'rfFootwork', cue: '발바닥 전체로 밀고, 골반은 중립! 허리 들리지 않게~' },
-      { id: 'rf2', prop: 'reformer', idx: 1, name: '리포머 2', ex: '암 풀', preset: 'rfArmPull', cue: '어깨 으쓱 말고 날개뼈부터! 팔로만 당기지 마~' },
-      { id: 'm1', add: { prop: 'yogaMat', x: -1.35, z: -0.8 }, name: '매트 1', ex: '브릿지', preset: 'bridge', cue: '허리로 들어 올리지 마! 엉덩이로 밀어 올려~' },
-      { id: 'm2', add: { prop: 'yogaMat', x: 1.35, z: -0.8 }, name: '매트 2', ex: '헌드레드', preset: 'hundred', cue: '목에 힘 빼고 배로 버텨! 숨은 짧게 끊어서~' },
-      { id: 'm3', add: { prop: 'yogaMat', x: -1.35, z: 0.7 }, name: '매트 3', ex: '캣 / 카우', preset: 'catCow', cue: '목만 까딱하면 안 돼! 척추 전체를 움직여봐' },
-      { id: 'm4', add: { prop: 'yogaMat', x: 1.35, z: 0.7 }, name: '매트 4', ex: '데드버그', preset: 'deadBug', cue: '허리가 바닥에서 뜨지 않게! 배에 힘 꽉!' },
+      { id: 'rf1', at: { prop: 'reformer', x: -8.8, z: -6.4 }, name: '리포머 1', ex: '풋워크', preset: 'rfFootwork', cue: '발바닥 전체로 밀어 봐. 골반은 그대로 두고, 허리가 뜨지 않게.' },
+      { id: 'rf2', at: { prop: 'reformer', x: -5.4, z: -6.4 }, name: '리포머 2', ex: '암 풀', preset: 'rfArmPull', cue: '어깨가 올라가지 않게 날개뼈부터 내려. 팔로만 당기면 안 돼.' },
+      { id: 'rf3', at: { prop: 'reformer', x: -2.0, z: -6.4 }, name: '리포머 3', ex: '힐 프레스', preset: 'rfHeels', cue: '뒤꿈치로 밀어. 무릎은 발끝 쪽으로, 다 펴도 잠그지는 말고.' },
+      { id: 'rf4', at: { prop: 'reformer', x: 1.4, z: -6.4 }, name: '리포머 4', ex: '헌드레드', preset: 'rfHundred', cue: '목에 힘 빼고 배로 버텨. 팔은 짧고 가볍게.' },
+      { id: 'm1', at: { prop: 'yogaMat', x: -8.4, z: -1.0 }, name: '매트 1', ex: '브릿지', preset: 'bridge', cue: '허리로 들지 말고 엉덩이로 밀어 올려.' },
+      { id: 'm2', at: { prop: 'yogaMat', x: -5.0, z: -1.0 }, name: '매트 2', ex: '헌드레드', preset: 'hundred', cue: '목에 힘 빼고 배로 버텨. 숨은 짧게 끊어서 쉬고.' },
+      { id: 'm3', at: { prop: 'yogaMat', x: -1.6, z: -1.0 }, name: '매트 3', ex: '캣 / 카우', preset: 'catCow', cue: '목만 움직이지 말고 척추 전체를 움직여 봐.' },
+      { id: 'm4', at: { prop: 'yogaMat', x: -8.4, z: 1.6 }, name: '매트 4', ex: '데드버그', preset: 'deadBug', cue: '허리가 바닥에서 뜨지 않게, 배에 힘 주고.' },
+      { id: 'm5', at: { prop: 'yogaMat', x: -5.0, z: 1.6 }, name: '매트 5', ex: '롤업', preset: 'rollUp', cue: '반동 없이 척추를 하나씩 말아 올려. 힘들면 무릎을 굽혀도 돼.' },
+      { id: 'm6', at: { prop: 'yogaMat', x: -1.6, z: 1.6 }, name: '매트 6', ex: '스파인 트위스트', preset: 'spineTwist', cue: '골반은 고정하고 등부터 돌려. 숨을 내쉬면서 조금 더.' },
+      { id: 'ring', at: { prop: 'pilatesRing', x: 2.6, z: 0.4 }, stand: { dx: 0, dz: 0 }, name: '필라테스 링', ex: '링 조이기', preset: 'ringSqueeze', cue: '어깨는 내리고, 가슴 앞에서 천천히 조여. 숨은 참지 말고.' },
+      { id: 'rf5', at: { prop: 'reformer', x: 4.8, z: -2.6 }, name: '리포머 5', ex: '한 다리 풋워크', preset: 'rfSingleLeg', cue: '한 발로 천천히 밀어. 골반이 기울지 않게.' },
+      { id: 'm7', at: { prop: 'yogaMat', x: -8.4, z: -3.6 }, name: '매트 7', ex: '티저', preset: 'teaser', cue: '배로 들어 올려. 어려우면 다리를 조금만 들어도 돼.' },
+      { id: 'm8', at: { prop: 'yogaMat', x: -5.0, z: -3.6 }, name: '매트 8', ex: '사이드 킥', preset: 'sideKick', cue: '골반이 뒤로 넘어가지 않게 잡고, 다리만 움직여.' },
+      { id: 'm9', at: { prop: 'yogaMat', x: -1.6, z: -3.6 }, name: '매트 9', ex: '스완', preset: 'swan', cue: '허리로 꺾지 말고 가슴을 앞으로 길게 뽑아.' },
+      { id: 'm10', at: { prop: 'yogaMat', x: 1.6, z: -3.6 }, name: '매트 10', ex: '버드독', preset: 'birdDog', cue: '골반이 돌아가지 않게. 팔다리는 멀리 길게.' },
+      { id: 'step', at: { prop: 'stepBox', x: 8.4, z: -1.2 }, stand: { dx: 0, dz: 0 }, lift: 0.2, name: '스텝박스', ex: '카프 레이즈', preset: 'calfRaise', cue: '발목으로 천천히 올라갔다 천천히 내려와.' },
+      { id: 'cad', at: { prop: 'cadillac', x: -9.4, z: 4, ry: 0 }, name: '캐딜락', ex: '레그 스프링', preset: 'cadLegSpring', cue: '허리가 뜨지 않을 만큼만 내려. 배에 힘 주고 천천히.' },
+      { id: 'wunda', at: { prop: 'wundaChair', x: -6.3, z: 4 }, stand: { dx: 0, dz: 0.16 }, seat: 0.64, pedal: true, name: '운다 체어', ex: '시티드 풋워크', preset: 'wundaFootwork', cue: '허리 세우고 앉아서 발바닥으로 페달을 눌러. 올라올 때도 천천히.' },
+      { id: 'barrel', at: { prop: 'ladderBarrel', x: -3.8, z: 4 }, stand: { dx: 0.25, dz: 0 }, seat: 0.94, face: -90, name: '래더 바렐', ex: '숏 박스 라운드 백', preset: 'barrelRoundBack', cue: '등을 둥글게 말면서 배로 버텨. 허리가 꺾이면 범위를 줄여.' },
+      { id: 'ball1', at: { prop: 'gymBall', x: 5.6, z: 1.6 }, stand: { dx: 0, dz: 0 }, seat: 0.6, name: '짐볼 1', ex: '시티드 마치', preset: 'ballMarch', cue: '볼이 흔들려도 골반은 수평으로. 무릎은 조금만 들어도 돼.' },
+      { id: 'ball2', at: { prop: 'gymBall', x: 7.4, z: 1.6 }, stand: { dx: 0, dz: 0 }, seat: 0.6, name: '짐볼 2', ex: '시티드 트위스트', preset: 'ballTwist', cue: '골반은 앞을 보고 등부터 돌려. 숨 내쉬면서 천천히.' },
+      { id: 'ball3', at: { prop: 'gymBall', x: 9.2, z: 1.6 }, stand: { dx: 0, dz: 0 }, seat: 0.6, name: '짐볼 3', ex: '사이드 벤드', preset: 'ballSideBend', cue: '앞으로 숙이지 말고 옆으로만. 옆구리가 늘어나는 만큼만 해.' },
+      { id: 'roll1', at: { prop: 'foamRoller', x: 3.0, z: 4 }, name: '폼롤러 1', ex: '가슴 열기', preset: 'rollerChestOpen', cue: '롤러 위에 척추를 길게 놓고, 팔 무게로 가슴을 열어. 숨은 편하게.' },
+      { id: 'roll2', at: { prop: 'foamRoller', x: 5.8, z: 4 }, name: '폼롤러 2', ex: '데드버그', preset: 'rollerDeadBug', cue: '몸이 기울지 않게 배에 힘 주고. 작게 움직여도 충분해.' },
+      { id: 'mroll1', at: { prop: 'yogaMatRolled', x: 8.2, z: 3.8, ry: 90 }, stand: { dx: 0, dz: 0.95 }, name: '말린 매트 1', ex: '앞으로 숙이기', preset: 'seatedFold', cue: '허리를 말지 말고 고관절부터 접어. 당기는 데서 멈추고 숨 쉬어.' },
+      { id: 'mroll2', at: { prop: 'yogaMatRolled', x: 9.6, z: 3.8, ry: 90 }, stand: { dx: 0, dz: 0.95 }, name: '말린 매트 2', ex: '나비 자세', preset: 'butterfly', cue: '무릎을 억지로 누르지 마. 허리 세우고 편한 만큼만.' },
     ],
   },
   weight: {
-    id: 'weight', set: 'gym', name: '웨이트샵', tagline: '스쿼트 랙 · 벤치 · 덤벨 · 케틀벨 · 매트', reps: 12,
-    coachSpots: [{ x: 3.2, z: 0.4 }, { x: 2.0, z: -2.6 }, { x: -3.4, z: 1.0 }, { x: 2.6, z: -1.6 }], spawn: { x: 0, z: 2.0 },
+    id: 'weight', set: 'gymWide', name: '웨이트샵', tagline: '', reps: 12,
+    coachSpots: [{ x: 5, z: -7.7 }, { x: -3.2, z: -2.2 }, { x: -6.4, z: -1.2 }, { x: 2.6, z: 3.4 }, { x: 7.2, z: -1.8 }], spawn: { x: 7, z: -3.4 },
     stations: [
-      { id: 'rack', prop: 'squatRack', idx: 0, stand: { dx: 0, dz: 0 }, name: '스쿼트 랙', ex: '백 스쿼트', preset: 'backSquat', cue: '엉덩이를 뒤로 빼면서 앉아! 무릎은 발끝 방향~' },
-      { id: 'bench', prop: 'flatBench', idx: 0, name: '벤치', ex: '벤치프레스', preset: 'bench', cue: '어깨 말리지 않게 가슴 활짝! 날개뼈는 벤치에 붙여~' },
-      { id: 'db', prop: 'dumbbellRack', idx: 0, stand: { dx: 0, dz: 0.75 }, name: '덤벨 랙', ex: '덤벨 컬', preset: 'curl', cue: '팔꿈치는 옆구리에 고정! 반동 쓰지 말고 천천히~' },
-      { id: 'kb', prop: 'kettlebell', idx: 0, stand: { dx: 0.1, dz: 0.75 }, name: '케틀벨', ex: '케틀벨 스윙', preset: 'kbSwing', cue: '팔로 들지 말고 엉덩이로 튕겨! 허리는 길게~' },
-      { id: 'mat', prop: 'yogaMat', idx: 0, name: '매트', ex: '푸시업', preset: 'pushup', cue: '엉덩이 처지지 않게 몸통 일자로! 무릎 대도 OK~' },
-      { id: 'mat2', add: { prop: 'yogaMat', x: 1.0, z: 0.4 }, name: '매트 2', ex: '힙 브릿지', preset: 'hipBridge', cue: '허리 꺾지 말고 엉덩이 꽉! 갈비뼈는 닫고~' },
+      { id: 'rack', at: { prop: 'squatRack', x: -8.6, z: -6.6 }, stand: { dx: 0, dz: 0 }, name: '스쿼트 랙 1', ex: '백 스쿼트', preset: 'backSquat', cue: '엉덩이를 뒤로 빼면서 앉아. 무릎은 발끝 쪽으로.' },
+      { id: 'rack2', at: { prop: 'squatRack', x: -5.2, z: -6.6 }, stand: { dx: 0, dz: 0 }, name: '스쿼트 랙 2', ex: '백 스쿼트', preset: 'backSquat', cue: '가슴 펴고 발바닥 전체로 밀어 올려. 허리는 길게.' },
+      { id: 'lift', at: { prop: 'liftPlatform', x: -1.2, z: -6.5 }, stand: { dx: 0, dz: 0 }, name: '플랫폼', ex: '데드리프트', preset: 'deadlift', cue: '허리를 말지 말고 엉덩이를 접어. 바는 몸 가까이.' },
+      { id: 'bench', at: { prop: 'flatBench', x: -8.2, z: -2.6, ry: 90 }, name: '벤치 1', ex: '벤치프레스', preset: 'bench', cue: '어깨가 말리지 않게 가슴을 펴. 날개뼈는 벤치에 붙이고.' },
+      { id: 'bench2', at: { prop: 'flatBench', x: -4.8, z: -2.6, ry: 90 }, name: '벤치 2', ex: '벤치프레스', preset: 'bench', cue: '발은 바닥에 단단히. 천천히 내리고 숨 내쉬면서 밀어.' },
+      { id: 'db', at: { prop: 'dumbbellRack', x: -1.2, z: -3.2 }, stand: { dx: 0, dz: 0.85 }, name: '덤벨 랙 1', ex: '덤벨 컬', preset: 'curl', cue: '팔꿈치는 옆구리에 붙이고. 반동 없이 천천히.' },
+      { id: 'db2', at: { prop: 'dumbbellRack', x: 1.8, z: -3.2 }, stand: { dx: 0, dz: 0.85 }, name: '덤벨 랙 2', ex: '숄더 프레스', preset: 'press', cue: '갈비뼈가 들리지 않게 배에 힘 주고, 허리 꺾지 말고 밀어.' },
+      { id: 'db3', at: { prop: 'dumbbellRack', x: 4.8, z: -3.2 }, stand: { dx: 0, dz: 0.85 }, name: '덤벨 랙 3', ex: '사이드 레터럴', preset: 'lateral', cue: '어깨 으쓱하지 말고 팔꿈치부터 옆으로. 무게는 가볍게.' },
+      { id: 'kb', at: { prop: 'kettlebell', x: -8.2, z: 1.4 }, stand: { dx: 0.1, dz: 0.75 }, name: '케틀벨 1', ex: '케틀벨 스윙', preset: 'kbSwing', cue: '팔로 들지 말고 엉덩이로 튕겨. 허리는 길게.' },
+      { id: 'kb2', at: { prop: 'kettlebell', x: -5.2, z: 1.4 }, stand: { dx: 0.1, dz: 0.75 }, name: '케틀벨 2', ex: '고블릿 스쿼트', preset: 'gobletSquat', cue: '케틀벨은 가슴에 붙이고 엉덩이를 뒤로. 무릎은 발끝 쪽으로.' },
+      { id: 'mat', at: { prop: 'yogaMat', x: -1.8, z: 1.4 }, name: '매트 1', ex: '푸시업', preset: 'pushup', cue: '엉덩이가 처지지 않게 몸통을 일자로. 무릎을 대도 괜찮아.' },
+      { id: 'mat2', at: { prop: 'yogaMat', x: 1.4, z: 1.4 }, name: '매트 2', ex: '힙 브릿지', preset: 'hipBridge', cue: '허리 꺾지 말고 엉덩이에 힘 줘. 갈비뼈는 닫고.' },
+      { id: 'run', at: { prop: 'treadmill', x: 5.0, z: 1.2 }, stand: { dx: 0, dz: 0 }, lift: 0.09, cardio: 'run', name: '러닝머신 1', ex: '달리기', preset: 'run', cue: '누를수록 빨라져. 시선은 앞으로, 어깨 힘은 빼고.' },
+      { id: 'lat', at: { prop: 'latMachine', x: 2.4, z: -6.8 }, stand: { dx: 0, dz: 0 }, seat: 0.5, bar: { w: 1, from: [0, 2.3, 0.2] }, name: '랫풀다운', ex: '랫풀다운', preset: 'latPulldown', cue: '팔로 당기지 말고 팔꿈치를 옆구리로 끌어내려. 어깨는 내리고.' },
+      { id: 'rower', at: { prop: 'rowingMachine', x: -1.4, z: 4.4 }, stand: { dx: -0.1, dz: 0 }, seat: 0.3, face: 90, slide: -0.35, bar: { w: 0.36, from: [1.05, 0.52, 0] }, name: '로잉 머신', ex: '로잉', preset: 'rowerRow', cue: '다리부터 밀고, 그다음 등으로 당겨. 허리는 세운 채로.' },
+      { id: 'bike', at: { prop: 'spinBike', x: 1.6, z: 4.4 }, stand: { dx: 0, dz: 0 }, seat: 0.88, cardio: 'bike', name: '실내 자전거', ex: '자전거 타기', preset: 'bikePedal', cue: '누를수록 빨라져. 어깨 힘 빼고 허리는 길게.' },
+      { id: 'legext', at: { prop: 'legExtension', x: 4.4, z: 4.4 }, stand: { dx: 0, dz: 0 }, seat: 0.56, pedal: -1.1, name: '레그 익스텐션', ex: '레그 익스텐션', preset: 'legExtensionMove', cue: '반동 없이 무릎을 펴. 내릴 때도 천천히.' },
+      { id: 'db4', at: { prop: 'dumbbellRack', x: 8.4, z: -1.8 }, stand: { dx: 0, dz: 0.85 }, name: '덤벨 랙 4', ex: '벤트오버 로우', preset: 'row', cue: '허리를 편 채 숙이고, 팔꿈치를 뒤로 당겨.' },
+      { id: 'db5', at: { prop: 'dumbbellRack', x: -4.6, z: 3.8 }, stand: { dx: 0, dz: 0.95 }, name: '덤벨 랙 5', ex: '리버스 런지', preset: 'reverseLunge', cue: '뒤로 한 걸음 빼고 앉아. 앞무릎이 안쪽으로 모이지 않게.' },
+      { id: 'step', at: { prop: 'stepBox', x: -7, z: 4.4 }, stand: { dx: 0, dz: 0 }, lift: 0.2, name: '스텝박스', ex: '카프 레이즈', preset: 'calfRaise', cue: '발목으로 천천히 올라갔다 천천히 내려와.' },
+      { id: 'pull', at: { prop: 'pullupBar', x: -9.6, z: 4.2 }, stand: { dx: 0, dz: 0 }, lift: 0.86, name: '철봉', ex: '풀업', preset: 'pullUp', cue: '어깨부터 끌어내리고 가슴을 봉 쪽으로. 반동 없이 천천히.' },
+      { id: 'incline', at: { prop: 'inclineBench', x: 8.0, z: 4 }, stand: { dx: 0.18, dz: 0 }, seat: 0.48, face: 90, name: '인클라인 벤치', ex: '덤벨 프레스', preset: 'inclinePress', cue: '날개뼈를 등받이에 붙이고 가슴 위로 밀어. 허리는 너무 꺾지 말고.' },
+      { id: 'plate1', at: { prop: 'platesTree', x: -10.2, z: -4.8 }, stand: { dx: 0, dz: 1 }, plate: true, name: '원판 거치대 1', ex: '프런트 레이즈', preset: 'plateRaise', cue: '어깨 높이까지만 올려. 반동 없이, 내릴 때도 천천히.' },
+      { id: 'plate2', at: { prop: 'platesTree', x: -2.9, z: -8.1, s: 0.9 }, stand: { dx: 0, dz: 1 }, plate: true, name: '원판 거치대 2', ex: '원판 스쿼트', preset: 'plateSquat', cue: '원판은 가슴에 붙이고 엉덩이를 뒤로. 무릎은 발끝 쪽으로.' },
+      { id: 'run2', at: { prop: 'treadmill', x: 7.6, z: 1.2 }, stand: { dx: 0, dz: 0 }, lift: 0.09, cardio: 'run', name: '러닝머신 2', ex: '달리기', preset: 'run', cue: '누를수록 빨라져. 숨은 편하게, 발은 가볍게.' },
+      { id: 'stair', at: { prop: 'stairMill', x: 9.3, z: -4.6, ry: -90 }, stand: { dx: 0, dz: 0 }, face: -90, lift: 0.6, cardio: 'stair', name: '천국의 계단', ex: '계단 오르기', preset: 'stairClimb', cue: '누를수록 빨라져. 손잡이에 기대지 말고 발바닥 전체로 디뎌.' },
+      { id: 'stair2', at: { prop: 'stairMill', x: 9.7, z: 2.2, ry: -90 }, stand: { dx: 0, dz: 0 }, face: -90, lift: 0.6, cardio: 'stair', name: '천국의 계단 2', ex: '계단 오르기', preset: 'stairClimb', cue: '누를수록 빨라져. 상체는 세우고 엉덩이로 밀어 올려.' },
     ],
   },
 };
 const stationOf = (shopId, id) => SHOPS[shopId]?.stations.find((s) => s.id === id) || null;
-const BOUNDS = { x0: -4.9, x1: 4.9, z0: -3.6, z1: 2.8 };
+const BOUNDS = WORLD.bounds;
 
 // ------------------------------------------------------------------ helpers
 const COLOR_DEFS = {
-  orange: { label: '주황', h: null, hex: 0xF07D28 },
-  pink: { label: '핑크', h: 330, s: 0.55, v: 1.05, hex: 0xF29BC0 },
-  sky: { label: '하늘', h: 200, s: 0.75, v: 1.0, hex: 0x5DB7E3 },
-  mint: { label: '민트', h: 162, s: 0.6, v: 0.95, hex: 0x5CCDAE },
-  purple: { label: '보라', h: 268, s: 0.6, v: 0.95, hex: 0xA486E0 },
-  red: { label: '빨강', h: 356, s: 1.0, v: 0.88, hex: 0xE04848 },
+  orange: { label: '주황', hex: 0xF07D28 },
+  pink: { label: '핑크', hex: 0xF29BC0 },
+  sky: { label: '하늘', hex: 0x5DB7E3 },
+  mint: { label: '민트', hex: 0x5CCDAE },
+  purple: { label: '보라', hex: 0xA486E0 },
+  red: { label: '빨강', hex: 0xE04848 },
+  yellow: { label: '노랑', hex: 0xF2D531 },
+  lime: { label: '연두', hex: 0x9BD83F },
+  green: { label: '초록', hex: 0x2F9E5B },
+  navy: { label: '남색', hex: 0x2A3F86 },
+  white: { label: '흰색', hex: 0xF7F5F0 },
+  black: { label: '검정', hex: 0x2B2B2F },
 };
+// 나시 색: 기본색 이름 또는 #rrggbb. 다른 사람이 보낸 값은 믿지 않고 여기서 거른다
+const isPreset = (c) => typeof c === 'string' && Object.prototype.hasOwnProperty.call(COLOR_DEFS, c);
+const validColor = (c, fallback = 'orange') => (isPreset(c) || (typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c)) ? c : fallback);
+const BAND_DEFAULT = 'sky', PANTS_DEFAULT = '#7cc243';
+const colorHex = (c) => (isPreset(c) ? COLOR_DEFS[c].hex : parseInt(validColor(c).slice(1), 16));
 const GESTURES = {
-  wave: { label: '인사', preset: 'wave', emoji: '👋' },
-  clap: { label: '박수', preset: 'clap', emoji: '👏' },
-  thumbs: { label: '엄지척', preset: 'thumbs', emoji: '👍' },
-  hooray: { label: '만세', preset: 'hooray', emoji: '🙌' },
+  wave: { label: '인사', preset: 'wave' },
+  clap: { label: '박수', preset: 'clap' },
+  thumbs: { label: '엄지척', preset: 'thumbs' },
+  hooray: { label: '만세', preset: 'hooray' },
+  rest: { label: '앉기', preset: 'butterfly', stay: true },
+  stand: { label: '', preset: 'idle' },
 };
-const COACH_MURMURS = ['숨 참지 말고 천천히~', '어깨 힘 빼고!', '허리 말고 엉덩이로!', '쉬는 것도 운동이야.', '오늘 자세 좋은데?'];
 const LIMIT = { nick: 12, chat: 140, ask: 300 };
 const BAD_CHARS = new RegExp('[' + [[0, 31], [127, 127], [0x200b, 0x200f], [0x2028, 0x202e], [0x2066, 0x2069]]
   .map(([a, b]) => String.fromCharCode(a) + '-' + String.fromCharCode(b)).join('') + ']', 'g');
@@ -91,56 +161,24 @@ function fmt(ms) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
-// ------------------------------------------------------------------ 로비 미리보기 (2D 일러스트 나시 색)
-const sprites = {};
-function rgb2hsv(r, g, b) {
-  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
-  let h = 0;
-  if (d) { if (max === r) h = ((g - b) / d) % 6; else if (max === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; h *= 60; if (h < 0) h += 360; }
-  return [h, max ? d / max : 0, max / 255];
-}
-function hsv2rgb(h, s, v) {
-  const c = v * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = v - c;
-  const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
-  return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
-}
-async function buildSprites() {
-  const img = new Image();
-  img.src = 'jjack.png';
-  await img.decode();
-  const cv = document.createElement('canvas');
-  cv.width = img.naturalWidth; cv.height = img.naturalHeight;
-  const ctx = cv.getContext('2d', { willReadFrequently: true });
-  for (const [key, def] of Object.entries(COLOR_DEFS)) {
-    if (def.h == null) { sprites[key] = img.src; continue; }
-    ctx.clearRect(0, 0, cv.width, cv.height);
-    ctx.drawImage(img, 0, 0);
-    const data = ctx.getImageData(0, 0, cv.width, cv.height), p = data.data;
-    for (let i = 0; i < p.length; i += 4) {
-      if (!p[i + 3]) continue;
-      const [h, s, v] = rgb2hsv(p[i], p[i + 1], p[i + 2]);
-      if (h >= 5 && h <= 27 && s > 0.35 && v > 0.3) {
-        const [r, g, b] = hsv2rgb(def.h, Math.min(1, s * def.s), Math.min(1, v * def.v));
-        p[i] = r; p[i + 1] = g; p[i + 2] = b;
-      }
-    }
-    ctx.putImageData(data, 0, 0);
-    sprites[key] = cv.toDataURL('image/png');
-  }
-}
-const spriteFor = (color) => sprites[color] || 'jjack.png';
-
 // ------------------------------------------------------------------ sound
 const sound = {
   ctx: null,
   on: store.get('jg.sound', '1') === '1',
-  unlock() { if (!this.ctx) { try { this.ctx = new AudioContext(); } catch { /* 소리 없음 */ } } this.ctx?.resume?.(); },
+  unlock() {
+    if (!this.ctx) {
+      try { this.ctx = new AudioContext(); this.out = this.ctx.createGain(); this.out.gain.value = this.volume; this.out.connect(this.ctx.destination); } catch { /* 소리 없음 */ }
+    }
+    this.ctx?.resume?.();
+  },
+  volume: Math.min(1, Math.max(0, parseFloat(store.get('jg.volume', '0.8')))) || 0.8,
+  setVolume(v) { this.volume = v; store.set('jg.volume', String(v)); if (this.out) this.out.gain.value = v; },
   beep(freq = 880, dur = 0.12, when = 0, vol = 0.16) {
     if (!this.on || !this.ctx) return;
     const t = this.ctx.currentTime + when, o = this.ctx.createOscillator(), g = this.ctx.createGain();
     o.type = 'sine'; o.frequency.value = freq;
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g).connect(this.ctx.destination); o.start(t); o.stop(t + dur + 0.02);
+    o.connect(g).connect(this.out); o.start(t); o.stop(t + dur + 0.02);
   },
   rep() { this.repPlayed = (this.repPlayed || 0) + 1; this.beep(620, 0.07, 0, 0.12); }, // 운동 효과음은 누른 사람에게만 난다
   setDone() { this.beep(784, 0.14); this.beep(988, 0.14, 0.13); this.beep(1319, 0.24, 0.26); },
@@ -168,7 +206,7 @@ const ambient = {
     this.master = ctx.createGain();
     this.master.gain.setValueAtTime(0, ctx.currentTime);
     this.master.gain.linearRampToValueAtTime(1, ctx.currentTime + 2.5);
-    this.master.connect(ctx.destination);
+    this.master.connect(sound.out);
     const len = ctx.sampleRate * 4, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
     let last = 0;
     for (let i = 0; i < len; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; }
@@ -221,26 +259,171 @@ const ambient = {
   },
 };
 
+// 배경음악: 파일 없이 합성 (저작권 걱정 없음). 샵마다 분위기가 다름
+// 웨이트: 92 BPM, 단조, 묵직한 박자 / 필라테스: 60 BPM, 부드러운 화음과 맑은 음
+const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
+const TRACKS = {
+  weight: {
+    bpm: 92, steps: 16, level: 0.5,
+    chords: [[45, 57, 60, 64], [41, 53, 57, 60], [48, 55, 60, 64], [43, 55, 59, 62]], // Am F C G
+    play(c, dest, t, step, bar, sec) {
+      const ch = this.chords[bar % 4];
+      if (step % 8 === 0 || step === 10) kick(c, dest, t, 0.42);
+      if (step % 2 === 0) hat(c, dest, t, step % 4 === 2 ? 0.05 : 0.025);
+      if (step === 4 || step === 12) snap(c, dest, t, 0.09);
+      if ([0, 3, 6, 10, 14].includes(step)) tone(c, dest, 'sawtooth', midi(ch[0] - 12), t, sec * 1.6, 0.13, 320);
+      if (step === 0) for (const n of ch.slice(1)) tone(c, dest, 'triangle', midi(n), t, sec * 14, 0.035, 1100, 0.06);
+      if (step === 6 || step === 14) tone(c, dest, 'square', midi(ch[1 + (bar % 3)] + 12), t, sec * 1.2, 0.018, 1600);
+    },
+  },
+  pilates: {
+    bpm: 60, steps: 16, level: 0.55,
+    chords: [[48, 60, 64, 67, 71], [45, 57, 60, 64, 67], [41, 57, 60, 65, 69], [43, 55, 59, 62, 67]], // Cmaj7 Am7 Fmaj7 G
+    bell: [72, 74, 76, 79, 81, 84],
+    play(c, dest, t, step, bar, sec) {
+      const ch = this.chords[bar % 4];
+      if (step === 0) {
+        tone(c, dest, 'sine', midi(ch[0]), t, sec * 16, 0.11, 500, 1.2);
+        for (const n of ch.slice(1)) tone(c, dest, 'triangle', midi(n), t, sec * 16, 0.028, 900, 1.5);
+      }
+      // 같은 자리에 같은 음이 나오도록 간단한 규칙으로 고른다
+      if (step % 4 === 2 || step === 0) {
+        const h = (bar * 7 + step * 3) % 11;
+        if (h < 7) {
+          const n = this.bell[h % this.bell.length];
+          tone(c, dest, 'sine', midi(n), t, 1.8, 0.05, 4000, 0.008);
+          tone(c, dest, 'sine', midi(n + 12), t, 0.7, 0.012, 6000, 0.005);
+        }
+      }
+    },
+  },
+};
+function tone(c, dest, type, freq, t, dur, vol, cutoff = 4000, attack = 0.008) {
+  const o = c.createOscillator(), g = c.createGain(), f = c.createBiquadFilter();
+  o.type = type; o.frequency.value = freq;
+  f.type = 'lowpass'; f.frequency.value = cutoff;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(vol, t + attack);
+  g.gain.setValueAtTime(vol, t + Math.max(attack, dur * 0.3));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(attack + 0.02, dur));
+  o.connect(f).connect(g).connect(dest);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+function kick(c, dest, t, vol) {
+  const o = c.createOscillator(), g = c.createGain();
+  o.frequency.setValueAtTime(120, t);
+  o.frequency.exponentialRampToValueAtTime(48, t + 0.1);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+  o.connect(g).connect(dest);
+  o.start(t); o.stop(t + 0.22);
+}
+const _noise = new WeakMap();
+function noiseOf(c) {
+  if (_noise.has(c)) return _noise.get(c);
+  const b = c.createBuffer(1, c.sampleRate * 0.4, c.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  _noise.set(c, b);
+  return b;
+}
+function burst(c, dest, t, vol, dur, type, freq) {
+  const s = c.createBufferSource(), g = c.createGain(), f = c.createBiquadFilter();
+  s.buffer = noiseOf(c);
+  f.type = type; f.frequency.value = freq;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f).connect(g).connect(dest);
+  s.start(t); s.stop(t + dur + 0.02);
+}
+const hat = (c, dest, t, vol) => burst(c, dest, t, vol, 0.05, 'highpass', 7000);
+const snap = (c, dest, t, vol) => burst(c, dest, t, vol, 0.14, 'bandpass', 1700);
+/** 음악 소리 길: 필라테스는 잔향을 조금 더해 공간감을 준다 */
+function musicBus(c, kind, out) {
+  const bus = c.createGain(), comp = c.createDynamicsCompressor();
+  bus.gain.value = TRACKS[kind].level;
+  bus.connect(comp).connect(out);
+  if (kind === 'pilates') {
+    const d = c.createDelay(1), fb = c.createGain(), wet = c.createGain();
+    d.delayTime.value = 0.5; fb.gain.value = 0.36; wet.gain.value = 0.3;
+    bus.connect(d); d.connect(fb).connect(d); d.connect(wet).connect(comp);
+  }
+  return bus;
+}
+const music = {
+  on: store.get('jg.music', '1') === '1',
+  kind: null, bus: null, master: null, timer: null, nextT: 0, step: 0, bar: 0,
+  start(kind) { this.kind = kind; this.apply(); },
+  stop() { this.kind = null; this.apply(); },
+  apply() {
+    const want = this.kind && this.on && sound.on && sound.ctx;
+    if (!want) { this.teardown(); return; }
+    if (this.master) return;
+    const ctx = sound.ctx;
+    this.master = ctx.createGain();
+    this.master.gain.setValueAtTime(0, ctx.currentTime);
+    this.master.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 3);
+    this.master.connect(sound.out);
+    this.bus = musicBus(ctx, this.kind, this.master);
+    this.nextT = ctx.currentTime + 0.15; this.step = 0; this.bar = 0;
+    this.pump();
+    this.timer = setInterval(() => this.pump(), 250);
+  },
+  // 탭이 내려가도 끊기지 않게 2초 앞까지 미리 넣어 둔다
+  pump() {
+    const ctx = sound.ctx, tr = TRACKS[this.kind];
+    if (!ctx || !tr || !this.bus) return;
+    const sec = 60 / tr.bpm / 4;
+    if (this.nextT < ctx.currentTime) this.nextT = ctx.currentTime + 0.05;
+    while (this.nextT < ctx.currentTime + 2) {
+      tr.play(ctx, this.bus, this.nextT, this.step, this.bar, sec);
+      this.nextT += sec;
+      this.step = (this.step + 1) % tr.steps;
+      if (!this.step) this.bar++;
+    }
+  },
+  teardown() {
+    clearInterval(this.timer); this.timer = null;
+    if (!this.master) return;
+    const m = this.master, ctx = sound.ctx;
+    this.master = null; this.bus = null;
+    m.gain.cancelScheduledValues(ctx.currentTime);
+    m.gain.setValueAtTime(m.gain.value, ctx.currentTime);
+    m.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+    setTimeout(() => m.disconnect(), 700);
+  },
+  /** 시험용: 소리를 내지 않고 몇 초 만들어 크기를 잰다 */
+  async measure(kind, seconds) {
+    const c = new OfflineAudioContext(2, 44100 * seconds, 44100), tr = TRACKS[kind], sec = 60 / tr.bpm / 4;
+    const bus = musicBus(c, kind, c.destination);
+    let t = 0.05, step = 0, bar = 0;
+    while (t < seconds) { tr.play(c, bus, t, step, bar, sec); t += sec; step = (step + 1) % tr.steps; if (!step) bar++; }
+    const d = (await c.startRendering()).getChannelData(0);
+    let peak = 0, sum = 0;
+    for (const v of d) { peak = Math.max(peak, Math.abs(v)); sum += v * v; }
+    return { peak, rms: Math.sqrt(sum / d.length) };
+  },
+};
+
 // ------------------------------------------------------------------ state
 const S = {
   shop: null,
-  tab: 'chat',
   unread: 0,
   lastChatAt: 0,
   lastGestureAt: 0,
-  panelAuto: false,
   coachSlot: null,
   coachBusyUntil: 0,
+  coachHome: true,
+  stationBox: {},
   lastBeep: null,
   lastPresenceAt: 0,
-  ptTurns: [],
   ptBusy: false,
   announce: false,
   me: {
-    nick: '', color: 'orange',
+    nick: '', color: 'orange', band: BAND_DEFAULT, pants: PANTS_DEFAULT,
     station: null, claimedAt: 0, on: false, // on: 기구에 올라가 있음
     queue: null, queuedAt: 0,               // 줄 서 있는 기구
     gest: null, gestN: 0,                   // 몸짓: 숫자가 올라가면 한 번 재생
+    ptUntil: 0,                             // PT 중: 이때까지 쌤이 옆에서 봐 줌
     state: 'idle', reps: 0, set: 1, restUntil: 0, lastActAt: 0,
   },
   meA: null,          // 내 3D 짹짹이
@@ -252,7 +435,6 @@ const S = {
   modelsReady: false,
 };
 let room = null;
-let sample = null;
 const capability = (name) => (window.claude?.use ? window.claude.use(name).catch(() => null) : Promise.resolve(null));
 
 function syncPresence(force = false) {
@@ -262,9 +444,9 @@ function syncPresence(force = false) {
   S.lastPresenceAt = now;
   const m = S.me, A = S.meA;
   room.presence({
-    nick: m.nick, color: m.color, shop: S.shop,
+    nick: m.nick, color: m.color, band: m.band, pants: m.pants, shop: S.shop,
     station: m.station, claimedAt: m.claimedAt, on: m.on,
-    queue: m.queue, queuedAt: m.queuedAt, gest: m.gest, gestN: m.gestN,
+    queue: m.queue, queuedAt: m.queuedAt, gest: m.gest, gestN: m.gestN, ptUntil: m.ptUntil, cls: !!m.classOn,
     state: m.state, reps: m.reps, set: m.set, restUntil: m.restUntil,
     x: A ? Math.round(A.place.x * 100) / 100 : null,
     z: A ? Math.round(A.place.z * 100) / 100 : null,
@@ -274,37 +456,43 @@ function syncPresence(force = false) {
 // ------------------------------------------------------------------ 3D: 배우 · 걷기 · 기구
 const presetClip = (id) => G.presetClip(G.presetById(id));
 
-function makeJjak(x, z, color) {
+function makeJjak(x, z, color, band, pants) {
   const A = G.addActor('jjak', { x, z });
   if (!A) return null;
   A.place.s = RULES.jjakScale;
   G.applyPlace(A);
-  paint(A, color);
+  paint(A, color, band, pants);
   return A;
 }
-function paint(A, color) {
-  const def = COLOR_DEFS[color] || COLOR_DEFS.orange;
-  if (A._color === color) return;
-  A._color = color;
-  for (const m of A.inst.meshes) if (m.userData.matName === 'shirt_orange') {
+function paintPart(A, matName, hex) {
+  for (const m of A.inst.meshes) if (m.userData.matName === matName) {
     if (!m.userData._own) { m.material = m.material.clone(); m.userData._own = true; }
-    m.material.color.setHex(def.hex);
+    m.material.color.setHex(hex);
   }
+}
+function paint(A, shirt, band, pants) {
+  shirt = validColor(shirt);
+  band = validColor(band, BAND_DEFAULT);
+  pants = validColor(pants, PANTS_DEFAULT);
+  if (A._pants !== pants) { A._pants = pants; paintPart(A, 'shorts_green', colorHex(pants)); }
+  if (A._shirt !== shirt) { A._shirt = shirt; paintPart(A, 'shirt_orange', colorHex(shirt)); }
+  if (A._band !== band) { A._band = band; paintPart(A, 'band_sky', colorHex(band)); }
 }
 function setIdle(A) { A.speed = 1; G.setClip(A, presetClip('idle'), { blend: 0.25 }); }
 function setWalkClip(A) { A.speed = RULES.walkAnim; G.setClip(A, presetClip('walk'), { blend: 0.2 }); }
 
-function walkTo(A, x, z, then) {
+function walkTo(A, x, z, then, within = 0) {
   x = clamp(x, BOUNDS.x0, BOUNDS.x1); z = clamp(z, BOUNDS.z0, BOUNDS.z1);
   const was = S.walk.get(A);
-  S.walk.set(A, { x, z, then });
+  const d = Math.hypot(x - A.place.x, z - A.place.z);
+  S.walk.set(A, { x, z, then, v: within ? Math.max(RULES.moveSpeed, d / within) : 0 });
   if (!was) setWalkClip(A);
 }
 function stepWalkers(dt) {
   for (const [A, w] of S.walk) {
     if (!A.root.parent) { S.walk.delete(A); continue; }
     const dx = w.x - A.place.x, dz = w.z - A.place.z, d = Math.hypot(dx, dz);
-    const v = RULES.moveSpeed;
+    const v = w.v || RULES.moveSpeed;
     if (d < 0.03) {
       S.walk.delete(A);
       if (w.then) w.then(); else setIdle(A);
@@ -335,8 +523,8 @@ function mountActor(A, st) {
     G.setClip(A, presetClip(st.preset), {
       loop: false, blend: 0.2,
       beforeMeasure: (B) => {
-        B.seatH = 0; B.reformer = null;
-        B.place.x = ap.x; B.place.z = ap.z; B.place.ry = 0; B.place.elev = G.floorAt(ap.x, ap.z);
+        B.seatH = st.seat || 0; B.reformer = null;
+        B.place.x = ap.x; B.place.z = ap.z; B.place.ry = st.face || 0; B.place.elev = G.floorAt(ap.x, ap.z) + (st.lift || 0);
         G.applyPlace(B);
       },
     });
@@ -345,12 +533,92 @@ function mountActor(A, st) {
     A.loop = false;
   }
   holdRep(A);
+  A._cardio = st.cardio ? newCardio(st, obj) : null;
+  A._pedal = st.pedal ? obj.userData.moving.pedal : null;
+  A._pedalAmp = st.pedal === true ? 0.32 : st.pedal || 0;
+  if (st.bar && !A._barObj) {
+    const from = obj.localToWorld(new T.Vector3(...st.bar.from));
+    A._barObj = WORLD.makeBar(st.bar.w, from);
+    G.actorLayer.add(A._barObj.group, A._barObj.cable);
+  }
+  if (st.slide) {
+    const seatMesh = obj.userData.moving.seat;
+    A._slide = { x0: approachPoint(st).x, amp: st.slide, seat: seatMesh, base: seatMesh.position.x };
+  }
+  if (st.plate && !A._plateObj) { A._plateObj = WORLD.makePlate(); G.actorLayer.add(A._plateObj); }
 }
+// 유산소 기구: 누를 때마다 단계가 오르고, 안 누르면 천천히 느려진다
+const CARDIO_LABEL = {
+  run: (lv) => `시속 ${(lv ? 5 + lv * 1.3 : 0).toFixed(1)}km`,
+  stair: (lv) => `${lv ? Math.round(lv + 1) : 0}단계`,
+  bike: (lv) => `${lv ? Math.round(40 + lv * 8) : 0}rpm`,
+};
+function newCardio(st, obj) {
+  const mv = obj.userData.moving;
+  return { lv: 0, phase: 0, last: 0, moving: true, st, keepPose: !!st.seat, belt: mv.belt, steps: mv.steps, stepAt: 0, label: CARDIO_LABEL[st.cardio] };
+}
+function cardioPress(A) {
+  const c = A._cardio;
+  c.lv = Math.min(10, c.lv + 1);
+  c.last = G.clock.t;
+}
+function stepCardio(A, dt) {
+  const c = A._cardio;
+  if (G.clock.t - c.last > 1.6) c.lv = Math.max(0, c.lv - dt * 2.2);
+  if (c.lv > 0) {
+    if (!c.moving) { c.moving = true; G.setClip(A, presetClip(c.st.preset), { blend: 0.15 }); }
+    const speed = 0.6 + c.lv * 0.24;
+    c.phase += dt * speed;
+    A.speed = 1;
+    A.loop = true;
+    A.start = G.clock.t - c.phase;
+    if (c.belt) c.belt.material.map.offset.y -= dt * (0.3 + c.lv * 0.4);
+    if (c.steps) {
+      c.stepAt = (c.stepAt + dt * (0.1 + c.lv * 0.05)) % 1;
+      c.steps.forEach((s, i) => WORLD.placeStep(s, ((i / c.steps.length) - c.stepAt + 1) % 1));
+    }
+  } else if (c.moving) {
+    c.moving = false;
+    if (!c.keepPose) { A.speed = 1; G.setClip(A, presetClip('idle'), { blend: 0.3 }); }
+  }
+}
+function dropPlate(A) {
+  A._cardio = null;
+  if (A._plateObj) { A._plateObj.parent?.remove(A._plateObj); A._plateObj = null; }
+  if (A._pedal) { A._pedal.rotation.x = 0; A._pedal = null; }
+  if (A._barObj) { A._barObj.group.parent?.remove(A._barObj.group); A._barObj.cable.parent?.remove(A._barObj.cable); A._barObj = null; }
+  if (A._slide) { A._slide.seat.position.x = A._slide.base; A._slide = null; }
+}
+// 손 사이의 원판과 페달이 동작을 따라가게
+G.hooks.push((dt) => {
+  if (S.repQueued && S.meA && S.me.on && S.me.state === 'set' && !S.meA._cardio && !repBusy(S.meA)) doRep();
+  for (const A of G.actors) {
+    if (A._cardio) stepCardio(A, dt);
+    if (A._plateObj) {
+      const l = G.wp(A, A.hands.L.wrist), r = G.wp(A, A.hands.R.wrist);
+      A._plateObj.position.copy(l).add(r).multiplyScalar(0.5);
+      A._plateObj.rotation.y = A.place.ry * Math.PI / 180;
+    }
+    const u = A.clip ? (G.clock.t - A.start) * A.speed / G.clipDur(A.clip) : 2;
+    const wave = u >= 0 && u <= 1 ? Math.sin(Math.PI * u) : 0;
+    if (A._pedal) A._pedal.rotation.x = wave * A._pedalAmp;
+    if (A._slide) {
+      A.place.x = A._slide.x0 + wave * A._slide.amp;
+      G.applyPlace(A);
+      A._slide.seat.position.x = A._slide.base + wave * A._slide.amp;
+    }
+    if (A._barObj) {
+      const l = G.wp(A, A.hands.L.wrist), r = G.wp(A, A.hands.R.wrist);
+      WORLD.placeBar(A._barObj, l.add(r).multiplyScalar(0.5), A.place.ry);
+    }
+  }
+});
 /** 동작 끝 자세로 멈춰 두기 (대부분 처음 자세와 같음) */
 function holdRep(A) { A.start = G.clock.t - G.clipDur(A.clip) / A.speed - 0.01; }
 function playRep(A) { A.start = G.clock.t; }
 function repBusy(A) { return (G.clock.t - A.start) * A.speed < G.clipDur(A.clip) - 0.05; }
 function unmountActor(A, st) {
+  dropPlate(A);
   const ap = st ? approachPoint(st) : { x: A.place.x, z: A.place.z + 0.6 };
   G.leaveStation(A, ap.x, ap.z + (st && !st.stand ? 0 : 1.0)); // 다음 사람과 겹치지 않게 비켜 섬
   A.speed = 1;
@@ -363,6 +631,7 @@ function faceTo(A, x, z) {
 function playCoach(id) {
   const B = S.coach;
   if (!B) return;
+  if (S.walk.has(B) && S.coachVisiting) return; // 봐 주러 가는 길에는 멈추지 않음
   S.walk.delete(B);
   B.speed = 1;
   S.coachBusyUntil = Date.now() + 4000;
@@ -375,24 +644,63 @@ function coachGreet(nick, A) {
   if (A) faceTo(B, A.place.x, A.place.z);
   S.lastGreet = nick;
   playCoach('wave');
-  coachSay(`어서 와 ${nick}! 빈 기구 하나 골라봐~`, 6000);
 }
 // 쌤 자리: 시각으로 정해져서 접속한 사람 모두에게 같은 곳으로 보임
 const coachSlotAt = (ms) => Math.floor(ms / (RULES.coachWalkSec * 1000));
+// 쌤은 절반은 안내 데스크에, 나머지는 짐 안을 둘러본다
+const coachSpotAt = (slot, spots) => (slot % 2 === 0 ? spots[0] : spots[1 + slotPick(slot, spots.length - 1)]);
 const slotPick = (slot, n) => ((Math.imul(slot, 2654435761) >>> 0) >>> 13) % n;
+/** PT 찬스: 내 찬스가 먼저, 아니면 찬스를 쓴 다른 사람 옆으로 간다 (모두의 화면에서 쌤이 그쪽으로 감) */
+function coachPupil(now) {
+  if (S.me.ptUntil > now) return { A: S.meA, me: true };
+  let best = null, bestUntil = Infinity;
+  for (const m of members()) {
+    if (m.me || !(m.ptUntil > now) || m.ptUntil >= bestUntil) continue;
+    const R = S.remotes.get(m.peer);
+    if (R) { best = R.A; bestUntil = m.ptUntil; }
+  }
+  return best ? { A: best, me: false } : null;
+}
+function coachSpotBeside(A) {
+  const side = A.place.x > 0 ? -1 : 1;
+  return { x: clamp(A.place.x + side * 1.5, BOUNDS.x0, BOUNDS.x1), z: clamp(A.place.z + 0.75, BOUNDS.z0, BOUNDS.z1) };
+}
+function stepCoachVisit(now) {
+  const B = S.coach, p = coachPupil(now);
+  if (!B || !B.root.parent) return false;
+  if (!p) {
+    if (S.coachVisiting) { S.coachVisiting = false; S.coachSlot = null; S.coachBusyUntil = 0; } // 자기 자리로 돌아감
+    return false;
+  }
+  S.coachVisiting = true;
+  const sp = coachSpotBeside(p.A), w = S.walk.get(B);
+  const tx = w ? w.x : B.place.x, tz = w ? w.z : B.place.z;
+  if (Math.hypot(sp.x - tx, sp.z - tz) > 0.5) {
+    walkTo(B, sp.x, sp.z, () => {
+      B.speed = 1;
+      faceTo(B, p.A.place.x, p.A.place.z);
+      G.setClip(B, presetClip('armsCross'), { blend: 0.25 });
+      if (p.me && !S.ptBusy) coachSay('옆에서 볼게. 천천히 해 봐.', 3500);
+    });
+  } else if (!w) {
+    faceTo(B, p.A.place.x, p.A.place.z);
+  }
+  return true;
+}
 function stepCoach(now) {
   const B = S.coach, shop = SHOPS[S.shop];
   if (!B || !B.root.parent) return;
+  if (stepCoachVisit(now)) return;
+  if (S.coachClass) return;
   const slot = coachSlotAt(now);
   if (slot === S.coachSlot || now < S.coachBusyUntil) return;
   S.coachSlot = slot;
-  const p = shop.coachSpots[slotPick(slot, shop.coachSpots.length)];
+  const p = coachSpotAt(slot, shop.coachSpots);
   if (Math.hypot(p.x - B.place.x, p.z - B.place.z) < 0.1) return;
   walkTo(B, p.x, p.z, () => {
     B.speed = 1;
     B.place.ry = 0; G.applyPlace(B);
     G.setClip(B, presetClip('armsCross'), { blend: 0.25 });
-    if (slot % 3 === 0) coachSay(COACH_MURMURS[slotPick(slot, COACH_MURMURS.length)], 3500);
   });
 }
 
@@ -403,42 +711,50 @@ function buildShop(shopId) {
   S.walk.clear();
   S.remotes.clear();
   const set = G.setSet(shop.set);
-  const byProp = {};
-  for (const o of set.children) {
-    const id = o.userData && o.userData.id;
-    if (id && G.AS.props[id]) (byProp[id] ||= []).push(o);
-  }
   S.stationObj = {};
   for (const st of shop.stations) {
-    if (st.add) {
-      const o = G.AS.props[st.add.prop].build();
-      o.position.set(st.add.x, 0, st.add.z);
-      set.add(o);
-      S.stationObj[st.id] = o;
-    } else {
-      S.stationObj[st.id] = (byProp[st.prop] || [])[st.idx || 0];
-    }
+    const o = G.AS.props[st.at.prop].build();
+    o.position.set(st.at.x, 0, st.at.z);
+    if (st.at.ry) o.rotation.y = st.at.ry * Math.PI / 180;
+    if (st.at.s) o.scale.setScalar(st.at.s);
+    set.add(o);
+    S.stationObj[st.id] = o;
   }
   set.updateMatrixWorld(true);
+  // 마우스·터치 판정용 바닥 자리
+  S.stationBox = {};
+  for (const st of shop.stations) {
+    const box = new T.Box3().setFromObject(S.stationObj[st.id]);
+    box.expandByVector(new T.Vector3(0.12, 0, 0.12));
+    // 작은 기구(케틀벨·링)도 누르기 쉽게 바닥 자리를 넉넉히
+    for (const k of ['x', 'z']) { const c = (box.min[k] + box.max[k]) / 2; box.min[k] = Math.min(box.min[k], c - 0.5); box.max[k] = Math.max(box.max[k], c + 0.5); }
+    S.stationBox[st.id] = box;
+  }
+  buildHoverMark(set);
   // 부리부리 쌤
   S.coachSlot = coachSlotAt(Date.now());
   S.coachBusyUntil = 0;
-  const cs = shop.coachSpots[slotPick(S.coachSlot, shop.coachSpots.length)];
+  const cs = coachSpotAt(S.coachSlot, shop.coachSpots);
   const B = G.addActor('buri', { x: cs.x, z: cs.z });
   B.place.s = 0.8; G.applyPlace(B);
   G.setClip(B, presetClip('armsCross'), { blend: 0 });
   S.coach = B;
   // 나
-  const sx = shop.spawn.x + (Math.random() - 0.5) * 2.4, sz = shop.spawn.z + Math.random() * 0.4;
-  S.meA = makeJjak(sx, sz, S.me.color);
-  S.meA.place.ry = 180; G.applyPlace(S.meA);
+  // 입구로 들어와서 안으로 걸어 들어온다
+  const sx = shop.spawn.x + (Math.random() - 0.5) * 2.4, sz = shop.spawn.z + Math.random() * 0.8;
+  S.meA = makeJjak(WORLD.doorSpot.x, WORLD.doorSpot.z, S.me.color, S.me.band, S.me.pants);
+  WORLD.openDoor();
+  walkTo(S.meA, sx, sz);
   // 카메라
   const narrow = matchMedia('(max-width: 860px)').matches;
   if (narrow) G.sun.shadow.mapSize.set(1024, 1024); // 휴대폰은 그림자를 가볍게
-  S.followX = narrow ? 1 : 0.5; // 휴대폰은 화면이 좁아 내 짹짹이를 가운데에 둔다
-  G.cam.position.set(sx * S.followX, narrow ? 8.8 : 6.0, sz + (narrow ? 11 : 8.4));
+  S.followX = narrow ? 1 : 0.8; // 내 짹짹이를 따라 방 안을 보여 준다
+  G.cam.position.set(sx * S.followX, narrow ? 9.4 : 7.2, sz + (narrow ? 12.5 : 11));
   G.orbit.target.set(sx * S.followX, 0.6, sz - 2.2);
-  G.orbit.enablePan = false; G.orbit.minDistance = 3; G.orbit.maxDistance = narrow ? 24 : 16; G.orbit.maxPolarAngle = Math.PI * 0.45;
+  G.orbit.enablePan = false; G.orbit.minDistance = 3; G.orbit.maxDistance = narrow ? 30 : 26;
+  // 방이 넓어져서 그림자 범위도 넓힌다
+  Object.assign(G.sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, far: 32 });
+  G.sun.shadow.camera.updateProjectionMatrix(); G.orbit.maxPolarAngle = Math.PI * 0.45;
   G.orbit.update();
   buildTags();
 }
@@ -453,7 +769,7 @@ function followCam(dt) {
   const dx = (_tgt.x - G.orbit.target.x) * k, dz = (_tgt.z - G.orbit.target.z) * k;
   G.orbit.target.x += dx; G.orbit.target.z += dz;
   G.cam.position.x += dx; G.cam.position.z += dz;
-  G.sun.position.set(A.place.x + 2.5, 5, A.place.z + 4);
+  G.sun.position.set(A.place.x + 3.5, 9, A.place.z + 6);
   G.sun.target.position.set(A.place.x, 0, A.place.z);
 }
 
@@ -474,12 +790,16 @@ function buildTags() {
     const sub = document.createElement('small');
     c.append(nm, sub);
     c.addEventListener('click', () => claimStation(st.id));
+    c.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'touch') setHover(st.id); });
+    c.addEventListener('pointerleave', () => setHover(null));
+    c.addEventListener('focus', () => setHover(st.id));
+    c.addEventListener('blur', () => setHover(null));
     bar.append(c);
   }
   tagFor('me', true);
   const ct = tagFor('coach');
   ct.classList.add('coach');
-  ct.querySelector('.nm').textContent = '부리부리 쌤 · AI';
+  ct.querySelector('.nm').textContent = '부리부리 쌤';
 }
 function tagFor(key, me = false) {
   let el = S.tags.get(key);
@@ -507,7 +827,10 @@ function placeTag(el, A, yOff) {
   const head = G.wp(A, A.headBone);
   const p = project(head.x, head.y + yOff, head.z);
   el.classList.toggle('hidden', !p.vis);
-  el.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -100%)`;
+  // 말풍선이 있으면 화면 밖으로 잘리지 않게 안쪽으로 민다
+  const half = el.querySelector('.bubble') ? el.offsetWidth / 2 + 4 : 0, w = $('#view').clientWidth;
+  const x = half ? Math.max(half, Math.min(w - half, p.x)) : p.x;
+  el.style.transform = `translate(${x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -100%)`;
 }
 function updateTags() {
   if (!S.shop || !S.meA) return;
@@ -526,7 +849,8 @@ function updateTags() {
     el.querySelector('.nm').textContent = R.nick;
     el.querySelector('.st').textContent = statusText(R, now);
     el.classList.toggle('resting', R.state === 'rest');
-    placeTag(el, R.A, 0.42);
+    el.classList.toggle('hidden', !!R.hiddenFar);
+    if (!R.hiddenFar) placeTag(el, R.A, 0.42);
   }
 }
 function statusText(m, now) {
@@ -547,13 +871,17 @@ function members() {
     list.push({
       peer: p.peer, pid: p.peer, me: false,
       nick: cleanText(pr.nick, LIMIT.nick) || '익명 짹짹이',
-      color: COLOR_DEFS[pr.color] ? pr.color : 'orange',
+      color: validColor(pr.color),
+      band: validColor(pr.band, BAND_DEFAULT),
+      pants: validColor(pr.pants, PANTS_DEFAULT),
       station: stationOf(S.shop, pr.station) ? pr.station : null,
       claimedAt: num(pr.claimedAt, Infinity),
       queue: stationOf(S.shop, pr.queue) ? pr.queue : null,
       queuedAt: num(pr.queuedAt, Infinity),
       gest: GESTURES[pr.gest] ? pr.gest : null,
       gestN: Math.max(0, Math.floor(num(pr.gestN))),
+      cls: pr.cls === true,
+      ptUntil: Math.min(num(pr.ptUntil), Date.now() + RULES.ptSessionSec * 1000), // 너무 긴 값은 잘라서 받음
       on: pr.on === true,
       state: ['idle', 'set', 'rest'].includes(pr.state) ? pr.state : 'idle',
       reps: Math.max(0, Math.min(99, Math.floor(num(pr.reps)))),
@@ -596,7 +924,7 @@ function syncScene() {
     const o = own.get(S.me.station);
     if (o && !o.me) {
       const id = S.me.station;
-      toast(`${o.nick} 님이 ${stationOf(S.shop, id)?.name || '기구'}를 먼저 잡았어요. 줄을 섰어요.`, 2800);
+      toast(`${o.nick} 님이 먼저 잡으셔서 줄을 서 둘게요.`, 2800);
       releaseStation(true);
       joinQueue(id, true);
       return;
@@ -608,7 +936,7 @@ function syncScene() {
     if (!own.get(id) && idx === 0) {
       if (document.hidden) { leaveQueue(); return; }
       sound.turn();
-      toast(`차례가 왔어요! ${stationOf(S.shop, id).name}로 가요.`, 2800);
+      toast(`${stationOf(S.shop, id).name} 차례가 됐어요.`, 2800);
       claimStation(id);
       return;
     }
@@ -620,16 +948,15 @@ function syncScene() {
     seen.add(m.peer);
     let R = S.remotes.get(m.peer);
     if (!R) {
-      const sp = SHOPS[S.shop].spawn;
-      const x = m.x ?? sp.x, z = m.z ?? sp.z;
-      const A = makeJjak(x, z, m.color);
+      const x = m.x ?? WORLD.doorSpot.x, z = m.z ?? WORLD.doorSpot.z;
+      const A = makeJjak(x, z, m.color, m.band, m.pants);
       if (!A) continue;
       R = { A, mounted: null, lastReps: m.reps, lastGestN: m.gestN };
       S.remotes.set(m.peer, R);
-      if (S.announce) { sysLine(`${m.nick} 님이 들어왔어요`, ''); coachGreet(m.nick, A); }
+      if (S.announce) { sysLine(`${m.nick} 님이 들어왔어요`, ''); coachGreet(m.nick, A); WORLD.openDoor(); }
     }
-    Object.assign(R, { nick: m.nick, color: m.color, state: m.state, reps: m.reps, set: m.set, restUntil: m.restUntil, on: m.on });
-    paint(R.A, m.color);
+    Object.assign(R, { nick: m.nick, color: m.color, band: m.band, pants: m.pants, state: m.state, reps: m.reps, set: m.set, restUntil: m.restUntil, on: m.on });
+    paint(R.A, m.color, m.band, m.pants);
     const st = m.station && m.on && own.get(m.station)?.peer === m.peer ? stationOf(S.shop, m.station) : null;
     if (st && R.mounted !== st.id) {
       if (R.mounted) unmountActor(R.A, stationOf(S.shop, R.mounted));
@@ -640,18 +967,25 @@ function syncScene() {
       unmountActor(R.A, stationOf(S.shop, R.mounted));
       R.mounted = null;
     }
+    // 함께 스트레칭: 같은 시각 같은 동작
+    const cl = classNow(Date.now());
+    if (m.cls && cl.on && !R.mounted) classClip(R.A, cl.idx);
+    else if (R.A._classIdx != null) classEnd(R.A);
     if (m.gestN !== R.lastGestN) {
       R.lastGestN = m.gestN;
-      if (m.gest) playGesture(R.A, m.peer, m.gest, !!R.mounted);
+      if (m.gest) {
+        playGesture(R.A, m.peer, m.gest, !!R.mounted);
+        if (['wave', 'clap', 'thumbs', 'hooray'].includes(m.gest)) noteGreeting(m.nick, m.gest);
+      }
     }
     if (R.mounted) {
-      if (m.reps > R.lastReps && m.state !== 'idle') playRep(R.A);
+      if (m.reps > R.lastReps && m.state !== 'idle') { if (R.A._cardio) cardioPress(R.A); else playRep(R.A); }
       R.lastReps = m.reps;
     } else if (m.x != null && m.z != null && !gesturing(R.A)) {
       const w = S.walk.get(R.A);
       const tx = w ? w.x : R.A.place.x, tz = w ? w.z : R.A.place.z;
       if (Math.hypot(m.x - tx, m.z - tz) > 0.05) {
-        if (Math.hypot(m.x - R.A.place.x, m.z - R.A.place.z) > 6) { R.A.place.x = m.x; R.A.place.z = m.z; G.applyPlace(R.A); }
+        if (Math.hypot(m.x - R.A.place.x, m.z - R.A.place.z) > 12) { R.A.place.x = m.x; R.A.place.z = m.z; G.applyPlace(R.A); }
         else walkTo(R.A, m.x, m.z);
       }
     }
@@ -665,6 +999,12 @@ function syncScene() {
     dropTag(peer);
     if (S.announce && R.nick) sysLine(`${R.nick} 님이 나갔어요`, '');
   }
+  // 가까운 사람만 그린다
+  if (S.remotes.size > 6 && S.meA) {
+    const cap = matchMedia('(max-width: 860px)').matches ? RULES.nearAvatars >> 1 : RULES.nearAvatars;
+    const near = [...S.remotes.values()].sort((p, q) => Math.hypot(p.A.place.x - S.meA.place.x, p.A.place.z - S.meA.place.z) - Math.hypot(q.A.place.x - S.meA.place.x, q.A.place.z - S.meA.place.z));
+    near.forEach((Rm, i) => { const show = i < cap || !!Rm.mounted; Rm.A.visible = show; Rm.A.root.visible = show; Rm.hiddenFar = !show; });
+  } else for (const Rm of S.remotes.values()) if (Rm.hiddenFar) { Rm.A.visible = true; Rm.A.root.visible = true; Rm.hiddenFar = false; }
   // 기구 목록
   for (const st of SHOPS[S.shop].stations) {
     const c = $(`#pick-${st.id}`);
@@ -674,15 +1014,15 @@ function syncScene() {
     c.classList.toggle('mine', !!o && o.me);
     c.classList.toggle('lined', myIdx >= 0);
     const wait = line.length ? ` · 대기 ${line.length}` : '';
-    c.querySelector('small').textContent = myIdx >= 0 ? `내 앞에 ${myIdx + (o ? 1 : 0)}명` : !o ? (line.length ? `대기 ${line.length}` : st.ex) : o.me ? '사용 중 (나)' : `사용 중${wait}`;
-    c.setAttribute('aria-label', `${st.name} ${st.ex}, ${!o ? '비어 있음 — 눌러서 사용' : o.me ? '내가 사용 중' : `${o.nick} 님 사용 중, 대기 ${line.length}명 — 눌러서 줄 서기`}`);
+    c.querySelector('small').textContent = myIdx >= 0 ? `내 앞에 ${myIdx + (o ? 1 : 0)}명` : !o ? (line.length ? `대기 ${line.length}` : st.ex) : o.me ? '내가 쓰는 중' : `사용 중${wait}`;
+    c.setAttribute('aria-label', `${st.name} ${st.ex}, ${!o ? '비어 있어요. 눌러서 시작' : o.me ? '내가 쓰는 중' : `${o.nick} 님이 쓰는 중, 대기 ${line.length}명. 눌러서 줄 서기`}`);
   }
   renderCount(list.length);
   S.lineAhead = S.me.queue ? (queue.get(S.me.queue) || []).findIndex((m) => m.me) + (own.get(S.me.queue) ? 1 : 0) : 0;
   S.lineBehind = S.me.station ? (queue.get(S.me.station) || []).length : 0;
 }
 function renderCount(n) {
-  $('#memberCount').textContent = room ? `지금 ${n}명이 함께 운동 중` : '지금은 혼자 운동 중';
+  $('#memberCount').textContent = n > 1 ? `지금 ${n}명이 함께 운동 중` : '지금은 혼자예요. 부리부리 쌤이 함께 있어요.';
 }
 
 // ------------------------------------------------------------------ 내 행동
@@ -692,9 +1032,10 @@ function claimStation(id) {
   if (!st || S.me.station === id) return;
   const list = members(), own = owners(list).get(id), line = lines(list).get(id) || [];
   if ((own && !own.me) || (line.length && !line[0].me)) { joinQueue(id); return; }
-  if (S.me.on && S.me.state === 'set' && S.me.reps > 0) { toast('지금 세트 중이에요. 기구 반납 후 옮겨 주세요.', 2200); return; }
+  if (S.me.on && S.me.state === 'set' && S.me.reps > 0) { toast('세트 중이에요. 기구를 반납하면 옮길 수 있어요.', 2200); return; }
   sound.unlock();
   if (S.me.on) dismount(true);
+  standUp();
   const resting = S.me.state === 'rest';
   Object.assign(S.me, { station: id, claimedAt: Date.now(), on: false, reps: 0, set: resting ? 0 : 1, queue: null, queuedAt: 0, lastActAt: Date.now() });
   if (!resting) S.me.state = 'set';
@@ -706,10 +1047,9 @@ function claimStation(id) {
     S.me.on = true;
     S.me.lastActAt = Date.now();
     syncPresence(true);
-    coachSay(`${st.name}! ${st.cue}`, 8000);
-    sysLine(`🏋️ ${st.name} 사용 시작 — ${st.ex} ${SHOPS[S.shop].reps}회 × ${RULES.setsPerStation}세트`, 'work');
+    coachSay(st.cue, 8000);
     renderHud();
-  });
+  }, 2.5); // 아무리 멀어도 2.5초 안에 도착
   renderHud();
   syncScene();
 }
@@ -717,7 +1057,6 @@ function dismount(silent) {
   const st = stationOf(S.shop, S.me.station);
   if (S.me.on) unmountActor(S.meA, st);
   S.me.on = false;
-  if (!silent && st) sysLine(`${st.name} 반납`, '');
 }
 function releaseStation(silent = false) {
   if (!S.me.station) return;
@@ -739,7 +1078,7 @@ function joinQueue(id, quiet = false) {
   if (S.me.station) { toast('지금 쓰는 기구를 반납하면 줄을 설 수 있어요.', 2400); return; }
   S.me.queue = id;
   S.me.queuedAt = Date.now();
-  if (!quiet) toast(`${st.name} 줄에 섰어요. 차례가 오면 바로 시작해요.`, 2400);
+  if (!quiet) toast(`${st.name} 줄에 섰어요. 차례가 되면 바로 시작해요.`, 2400);
   sound.unlock();
   syncPresence(true);
   syncScene();
@@ -772,23 +1111,44 @@ function standInLine(st, idx) {
 
 // ------------------------------------------------------------------ 몸짓: 말 없이 소통 (내 짹짹이가 직접, 모두에게 보임)
 function gesturing(A) { return G.clock.t < (A._gestUntil || 0); }
+/** 일어나서 움직이기 전에: 앉아 있었거나 함께 스트레칭 중이었으면 풀어 준다 */
+function standUp() {
+  const m = S.me, A = S.meA;
+  if (m.classOn) leaveClass();
+  if (m.gest === 'rest') { m.gest = 'stand'; m.gestN += 1; $('#gest-rest').setAttribute('aria-pressed', false); }
+  if (A) A._gestUntil = 0;
+}
+// 누가 몸짓을 하면 조용히 알려 준다 (너무 잦으면 묶어서)
+let lastGreetAt = 0;
+function noteGreeting(nick, id) {
+  const now = Date.now();
+  if (now - lastGreetAt < 2500) return;
+  lastGreetAt = now;
+  const word = { wave: '인사했어요', clap: '박수를 보냈어요', thumbs: '엄지를 들었어요', hooray: '만세를 했어요' }[id];
+  sysLine(`${nick} 님이 ${word}`, '');
+}
 /** 기구 위에서는 몸이 묶여 있으니 머리 위 그림만 띄운다 */
 function playGesture(A, tagKey, id, busy) {
   const g = GESTURES[id];
   if (!g || !A) return;
-  floatEmoji(tagKey, g.emoji);
+  if (g.label) floatWord(tagKey, g.label);
   A._gest = id;
   if (busy) return;
   S.walk.delete(A);
   A.speed = 1;
+  if (id === 'stand') { A._gestUntil = 0; setIdle(A); return; }
+  if (g.stay) { G.setClip(A, presetClip(g.preset), { blend: 0.3 }); A._gestUntil = Infinity; return; }
   G.playOnce(A, g.preset, 'idle', { blend: 0.2 });
   A._gestUntil = G.clock.t + G.clipDur(A.clip) + 0.1;
 }
 for (const btn of document.querySelectorAll('[data-gesture]')) {
   btn.addEventListener('click', () => {
     btn.blur();
-    const id = btn.dataset.gesture, now = Date.now(), m = S.me;
+    let id = btn.dataset.gesture;
+    const now = Date.now(), m = S.me;
     if (!S.shop || !S.meA || now - S.lastGestureAt < RULES.gestureGapMs) return;
+    if (id === 'rest' && m.gest === 'rest') id = 'stand'; // 한 번 더 누르면 일어남
+    btn.setAttribute('aria-pressed', id === 'rest');
     S.lastGestureAt = now;
     sound.unlock();
     sound.gesture();
@@ -799,15 +1159,122 @@ for (const btn of document.querySelectorAll('[data-gesture]')) {
   });
 }
 
+// 함께 스트레칭: 매시 정각과 30분에 2분. 쌤이 앞에서 하고, 같이 하기를 누른 사람은 같은 동작을 한다
+const CLASS_MOVES = [['neck', '목 옆 늘리기'], ['shrug', '어깨 돌리기'], ['crossArm', '팔 가로 당기기'], ['sideBend', '옆구리 늘리기'], ['twist', '허리 돌리기'], ['forwardFold', '앞으로 숙이기']];
+let classShift = 0; // 시험용
+function classNow(nowMs) {
+  const every = RULES.classEveryMin * 60, t = (nowMs + classShift) / 1000, into = t % every;
+  if (into < RULES.classSec) {
+    const idx = Math.min(CLASS_MOVES.length - 1, Math.floor(into / (RULES.classSec / CLASS_MOVES.length)));
+    return { on: true, idx, left: RULES.classSec - into };
+  }
+  return { on: false, wait: every - into };
+}
+function classClip(A, idx) {
+  if (A._classIdx === idx) return;
+  A._classIdx = idx;
+  S.walk.delete(A);
+  A.speed = 1;
+  A._gestUntil = Infinity;
+  G.setClip(A, presetClip(CLASS_MOVES[idx][0]), { blend: 0.4 });
+}
+function classEnd(A) {
+  if (A._classIdx == null) return;
+  A._classIdx = null;
+  A._gestUntil = 0;
+  setIdle(A);
+}
+function joinClass() {
+  const m = S.me;
+  if (m.station) releaseStation(true);
+  leaveQueue();
+  m.classOn = true;
+  syncPresence(true);
+  sysLine('함께 스트레칭을 시작했어요.', 'rest');
+  stepClass(Date.now());
+}
+function leaveClass() {
+  S.me.classOn = false;
+  if (S.meA) classEnd(S.meA);
+  syncPresence(true);
+  stepClass(Date.now());
+}
+$('#classBtn').addEventListener('click', () => { sound.unlock(); if (S.me.classOn) leaveClass(); else joinClass(); });
+function stepClass(nowMs) {
+  const c = classNow(nowMs), bar = $('#classBar'), m = S.me;
+  if (c.on) {
+    bar.hidden = false;
+    $('#classText').textContent = `함께 스트레칭 · ${CLASS_MOVES[c.idx][1]} · ${fmt(c.left * 1000)}`;
+    $('#classBtn').hidden = false;
+    $('#classBtn').textContent = m.classOn ? '그만하기' : '같이 하기';
+    if (m.classOn && S.meA) classClip(S.meA, c.idx);
+    if (S.coach && !coachPupil(nowMs)) {
+      const spot = SHOPS[S.shop].coachSpots[1];
+      if (!S.coachClass) { S.coachClass = true; walkTo(S.coach, spot.x, spot.z, () => { S.coach.place.ry = 0; G.applyPlace(S.coach); S.coach._classIdx = null; }); }
+      if (!S.walk.has(S.coach)) classClip(S.coach, c.idx);
+    }
+  } else {
+    if (S.coachClass) { S.coachClass = false; if (S.coach) { S.coach._classIdx = null; S.coach._gestUntil = 0; G.setClip(S.coach, presetClip('armsCross'), { blend: 0.3 }); S.coachSlot = null; } }
+    if (m.classOn) { m.classOn = false; if (S.meA) classEnd(S.meA); syncPresence(true); sysLine('수고했어요. 함께 스트레칭이 끝났어요.', 'rest'); noteSet({ preset: 'seatedFold' }); }
+    const soon = c.wait <= 180;
+    bar.hidden = !soon;
+    if (soon) { $('#classText').textContent = `${Math.max(1, Math.ceil(c.wait / 60))}분 뒤 함께 스트레칭`; $('#classBtn').hidden = true; }
+  }
+}
+
+// 오늘 기록과 루틴 (이 브라우저에만 저장)
+const todayKey = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+function loadLog() {
+  let l = {};
+  try { l = JSON.parse(store.get('jg.log', '{}')) || {}; } catch { /* 처음부터 */ }
+  const today = todayKey();
+  if (l.date !== today) {
+    const y = new Date(Date.now() + 9 * 3600e3 - 86400e3).toISOString().slice(0, 10);
+    l = { date: today, reps: 0, sets: 0, routine: {}, routines: 0, total: l.total || 0, streak: l.date === y ? (l.streak || 1) + 1 : 1 };
+  }
+  return l;
+}
+let LOG = loadLog();
+function saveLog() { store.set('jg.log', JSON.stringify(LOG)); renderLog(); }
+const routineOf = (st) => { const tags = PT_KNOW[st.preset]?.tags || []; return tags[0] === '유산소' || st.cardio ? 'cardio' : tags[0] === '스트레칭' ? 'stretch' : 'strength'; };
+function noteRep() {
+  if (LOG.date !== todayKey()) LOG = loadLog();
+  LOG.reps++; LOG.total = (LOG.total || 0) + 1;
+  saveLog();
+}
+function noteSet(st) {
+  LOG.sets++;
+  if (st) LOG.routine[routineOf(st)] = true;
+  if (LOG.routine.cardio && LOG.routine.strength && LOG.routine.stretch) {
+    LOG.routine = {};
+    LOG.routines++;
+    sysLine(`오늘의 루틴을 ${LOG.routines}번 마쳤어요.`, 'rest');
+    toast('오늘의 루틴을 마쳤어요. 잘했어요.', 3000);
+    playCoach('clapCheer');
+  }
+  saveLog();
+}
+function renderLog() {
+  const r = LOG.routine, el = $('#routine');
+  if (!el) return;
+  for (const k of ['cardio', 'strength', 'stretch']) el.querySelector(`[data-r="${k}"]`).classList.toggle('done', !!r[k]);
+  $('#todayReps').textContent = `오늘 ${LOG.reps}회`;
+  $('#logLine').textContent = `오늘 ${LOG.reps}회 · ${LOG.sets}세트 · 루틴 ${LOG.routines}번 · ${LOG.streak}일째`;
+}
+
+const COUNT_WORDS = ['하나', '둘', '셋', '넷', '다섯', '여섯', '일곱', '여덟', '아홉', '열', '열하나', '열둘', '열셋', '열넷', '열다섯'];
 function doRep() {
   const m = S.me, A = S.meA;
   if (!S.shop || m.state !== 'set' || !m.on || !A) return;
-  if (repBusy(A)) return;
+  // 동작이 끝나기 전에 누르면 버리지 않고 끝나자마자 이어서 한다 (유산소 기구는 바로바로)
+  if (!A._cardio && repBusy(A)) { S.repQueued = true; return; }
+  S.repQueued = false;
   const target = SHOPS[S.shop].reps;
   m.reps = Math.min(target, m.reps + 1);
   m.lastActAt = Date.now();
-  playRep(A);
+  if (A._cardio) cardioPress(A); else playRep(A);
   sound.rep();
+  noteRep();
   if (m.reps >= target) finishSet();
   syncPresence(true);
   renderHud();
@@ -815,6 +1282,7 @@ function doRep() {
 function finishSet() {
   const m = S.me;
   const st = stationOf(S.shop, m.station);
+  noteSet(st);
   const restMs = randomRestMs();
   const doneAll = m.set >= RULES.setsPerStation;
   m.state = 'rest';
@@ -823,31 +1291,29 @@ function finishSet() {
   playCoach(doneAll ? 'clapCheer' : 'thumbs');
   const secs = Math.round(restMs / 1000);
   if (doneAll) {
-    sysLine(`🎉 ${st?.name || '기구'} ${RULES.setsPerStation}세트 완료! 쉬는 시간 ${secs}초 — 수다 OK`, 'rest');
-    coachSay('완벽해! 기구는 다음 짹짹이에게 넘겨주고 쉬면서 수다 떨어~', 7000);
+    sysLine(`${st?.name || '기구'} ${RULES.setsPerStation}세트 완료. ${secs}초 쉬어요`, 'rest');
+
     setTimeout(() => { if (S.me.station === st?.id && S.me.state === 'rest') { dismount(true); S.me.station = null; S.me.claimedAt = 0; syncPresence(true); syncScene(); renderHud(); } }, 1600);
   } else {
-    sysLine(`☕ ${m.set}세트 끝! 쉬는 시간 ${secs}초 — 수다 OK`, 'rest');
-    coachSay(`좋아~ ${m.set}세트 끝! 쉬면서 수다 떨어도 돼. 자세 궁금하면 나한테 물어봐~`, 7000);
+    sysLine(`${m.set}세트 끝. ${secs}초 쉬어요`, 'rest');
+
   }
   // 넓은 화면은 수다창을 알아서 열어 준다
-  if (panelIsHidden() && !matchMedia('(max-width: 860px)').matches) { openPanel('chat'); S.panelAuto = true; }
-  else if (panelIsHidden()) toast('쉬는 시간! 💬 를 누르면 수다를 떨 수 있어요.', 3000);
+  if (matchMedia('(max-width: 860px)').matches) toast('쉬는 시간이에요. 채팅을 할 수 있어요.', 3000);
 }
 function endRest() {
   const m = S.me;
   sound.restOver();
-  if (S.panelAuto && S.tab === 'chat') closePanel();
-  S.panelAuto = false;
+  S.repQueued = false;
   m.lastActAt = Date.now();
   if (m.station) {
     m.set += 1; m.reps = 0; m.state = 'set';
     const st = stationOf(S.shop, m.station);
-    sysLine(`🏋️ ${m.set}세트 시작! 채팅은 세트 끝나면 다시 열려요`, 'work');
-    coachSay(st ? st.cue : '다음 세트 가자!', 6000);
+    
+    coachSay(st ? st.cue : '다음 세트 가자.', 6000);
   } else {
     m.state = 'idle'; m.reps = 0;
-    sysLine('쉬는 시간 끝! 다음 기구를 골라 볼까요?', '');
+    sysLine('쉬는 시간이 끝났어요. 다음 기구를 골라 보세요.', '');
   }
   syncPresence(true);
   renderHud();
@@ -863,6 +1329,32 @@ document.addEventListener('keydown', (e) => {
   setTimeout(() => $('#repBtn').classList.remove('pressed'), 120);
   doRep();
 });
+
+const heldKeys = new Set();
+document.addEventListener('keydown', (e) => {
+  const t = e.target;
+  if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement) return;
+  if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) { heldKeys.add(e.code); if (e.code.startsWith('Arrow')) e.preventDefault(); }
+  const n = { Digit1: 'wave', Digit2: 'clap', Digit3: 'thumbs', Digit4: 'hooray', Digit5: 'rest' }[e.code];
+  if (n && !e.repeat) document.querySelector(`[data-gesture="${n}"]`)?.click();
+});
+document.addEventListener('keyup', (e) => heldKeys.delete(e.code));
+addEventListener('blur', () => heldKeys.clear());
+function stepKeys() {
+  const A = S.meA;
+  if (!A || !heldKeys.size || S.me.on) return;
+  const f = (heldKeys.has('KeyW') || heldKeys.has('ArrowUp') ? 1 : 0) - (heldKeys.has('KeyS') || heldKeys.has('ArrowDown') ? 1 : 0);
+  const s = (heldKeys.has('KeyD') || heldKeys.has('ArrowRight') ? 1 : 0) - (heldKeys.has('KeyA') || heldKeys.has('ArrowLeft') ? 1 : 0);
+  if (!f && !s) return;
+  const dir = new T.Vector3();
+  G.cam.getWorldDirection(dir);
+  dir.y = 0; dir.normalize();
+  const x = dir.x * f - dir.z * s, z = dir.z * f + dir.x * s, len = Math.hypot(x, z) || 1;
+  if (S.me.queue) leaveQueue();
+  if (S.me.station) { S.me.station = null; S.me.claimedAt = 0; if (S.me.state === 'set') S.me.state = 'idle'; renderHud(); }
+  standUp();
+  walkTo(A, A.place.x + x / len * 0.7, A.place.z + z / len * 0.7);
+}
 
 // 3D 화면 누르기: 기구 → 사용, 부리부리 → PT, 바닥 → 이동 (드래그는 시점 돌리기)
 const ray = new T.Raycaster();
@@ -880,29 +1372,101 @@ $('#view').addEventListener('pointerup', (e) => {
   // 부리부리 쌤
   if (S.coach) {
     const hit = ray.intersectObject(S.coach.root, true)[0];
-    if (hit) { openPanel('pt'); playCoach('wave'); return; }
+    if (hit) { openPanel(); playCoach('wave'); return; }
   }
-  // 기구
-  let best = null;
-  for (const st of SHOPS[S.shop].stations) {
-    const o = S.stationObj[st.id];
-    if (!o) continue;
-    const hit = ray.intersectObject(o, true)[0];
-    if (hit && (!best || hit.distance < best.d)) best = { d: hit.distance, id: st.id };
-  }
+  // 안내 데스크 · 기구
+  if (ray.ray.intersectsBox(WORLD.doorBox)) { moveShop(otherShop()); return; }
+  if (ray.ray.intersectsBox(WORLD.deskBox)) { openPay(); return; }
+  const best = stationUnderRay();
   if (best) { claimStation(best.id); return; }
   // 바닥
-  if (S.me.on) { toast('기구 위에서는 「기구 반납」을 눌러 내려와요.', 2000); return; }
+  if (S.me.on) { toast('내려오려면 기구 반납을 눌러 주세요.', 2000); return; }
   const o = ray.ray.origin, d = ray.ray.direction;
   if (d.y >= -1e-4) return;
   const t = -o.y / d.y;
   const x = o.x + d.x * t, z = o.z + d.z * t;
   if (S.me.station && !S.me.on) { S.me.station = null; S.me.claimedAt = 0; if (S.me.state === 'set') S.me.state = 'idle'; renderHud(); syncScene(); }
   if (S.me.queue) { leaveQueue(); toast('줄에서 나왔어요.', 1600); }
-  S.meA._gestUntil = 0;
+  standUp();
   walkTo(S.meA, x, z);
   syncPresence(true);
 });
+
+/** 기구 모양을 직접 맞혔거나, 기구가 놓인 바닥 자리를 가리킬 때만 그 기구. 기구 뒤쪽 바닥을 눌러도 잡히지 않게 한다 */
+const otherShop = () => (S.shop === 'weight' ? 'pilates' : 'weight');
+function stationUnderRay() {
+  let best = null;
+  const o = ray.ray.origin, d = ray.ray.direction, hit = new T.Vector3();
+  const t0 = d.y < -1e-4 ? -o.y / d.y : Infinity;
+  const fx = o.x + d.x * t0, fz = o.z + d.z * t0;
+  for (const st of SHOPS[S.shop].stations) {
+    const box = S.stationBox[st.id];
+    if (!box) continue;
+    let dist = Infinity;
+    if (fx >= box.min.x && fx <= box.max.x && fz >= box.min.z && fz <= box.max.z) dist = t0;
+    if (ray.ray.intersectBox(box, hit)) {
+      const m = ray.intersectObject(S.stationObj[st.id], true)[0];
+      if (m) dist = Math.min(dist, m.distance);
+    }
+    if (dist < Infinity && (!best || dist < best.d)) best = { d: dist, id: st.id };
+  }
+  return best;
+}
+
+// 기구에 마우스를 올리면: 바닥에 표시 + 이름과 지금 상태 (아래 목록에 올려도 똑같이)
+let hoverMark = null, hoverAt = 0;
+function buildHoverMark(set) {
+  hoverMark = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ color: 0x4CD08A, transparent: true, opacity: 0.4, depthWrite: false }));
+  hoverMark.rotation.x = -Math.PI / 2;
+  hoverMark.visible = false;
+  set.add(hoverMark);
+  S.hover = null;
+  S.hoverDesk = false;
+}
+function hoverInfo(id) {
+  const list = members(), st = stationOf(S.shop, id), o = owners(list).get(id), line = lines(list).get(id) || [];
+  if (o && o.me) return { st, cls: 'mine', state: '내가 쓰는 중' };
+  if (line.some((m) => m.me)) return { st, cls: 'busy', state: `줄 서는 중 · 대기 ${line.length}명` };
+  if (o) return { st, cls: 'busy', state: `${o.nick} 님이 쓰는 중${line.length ? `, 대기 ${line.length}명` : ''}. 눌러서 줄 서기` };
+  if (line.length) return { st, cls: 'busy', state: `대기 ${line.length}명. 눌러서 줄 서기` };
+  return { st, cls: 'free', state: `${st.ex} · 비어 있어요. 눌러서 시작` };
+}
+function setHover(id, desk = false) {
+  S.hover = id;
+  S.hoverDesk = desk;
+  const canvas = $('#view canvas');
+  if (canvas) canvas.style.cursor = id || desk ? 'pointer' : 'grab';
+}
+function paintHover() {
+  const el = $('#hoverTag');
+  if (!S.shop || !hoverMark) { if (el) el.hidden = true; return; }
+  const box = S.hoverDesk === 'door' ? WORLD.doorBox : S.hoverDesk ? WORLD.deskBox : S.hover && S.stationBox[S.hover];
+  if (!box) { el.hidden = true; hoverMark.visible = false; return; }
+  let title = S.hoverDesk === 'door' ? '입구' : '안내 데스크', state = S.hoverDesk === 'door' ? `${SHOPS[otherShop()].name}으로 가기` : '온라인짐 후원', cls = 'free';
+  if (!S.hoverDesk) { const i = hoverInfo(S.hover); title = i.st.name; state = i.state; cls = i.cls; }
+  hoverMark.position.set((box.min.x + box.max.x) / 2, 0.02, (box.min.z + box.max.z) / 2);
+  hoverMark.scale.set(box.max.x - box.min.x + 0.2, box.max.z - box.min.z + 0.2, 1);
+  hoverMark.material.color.setHex(cls === 'busy' ? 0xFF8A3D : cls === 'mine' ? 0xF5D33F : 0x4CD08A);
+  hoverMark.material.opacity = 0.34 + Math.sin(performance.now() / 260) * 0.1;
+  hoverMark.visible = !S.hoverDesk;
+  const q = project((box.min.x + box.max.x) / 2, Math.min(box.max.y, 2.4) + 0.2, (box.min.z + box.max.z) / 2);
+  el.hidden = !q.vis;
+  el.dataset.state = cls;
+  el.style.transform = `translate(${q.x.toFixed(1)}px, ${q.y.toFixed(1)}px) translate(-50%, -100%)`;
+  el.querySelector('b').textContent = title;
+  el.querySelector('small').textContent = state;
+}
+$('#view').addEventListener('pointermove', (e) => {
+  if (!S.shop || e.pointerType === 'touch' || e.buttons) return;
+  const now = performance.now();
+  if (now - hoverAt < 50) return;
+  hoverAt = now;
+  const r = $('#view').getBoundingClientRect();
+  ray.setFromCamera(new T.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), G.cam);
+  const best = stationUnderRay();
+  setHover(best ? best.id : null, best ? false : ray.ray.intersectsBox(WORLD.doorBox) ? 'door' : ray.ray.intersectsBox(WORLD.deskBox));
+});
+$('#view').addEventListener('pointerleave', () => setHover(null));
 
 // ------------------------------------------------------------------ HUD
 function renderHud() {
@@ -913,23 +1477,30 @@ function renderHud() {
   $('#clock').hidden = false;
   if (m.state === 'set' && st) {
     stage.dataset.phase = 'work';
-    $('#exName').textContent = m.on ? `${st.ex} · ${m.set}/${RULES.setsPerStation}세트` : `${st.name}로 가는 중`;
+    const c = S.meA?._cardio;
+    $('#exName').textContent = !m.on ? `${st.name} 앞으로 가는 중` : c ? `${st.ex} · ${c.label(c.lv)} · ${m.set}/${RULES.setsPerStation}세트` : `${st.ex} · ${m.set}/${RULES.setsPerStation}세트`;
     $('#clock').textContent = `${m.reps}/${shop.reps}`;
     repBtn.hidden = false;
     repBtn.disabled = !m.on;
+    repBtn.textContent = m.on ? COUNT_WORDS[m.reps] || String(m.reps + 1) : '가는 중';
   } else if (m.state === 'rest') {
     stage.dataset.phase = 'rest';
-    $('#exName').textContent = st ? `쉬는 시간 · 다음 ${st.name} ${m.set + 1}세트` : qst ? `쉬는 시간 · ${qst.name} 줄 ${S.lineAhead || 0}명 앞` : '쉬는 시간 · 수다 OK';
+    $('#exName').textContent = st ? `쉬는 시간 · 다음 ${st.name} ${m.set + 1}세트` : qst ? `쉬는 시간 · ${qst.name} 줄, 내 앞에 ${S.lineAhead || 0}명` : '쉬는 시간이에요';
     $('#clock').textContent = fmt(m.restUntil - now);
-    repBtn.hidden = true;
+    repBtn.hidden = !st;
+    repBtn.disabled = true;
+    repBtn.textContent = st && !m.on ? '가는 중' : '쉬는 중';
   } else {
     stage.dataset.phase = 'idle';
-    $('#exName').textContent = qst ? `${qst.name} 줄 서는 중 · 내 앞에 ${S.lineAhead || 0}명` : '빈 기구를 골라 시작해요';
+    $('#exName').textContent = qst ? `${qst.name} 줄 서는 중 · 내 앞에 ${S.lineAhead || 0}명` : '비어 있는 기구를 눌러 보세요';
     $('#clock').hidden = true;
     $('#clock').textContent = '—';
     repBtn.hidden = true;
   }
   $('#releaseBtn').hidden = !m.station;
+  const chance = $('#ptChanceBtn');
+  chance.hidden = S.ptBusy;
+  chance.textContent = ptSessionLive() ? 'PT 받는 중' : 'PT 쌤 부르기';
   $('#leaveQueueBtn').hidden = !m.queue;
   $('#stnbar').hidden = !!m.station;
   updateChatLock();
@@ -941,10 +1512,23 @@ G.hooks.push((dt) => {
   const nowMs = performance.now(), realDt = Math.min(0.5, (nowMs - lastHook) / 1000);
   lastHook = nowMs;
   if (!S.shop || !S.meA) return;
+  stepKeys();
   stepWalkers(realDt); // 화면이 느려도 걷는 속도는 그대로
   followCam(dt);
   updateTags();
+  paintHover();
+  watchFrameRate(realDt);
 });
+// 느린 기기는 거울 반사를 꺼서 화면을 지킨다 (평범한 거울 색으로 바뀜)
+let slowSec = 0, fpsT = 0, fpsN = 0;
+function watchFrameRate(dt) {
+  fpsT += dt; fpsN++;
+  if (fpsT < 2) return;
+  const fps = fpsN / fpsT;
+  fpsT = 0; fpsN = 0;
+  slowSec = fps < 22 && !document.hidden ? slowSec + 2 : 0;
+  if (slowSec >= 6 && !FAST && WORLD.mirrorOn()) WORLD.mirrorOff();
+}
 // 1초마다 규칙 돌리기 (탭이 내려가 있어도 휴식·줄이 멈추지 않게 그리기와 분리)
 setInterval(() => {
   if (!S.shop || !S.meA) return;
@@ -958,33 +1542,213 @@ setInterval(() => {
   // 줄이 있는데 오래 멈춰 있으면 다음 사람에게
   if (m.station && m.state !== 'rest' && S.lineBehind > 0 && now - m.lastActAt > RULES.idleHoldSec * 1000) {
     const st = stationOf(S.shop, m.station);
-    toast(`오래 멈춰 있어서 ${st?.name || '기구'}를 다음 분께 넘겼어요.`, 3500);
+    toast('한동안 움직임이 없어서 다음 분께 자리를 넘겼어요.', 3500);
     releaseStation();
   }
+  endPtIfOver();
+  stepClass(now);
   stepCoach(now);
   renderHud();
-  document.title = m.state === 'rest' ? `☕ ${fmt(m.restUntil - now)} · 짹짹이짐` : m.state === 'set' ? `💪 ${m.reps}/${SHOPS[S.shop].reps} · 짹짹이짐` : '짹짹이짐 ONLINE 3D';
+  document.title = m.state === 'rest' ? `휴식 ${fmt(m.restUntil - now)} · ONLINE GYM` : m.state === 'set' ? `${m.reps}/${SHOPS[S.shop].reps} · ONLINE GYM` : 'ONLINE GYM';
 }, 1000);
 
 // ------------------------------------------------------------------ 로비
-function renderColorPicker() {
-  const box = $('#colorPicker');
-  box.textContent = '';
+// 나시 색 고르기: 기본색 + 무지개 막대 + 밝기 막대 + 랜덤. 로비와 짐 안에 하나씩
+const hslToHex = (h, s, l) => {
+  const a = s * Math.min(l, 1 - l), f = (n) => { const k = (n + h / 30) % 12; return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))).toString(16).padStart(2, '0'); };
+  return `#${f(0)}${f(8)}${f(4)}`;
+};
+function hexToHl(hex) {
+  const r = ((hex >> 16) & 255) / 255, g = ((hex >> 8) & 255) / 255, b = (hex & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  let h = 0;
+  if (d) { h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4; h = (h * 60 + 360) % 360; }
+  return [h, (max + min) / 2];
+}
+const studios = [];
+const PARTS = { shirt: { label: '나시', key: 'color', store: 'jg.color' }, band: { label: '머리띠', key: 'band', store: 'jg.band' }, pants: { label: '바지', key: 'pants', store: 'jg.pants' } };
+let shirtPart = 'shirt';
+function buildStudio(host, prefix) {
+  host.textContent = '';
+  const tabs = document.createElement('div');
+  tabs.className = 'part-tabs';
+  tabs.setAttribute('role', 'group');
+  tabs.setAttribute('aria-label', '바꿀 부분');
+  const partBtns = {};
+  for (const [key, def] of Object.entries(PARTS)) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.id = `${prefix}part-${key}`; b.textContent = def.label;
+    b.addEventListener('click', () => { shirtPart = key; paintStudios(false); });
+    tabs.append(b);
+    partBtns[key] = b;
+  }
+  const swatches = document.createElement('div');
+  swatches.className = 'swatches';
+  swatches.setAttribute('role', 'radiogroup');
+  swatches.setAttribute('aria-label', '기본 색');
+  const radios = {};
   for (const [key, def] of Object.entries(COLOR_DEFS)) {
     const label = document.createElement('label');
     label.title = def.label;
+    label.style.setProperty('--c', `#${def.hex.toString(16).padStart(6, '0')}`);
     const input = document.createElement('input');
-    input.type = 'radio'; input.name = 'color'; input.value = key; input.id = `color-${key}`;
-    input.checked = key === S.me.color;
-    input.setAttribute('aria-label', `${def.label} 나시`);
-    input.addEventListener('change', () => { S.me.color = key; store.set('jg.color', key); });
-    const img = document.createElement('img');
-    img.src = spriteFor(key); img.alt = '';
-    label.append(input, img);
-    box.append(label);
+    input.type = 'radio'; input.name = `${prefix}color`; input.value = key; input.id = `${prefix}color-${key}`;
+    input.setAttribute('aria-label', `${def.label}`);
+    input.addEventListener('change', () => setShirt(key, true));
+    label.append(input);
+    swatches.append(label);
+    radios[key] = input;
+  }
+  host.append(tabs, swatches);
+  const slider = (cls, text, id, min, max) => {
+    const label = document.createElement('label');
+    label.className = `shirt-slider ${cls}`;
+    const span = document.createElement('span');
+    span.textContent = text;
+    const input = document.createElement('input');
+    input.type = 'range'; input.id = id; input.min = min; input.max = max; input.step = 1;
+    label.append(span, input);
+    host.append(label);
+    return input;
+  };
+  const hue = slider('hue', '색', `${prefix}hue`, 0, 360);
+  const tone = slider('tone', '밝기', `${prefix}tone`, 8, 94);
+  const fromSliders = (done) => setShirt(hslToHex(+hue.value, 0.82, +tone.value / 100), done);
+  for (const s of [hue, tone]) {
+    s.addEventListener('input', () => fromSliders(false));
+    s.addEventListener('change', () => fromSliders(true));
+  }
+  const dice = document.createElement('button');
+  dice.type = 'button'; dice.className = 'shirt-dice'; dice.id = `${prefix}dice`;
+  dice.textContent = '아무 색이나';
+  dice.addEventListener('click', () => setShirt(hslToHex(Math.random() * 360, 0.6 + Math.random() * 0.35, 0.32 + Math.random() * 0.42), true));
+  host.append(dice);
+  studios.push({ radios, hue, tone, partBtns });
+}
+function paintStudios(fromSlider) {
+  const c = S.me[PARTS[shirtPart].key], [h, l] = hexToHl(colorHex(c));
+  for (const st of studios) {
+    for (const [k, b] of Object.entries(st.partBtns)) b.setAttribute('aria-pressed', k === shirtPart);
+    for (const [k, r] of Object.entries(st.radios)) r.checked = k === c;
+    if (!fromSlider) { st.hue.value = Math.round(h); st.tone.value = Math.round(l * 100); }
+    st.tone.style.setProperty('--hue', st.hue.value);
   }
 }
+function setShirt(color, done) {
+  const part = PARTS[shirtPart];
+  S.me[part.key] = validColor(color);
+  if (done) store.set(part.store, S.me[part.key]);
+  if (S.meA) paint(S.meA, S.me.color, S.me.band, S.me.pants);
+  syncPresence(done);
+  paintStudios(!done);
+}
+// 메뉴: 닉네임 · 옷 색 · 샵 이동 · PT 신청 · 소리
+function toggleMenu(open) {
+  const m = $('#menu'), show = open ?? m.hidden;
+  m.hidden = !show;
+  $('#menuBtn').setAttribute('aria-pressed', show);
+  if (show) { $('#nickInput').value = S.me.nick; lobbyCounts(); }
+}
+$('#menuBtn').addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
+document.addEventListener('pointerdown', (e) => {
+  const m = $('#menu');
+  if (!m.hidden && !m.contains(e.target) && e.target !== $('#menuBtn')) { toggleMenu(false); downAt = null; } // 바깥을 누르면 메뉴만 닫힘
+});
+$('#nickForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const nick = cleanText($('#nickInput').value, LIMIT.nick);
+  if (!nick) { $('#nickInput').value = S.me.nick; return; }
+  S.me.nick = nick;
+  store.set('jg.nick', nick);
+  syncPresence(true);
+  toast(`닉네임을 ${nick}(으)로 바꿨어요.`, 2000);
+});
+/** 다른 샵으로: 문까지 걸어가서 넘어간다 (바닥을 누르면 취소) */
+function moveShop(id) {
+  if (!SHOPS[id] || id === S.shop || !S.meA) return;
+  toggleMenu(false);
+  sound.unlock();
+  if (S.me.station) releaseStation(true);
+  leaveQueue();
+  standUp();
+  toast(`${SHOPS[id].name}으로 가요.`, 2200);
+  const d = WORLD.doorSpot;
+  walkTo(S.meA, d.x, d.z + 0.5, () => {
+    WORLD.openDoor();
+    setTimeout(() => enterGym(id), 350);
+  });
+  syncPresence(true);
+}
+for (const b of document.querySelectorAll('[data-go]')) b.addEventListener('click', () => moveShop(b.dataset.go));
+$('#menuPt').addEventListener('click', () => { toggleMenu(false); openPay(); });
+const isWeb = !!window.ONLINE_GYM_SUPABASE || !window.claude;
+$('#shareSec').hidden = !isWeb;
+$('#photoBtn').addEventListener('click', () => {
+  toggleMenu(false);
+  G.renderer.clear();
+  G.renderer.render(G.scene, G.cam);
+  const src = G.renderer.domElement, c = document.createElement('canvas');
+  c.width = src.width; c.height = src.height;
+  const x = c.getContext('2d');
+  x.drawImage(src, 0, 0);
+  const u = c.height / 600;
+  x.fillStyle = 'rgba(23,23,21,.85)'; x.fillRect(0, c.height - 44 * u, c.width, 44 * u);
+  x.fillStyle = '#f2cf1d'; x.font = `${22 * u}px 'Black Han Sans', sans-serif`; x.textBaseline = 'middle';
+  x.fillText('ONLINE GYM', 16 * u, c.height - 22 * u);
+  x.fillStyle = '#f4f2ec'; x.font = `${15 * u}px 'IBM Plex Sans KR', sans-serif`; x.textAlign = 'right';
+  x.fillText(`${S.me.nick} · 오늘 ${LOG.reps}회`, c.width - 16 * u, c.height - 22 * u);
+  const a = document.createElement('a');
+  a.download = `online-gym-${todayKey()}.png`;
+  a.href = c.toDataURL('image/png');
+  a.click();
+  toast('사진을 저장했어요.', 1800);
+});
+$('#linkBtn').addEventListener('click', async () => {
+  toggleMenu(false);
+  try { await navigator.clipboard.writeText('https://onlinegym.vercel.app'); toast('링크를 복사했어요.', 1800); }
+  catch { toast('onlinegym.vercel.app', 4000); }
+});
+$('#joinBtn').addEventListener('click', openPay);
+
+// 후원 창. 결제를 붙일 때 startCheckout()만 채우면 된다. 지금은 아무 정보도 받지 않고 돈도 나가지 않는다.
+function buildPayPlans() {
+  const box = $('#payPlans');
+  box.textContent = '';
+  DONATIONS.forEach((p, i) => {
+    const label = document.createElement('label');
+    label.className = 'plan';
+    const input = document.createElement('input');
+    input.type = 'radio'; input.name = 'plan'; input.value = p.id; input.id = `plan-${p.id}`; input.checked = i === 0;
+    const name = document.createElement('b'); name.textContent = p.name;
+    const price = document.createElement('span'); price.textContent = p.price;
+    label.append(input, name, price);
+    box.append(label);
+  });
+}
+function openPay() { $('#payMsg').hidden = true; $('#payModal').hidden = false; }
+function closePay() { $('#payModal').hidden = true; }
+function startCheckout() {
+  $('#payMsg').textContent = '후원은 아직 준비 중이에요. 돈은 나가지 않았어요. 마음만 고맙게 받을게요.';
+  $('#payMsg').hidden = false;
+}
+$('#payGo').addEventListener('click', () => startCheckout(document.querySelector('[name="plan"]:checked')?.value));
+$('#payClose').addEventListener('click', closePay);
+$('#payModal').addEventListener('pointerdown', (e) => { if (e.target === $('#payModal')) closePay(); });
+
+function renderChannel() {
+  const info = room?.channelInfo?.(), el = $('#channelSec');
+  el.hidden = !info;
+  if (info) $('#channelText').textContent = `${info.no}번 방 · ${info.count}명`;
+}
+$('#channelNext').addEventListener('click', () => {
+  const info = room?.channelInfo?.();
+  if (!info) return;
+  room.setChannel(info.no >= info.max ? 1 : info.no + 1);
+  sysLine('다른 방으로 옮겼어요.', '');
+  renderChannel();
+});
 function lobbyCounts() {
+  renderChannel();
   const counts = { pilates: 0, weight: 0 }, busy = { pilates: new Set(), weight: new Set() };
   if (room) {
     for (const p of room.peers()) {
@@ -998,76 +1762,35 @@ function lobbyCounts() {
     const el = document.querySelector(`[data-live="${id}"]`);
     if (!el) continue;
     const total = SHOPS[id].stations.length;
-    el.textContent = room ? `🐥 ${counts[id]}명 · 빈 기구 ${total - busy[id].size}/${total}` : `기구 ${total}개 · 세트당 ${SHOPS[id].reps}회`;
+    el.textContent = id === S.shop ? '지금 여기 있어요' : room ? `${counts[id]}명 · 빈 기구 ${total - busy[id].size}개` : `기구 ${total}개`;
+    document.querySelector(`[data-go="${id}"]`).disabled = id === S.shop;
   }
-  const all = counts.pilates + counts.weight;
-  $('#lobbyCount').hidden = !room;
-  $('#lobbyCount').textContent = all ? `지금 ${all}명이 함께 운동 중` : '지금은 조용해요. 첫 번째로 들어가 볼까요?';
 }
-function showLobby() {
-  if (S.shop) { releaseStation(true); }
-  S.me.queue = null; S.me.queuedAt = 0;
-  ambient.stop();
-  closePanel();
-  S.shop = null;
-  S.meA = null; S.coach = null;
-  for (const A of G.actors.slice()) G.removeActor(A);
-  S.remotes.clear(); S.walk.clear();
-  document.body.classList.remove('in-gym');
-  $('#gym').hidden = true;
-  $('#lobby').hidden = false;
-  document.title = '짹짹이짐 ONLINE 3D';
-  room?.presence({ shop: null, station: null, queue: null, state: 'idle', on: false }).catch(() => {});
-  lobbyCounts();
-}
-$('#joinForm').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const shop = e.submitter?.value;
-  const nick = cleanText($('#nick').value, LIMIT.nick);
-  if (!nick) { $('#nick').focus(); return; }
-  if (!SHOPS[shop] || !S.modelsReady) return;
-  sound.unlock();
-  S.me.nick = nick;
-  store.set('jg.nick', nick);
-  enterGym(shop);
-});
 function enterGym(shopId) {
+  const resting = S.me.state === 'rest' && S.me.restUntil > Date.now();
   S.shop = shopId;
-  Object.assign(S.me, { station: null, claimedAt: 0, on: false, queue: null, queuedAt: 0, state: 'idle', reps: 0, set: 1, restUntil: 0 });
-  S.ptTurns = [];
+  store.set('jg.shop', shopId);
+  Object.assign(S.me, { station: null, claimedAt: 0, on: false, queue: null, queuedAt: 0, reps: 0, set: 1 });
+  if (!resting) { S.me.state = 'idle'; S.me.restUntil = 0; }
   S.announce = false;
   setTimeout(() => { S.announce = true; }, 2500);
-  $('#chatLog').textContent = '';
-  $('#ptLog').textContent = '';
-  setTab('chat');
   const shop = SHOPS[shopId];
   $('#shopName').textContent = shop.name;
-  $('#lobby').hidden = true;
-  $('#gym').hidden = false;
-  document.body.classList.add('in-gym');
+  $('#loading').hidden = true;
   buildShop(shopId);
   syncPresence(true);
   ambient.start(shopId);
-  sysLine(`🐥 ${shop.name}에 입장! 바닥을 누르면 걸어가고, 빈 기구를 누르면 운동을 시작해요.`, '');
-  if (!room) sysLine('지금은 혼자 운동 모드예요. claude.ai에 로그인한 상태로 열면 다른 짹짹이들과 함께해요.', '');
-  setTimeout(() => { if (S.shop === shopId) coachGreet(S.me.nick, S.meA); }, 700);
+  music.start(shopId);
+  sysLine(`${shop.name}에 들어왔어요. 바닥을 누르면 걷고, 비어 있는 기구를 누르면 운동을 시작해요.`, '');
+  if (!room) sysLine('지금은 혼자 운동하고 있어요.', '');
+  setTimeout(() => { if (S.shop === shopId && S.coach) coachGreet(S.me.nick, S.meA); }, 1500);
   renderHud();
   syncScene();
   updatePtUI();
+  lobbyCounts();
 }
-$('#leaveBtn').addEventListener('click', showLobby);
 
 // ------------------------------------------------------------------ 말풍선 · 응원
-function showBubble(tagKey, text) {
-  const el = S.tags.get(tagKey);
-  if (!el) return;
-  el.querySelector('.bubble')?.remove();
-  const b = document.createElement('div');
-  b.className = 'bubble';
-  b.textContent = text;
-  el.prepend(b);
-  setTimeout(() => b.remove(), 6000);
-}
 let coachTimer = null;
 function coachSay(text, ms = 7000) {
   const el = S.tags.get('coach');
@@ -1081,13 +1804,13 @@ function coachSay(text, ms = 7000) {
   clearTimeout(coachTimer);
   coachTimer = setTimeout(() => b.remove(), ms);
 }
-function floatEmoji(tagKey, emoji) {
+function floatWord(tagKey, word) {
   const el = S.tags.get(tagKey);
   if (!el) return;
+  el.querySelector('.float-word')?.remove();
   const f = document.createElement('span');
-  f.className = 'float-emoji';
-  f.textContent = emoji;
-  f.style.marginLeft = `${(Math.random() * 40 - 20).toFixed(0)}px`;
+  f.className = 'float-word';
+  f.textContent = word;
   el.append(f);
   setTimeout(() => f.remove(), 1500);
 }
@@ -1117,7 +1840,7 @@ function chatLine(who, text, mine) {
   log.append(li);
   trimLog(log);
   if (mine) log.scrollTop = log.scrollHeight; else done();
-  if (S.tab !== 'chat' || panelIsHidden()) bumpUnread();
+  if (matchMedia('(max-width: 860px)').matches && !$('#chatFloat').classList.contains('open') && !mine) bumpUnread();
 }
 function updateChatLock() {
   const m = S.me, open = m.state === 'rest';
@@ -1126,11 +1849,11 @@ function updateChatLock() {
   $('#chatSend').disabled = !open;
   if (!open) {
     if (m.state === 'set' && m.on) {
-      $('#chatLockTitle').textContent = '🔒 세트 중엔 운동에 집중!';
-      $('#chatLockSub').textContent = `${SHOPS[S.shop].reps - m.reps}회만 더 하면 채팅이 열려요`;
+      $('#chatLockTitle').textContent = '세트 중에는 채팅할 수 없어요';
+      $('#chatLockSub').textContent = `${SHOPS[S.shop].reps - m.reps}회 더 하면 쉬는 시간이에요`;
     } else {
-      $('#chatLockTitle').textContent = '🔒 세트를 끝내야 수다를 떨 수 있어요';
-      $('#chatLockSub').textContent = '빈 기구를 골라 세트를 시작해 보세요';
+      $('#chatLockTitle').textContent = '쉬는 시간에만 채팅할 수 있어요';
+      $('#chatLockSub').textContent = '세트를 끝내면 열려요';
     }
   }
 }
@@ -1146,7 +1869,6 @@ function onChat(msg) {
   }
   const R = S.remotes.get(msg.peer);
   chatLine(msg.sameTab ? S.me.nick : R?.nick || '짹짹이', text, msg.sameTab);
-  showBubble(msg.sameTab ? 'me' : msg.peer, text);
 }
 async function sendChat(text) {
   if (S.me.state !== 'rest') return;
@@ -1156,12 +1878,11 @@ async function sendChat(text) {
   if (room && room.connected()) {
     try { await room.emit('chat', { shop: S.shop, text }); }
     catch (e) {
-      if (e?.code === 'not_permitted') toast('이 링크 권한으로는 채팅을 보낼 수 없어요. 공유한 분께 참여 권한을 요청해 주세요.', 4000);
+      if (e?.code === 'not_permitted') toast('이 링크로는 채팅을 보낼 수 없어요. 공유한 분께 참여 권한을 부탁해 주세요.', 4000);
       else toast('메시지를 보내지 못했어요. 잠시 후 다시 보내 주세요.', 2500);
     }
   } else {
     chatLine(S.me.nick, text, true);
-    showBubble('me', text);
   }
 }
 $('#chatForm').addEventListener('submit', (e) => {
@@ -1172,117 +1893,58 @@ $('#chatForm').addEventListener('submit', (e) => {
   sendChat(text);
 });
 // ------------------------------------------------------------------ 부리부리 쌤 PT (체험 1회, 이후 이용권)
-// 결제 시스템이 생기면 hasPtPass()가 실제 이용권을 확인하게 바꾸면 된다.
-function hasPtPass() { return false; }
-function trialUsed() { return Math.max(0, parseInt(store.get('jg.ptTrialUsed', '0'), 10) || 0); }
-function trialLeft() { return Math.max(0, RULES.trialQuestions - trialUsed()); }
-function canAskPt() { return hasPtPass() || trialLeft() > 0; }
-function updatePtUI() {
-  const pass = hasPtPass(), left = trialLeft();
-  $('#ptQuota').textContent = pass ? 'PT 이용권 사용 중' : left > 0 ? `체험 PT · 남은 질문 ${left}/${RULES.trialQuestions}` : '체험 PT 끝';
-  $('#ptMode').textContent = sample ? '' : '(지금은 오프라인 모드 — 기본 답변만 해줘요)';
-  const can = canAskPt();
-  $('#ptPaywall').hidden = can;
-  $('#ptChips').hidden = !can;
-  $('#ptInput').disabled = !can || S.ptBusy;
-  $('#ptSend').disabled = !can || S.ptBusy;
+const ptSessionLive = () => !!S.ptSession && S.ptSession.until > Date.now();
+function startPtSession() {
+  S.ptSession = { until: Date.now() + RULES.ptSessionSec * 1000 };
+  S.me.ptUntil = S.ptSession.until;
+  S.coachSlot = null;
+  syncPresence(true);
+  stepCoach(Date.now());
 }
-$('#buyBtn').addEventListener('click', () => { $('#buyNote').hidden = false; });
-function coachRules() {
-  const shop = SHOPS[S.shop];
-  const list = shop.stations.map((s) => `- ${s.name}: ${s.ex} — "${s.cue}"`).join('\n');
-  return `너는 온라인 헬스장 '짹짹이 바른자세 스튜디오'의 PT 쌤 '부리부리'야.
-흰 새 캐릭터에 뾰족한 검은 머리, 늘 팔짱을 끼고 있지만 회원들을 진심으로 아끼는 트레이너야.
-회원들은 '짹짹이'라고 불러. 지금 너는 ${shop.name}에서 1:1 PT 중이야.
-
-이 샵의 기구와 운동 (세트당 ${shop.reps}회 × ${RULES.setsPerStation}세트, 세트 사이 1~3분 휴식):
-${list}
-
-스튜디오 철학:
-- 아픈 곳만 주무르지 말고 직접 움직이게 한다. ("목이 뻣뻣하다고 목만 주무르지 마!")
-- 허리가 할 일을 대신하지 않게 고관절·엉덩이를 쓰고, 목 대신 등(흉추)을 움직인다.
-- 무리해서 억지로 하지 않는다. 가동 범위 안에서 천천히, 호흡은 참지 않는다.
-
-답하는 방식:
-- 반말로 친근하고 짧게. 2~4문장, 길어도 250자 안쪽. 채팅 말풍선에 그대로 뜨니까 마크다운·목록 기호·이모지 남발 금지.
-- 동작 질문엔 핵심 자세 포인트 1~2개와 흔한 실수 1개를 짚어 줘. 쉬운 대체 동작이 있으면 알려 줘.
-- 질문 앞의 [지금 상황]은 스튜디오가 붙여 주는 정보야. 지금 쓰는 기구와 연결해서 답하면 좋아.
-- 날카로운 통증, 저림, 부상, 수술 이력, 임신, 질환 같은 얘기가 나오면 진단하지 말고 그 동작은 멈추라고 한 뒤 병원·전문가 상담을 권해.
-- 운동·자세·건강 습관과 상관없는 질문은 가볍게 한마디 받아 주고 운동 얘기로 데려와.
-- 너는 AI 트레이너라는 걸 숨기지 않아. 물어보면 솔직하게 말해.
-이 규칙을 지키면서 아래 짹짹이의 메시지에 부리부리 쌤으로서 답만 써.`;
-}
-function contextNote(question) {
-  const m = S.me, st = stationOf(S.shop, m.station);
-  const where = st ? `${st.name}에서 ${st.ex}` : '기구 고르는 중';
-  const state = m.state === 'set' ? `${m.set}세트 ${m.reps}/${SHOPS[S.shop].reps}회` : m.state === 'rest' ? '세트 사이 휴식 중' : '대기 중';
-  return `[지금 상황] ${SHOPS[S.shop].name} · ${where} · ${state} · 질문한 짹짹이: ${m.nick}\n\n${question}`;
-}
-const OFFLINE_RULES = [
-  [/통증|아파|아프|저려|저림|찌릿|부상|다쳤/, '아픈 데가 있으면 그 동작은 바로 멈추자! 날카롭게 아프거나 저리면 참지 말고 병원에서 꼭 확인받아. 오늘은 통증 없는 범위에서만 천천히~'],
-  [/허리/, '허리가 할 일을 대신하지 않게 하는 게 핵심이야! 허리를 숙이는 게 아니라 고관절을 접는 느낌, 엉덩이로 움직여봐.'],
-  [/목|뒷목|거북/, '목이 뻣뻣하다고 목만 주무르지 마! 목부터 등까지 같이 움직여야 해. 캣/카우 같이 해보자~'],
-  [/무릎/, '무릎은 발끝 방향이랑 같이 가야 해. 안으로 모이면 안 돼! 엉덩이를 뒤로 빼면서 앉으면 무릎 부담이 줄어~'],
-  [/어깨|승모|날개/, '어깨가 귀 쪽으로 으쓱 올라가면 안 돼! 날개뼈를 살짝 아래 뒤로 모은 상태로 움직여봐.'],
-  [/호흡|숨/, '숨은 절대 참지 마! 힘 쓸 때 내쉬고 돌아올 때 들이마셔. 갈비뼈를 옆으로 넓히는 느낌~'],
-  [/몇\s*(번|개|회|세트)|횟수|반복/, '횟수보다 자세가 먼저야! 마지막 2~3회가 살짝 힘든 정도면 딱 좋아. 자세 무너지면 바로 쉬어.'],
-  [/쉬운|대체|못\s*하/, '힘들면 범위를 반으로 줄이거나 무게를 내려! 자세가 지켜지는 만큼만 하는 게 진짜 운동이야~'],
-  [/안녕|하이|반가/, '어서 와 짹짹이! 오늘도 바른 자세로 같이 움직여보자~ 궁금한 거 있으면 언제든 물어봐!'],
-  [/누구|ai|AI|사람|로봇/, '나는 짹짹이 스튜디오의 AI PT 부리부리야! 팔짱은 끼고 있지만 질문은 다 받아줄게~'],
-];
-function offlineAnswer(question) {
-  for (const [re, ans] of OFFLINE_RULES) if (re.test(question)) return ans;
-  const st = stationOf(S.shop, S.me.station);
-  if (st) return `지금 ${st.name}에서 ${st.ex} 하고 있지? 포인트는 이거! "${st.cue}" 더 궁금한 건 구체적으로 물어봐~`;
-  return '먼저 빈 기구 하나 골라봐! 기구를 잡으면 그 운동 기준으로 자세 포인트 알려줄게~';
-}
-const SAMPLE_COPY = {
-  rate_limited: '쌤한테 질문이 몰려서 잠깐 숨 고르는 중! 조금 있다가 다시 물어봐~',
-  refused: '음… 그건 내가 답하기 어려운 질문이야. 우리 자세 얘기로 돌아가 볼까?',
-  session_expired: 'claude.ai에 다시 로그인하면 이어서 답해줄게!',
-};
-async function askBuri(turns, question, onText) {
-  if (!sample) { const t = offlineAnswer(question); onText(t); return t; }
-  try {
-    const { text } = await sample(turns, { modelTier: 'quick', cache: false, onText: ({ text }) => onText(text) });
-    return text.trim();
-  } catch (e) {
-    const code = e?.code;
-    if (['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed'].includes(code)) {
-      sample = null; updatePtUI();
-      const t = offlineAnswer(question); onText(t); return t;
-    }
-    if (e?.text && code === 'upstream_error') return e.text + ' …앗, 쌤 말이 끊겼네! 다시 물어봐 줄래?';
-    return SAMPLE_COPY[code] || offlineAnswer(question);
+function endPtIfOver() {
+  if (S.ptSession && S.ptSession.until <= Date.now()) {
+    S.ptSession = null;
+    S.me.ptUntil = 0;
+    syncPresence(true);
+    updatePtUI();
+    renderHud();
   }
 }
-async function ptAsk(raw) {
+function updatePtUI() {
+  $('#ptQuota').textContent = ptSessionLive() ? '쌤이 옆에서 보고 있어요.' : '질문하면 쌤이 옆으로 와요.';
+  $('#ptInput').disabled = S.ptBusy;
+  $('#ptSend').disabled = S.ptBusy;
+}
+// 쌤 부르기
+$('#ptChanceBtn').addEventListener('click', () => {
+  sound.unlock();
+  if (ptSessionLive()) { openPanel(); return; }
+  const st = stationOf(S.shop, S.me.station);
+  ptAsk(st ? `${st.ex} 자세 좀 봐 주세요.` : '오늘 어떤 운동부터 하면 좋을까요?');
+  renderHud();
+});
+function ptAsk(raw) {
   const question = cleanText(raw, LIMIT.ask);
   if (!question || S.ptBusy || !S.shop) return;
-  if (!canAskPt()) { updatePtUI(); return; }
-  if (!hasPtPass()) store.set('jg.ptTrialUsed', String(trialUsed() + 1));
+  if (!ptSessionLive()) startPtSession();
   S.ptBusy = true;
   updatePtUI();
-  playCoach('talk');
   const log = $('#ptLog');
   const q = document.createElement('li'); q.className = 'msg mine';
   const qt = document.createElement('span'); qt.className = 'text'; qt.textContent = question;
   q.append(qt);
   const a = document.createElement('li'); a.className = 'msg coach';
   const who = document.createElement('span'); who.className = 'who'; who.textContent = '부리부리 쌤';
-  const at = document.createElement('span'); at.className = 'text typing'; at.textContent = '생각 중…';
+  const at = document.createElement('span'); at.className = 'text';
+  const text = ptAnswer(question, SHOPS[S.shop], stationOf(S.shop, S.me.station));
+  at.textContent = text;
   a.append(who, at);
   log.append(q, a);
   log.scrollTop = log.scrollHeight;
-  const userTurn = { role: 'user', content: contextNote(question) };
-  const turns = [{ role: 'user', content: coachRules() }, ...S.ptTurns.slice(-12), userTurn];
-  const text = await askBuri(turns, question, (txt) => { const keep = scrollKeeper(log); at.textContent = txt; keep(); });
-  at.classList.remove('typing');
-  at.textContent = text;
-  S.ptTurns.push(userTurn, { role: 'assistant', content: text || '…' });
   S.ptBusy = false;
   updatePtUI();
-  if (!canAskPt()) log.scrollTop = log.scrollHeight;
+  renderHud();
+  coachSay(text, Math.max(7000, text.length * 110)); // 쌤이 옆에서 말풍선으로도 말해 줌
 }
 $('#ptForm').addEventListener('submit', (e) => {
   e.preventDefault();
@@ -1293,63 +1955,64 @@ $('#ptForm').addEventListener('submit', (e) => {
 for (const chip of $('#ptChips').children) chip.addEventListener('click', () => ptAsk(chip.textContent));
 
 // ------------------------------------------------------------------ tabs / misc
-const panelIsHidden = () => $('#panel').hidden;
-function openPanel(tab) {
-  S.panelAuto = false;
+function openPanel() {
   $('#panel').hidden = false;
-  setTab(tab);
-  syncPanelBtns();
+  updatePtUI();
+  $('#openPt').setAttribute('aria-pressed', true);
 }
 function closePanel() {
   $('#panel').hidden = true;
-  S.panelAuto = false;
-  syncPanelBtns();
+  $('#openPt').setAttribute('aria-pressed', false);
 }
-function syncPanelBtns() {
-  const open = !panelIsHidden();
-  $('#openChat').setAttribute('aria-pressed', open && S.tab === 'chat');
-  $('#openPt').setAttribute('aria-pressed', open && S.tab === 'pt');
-}
-function togglePanel(tab) { if (!panelIsHidden() && S.tab === tab) closePanel(); else openPanel(tab); }
-$('#openChat').addEventListener('click', () => togglePanel('chat'));
-$('#openPt').addEventListener('click', () => togglePanel('pt'));
+$('#openPt').addEventListener('click', () => { if ($('#panel').hidden) openPanel(); else closePanel(); });
 $('#closePanel').addEventListener('click', closePanel);
-function setTab(tab) {
-  S.tab = tab;
-  $('#tabChat').setAttribute('aria-selected', tab === 'chat');
-  $('#tabPt').setAttribute('aria-selected', tab === 'pt');
-  $('#chatPane').hidden = tab !== 'chat';
-  $('#ptPane').hidden = tab !== 'pt';
-  if (tab === 'chat' && !panelIsHidden()) { S.unread = 0; $('#chatBadge').hidden = true; const log = $('#chatLog'); log.scrollTop = log.scrollHeight; }
-  if (tab === 'pt') updatePtUI();
-  syncPanelBtns();
-}
+// 넓은 화면은 채팅이 늘 보이고, 휴대폰에서만 눌러서 크게 연다
+$('#openChat').addEventListener('click', () => {
+  const open = $('#chatFloat').classList.toggle('open');
+  $('#openChat').setAttribute('aria-pressed', open);
+  S.unread = 0;
+  $('#chatBadge').hidden = true;
+  const log = $('#chatLog');
+  log.scrollTop = log.scrollHeight;
+});
 function bumpUnread() {
   S.unread++;
   const b = $('#chatBadge');
   b.textContent = S.unread > 99 ? '99+' : S.unread;
   b.hidden = false;
 }
-$('#tabChat').addEventListener('click', () => setTab('chat'));
-$('#tabPt').addEventListener('click', () => setTab('pt'));
 function renderSoundBtn() {
   const b = $('#soundBtn'), a = $('#ambientBtn');
-  b.textContent = sound.on ? '🔊' : '🔇';
   b.setAttribute('aria-pressed', sound.on);
   b.setAttribute('aria-label', sound.on ? '모든 소리 끄기' : '소리 켜기');
   a.setAttribute('aria-pressed', ambient.on && sound.on);
   a.setAttribute('aria-label', ambient.on ? '은은한 짐 소리 끄기' : '은은한 짐 소리 켜기');
   a.title = ambient.on ? '짐 소리 끄기' : '짐 소리 켜기';
   a.disabled = !sound.on;
+  const mu = $('#musicBtn');
+  mu.setAttribute('aria-pressed', music.on && sound.on);
+  mu.setAttribute('aria-label', music.on ? '배경음악 끄기' : '배경음악 켜기');
+  mu.title = music.on ? '배경음악 끄기' : '배경음악 켜기';
+  mu.disabled = !sound.on;
 }
-$('#soundBtn').addEventListener('click', () => { sound.on = !sound.on; store.set('jg.sound', sound.on ? '1' : '0'); sound.unlock(); ambient.apply(); renderSoundBtn(); });
+$('#soundBtn').addEventListener('click', () => { sound.on = !sound.on; store.set('jg.sound', sound.on ? '1' : '0'); sound.unlock(); ambient.apply(); music.apply(); renderSoundBtn(); });
+$('#volume').value = Math.round(sound.volume * 100);
+$('#volume').addEventListener('input', (e) => { sound.unlock(); sound.setVolume(+e.target.value / 100); });
+$('#musicBtn').addEventListener('click', () => {
+  music.on = !music.on;
+  store.set('jg.music', music.on ? '1' : '0');
+  sound.unlock();
+  music.apply();
+  renderSoundBtn();
+  toast(music.on ? '배경음악을 켰어요.' : '배경음악을 껐어요.', 1500);
+});
 $('#ambientBtn').addEventListener('click', () => {
   ambient.on = !ambient.on;
   store.set('jg.ambient', ambient.on ? '1' : '0');
   sound.unlock();
   ambient.apply();
   renderSoundBtn();
-  toast(ambient.on ? '은은한 짐 소리를 켰어요.' : '은은한 짐 소리를 껐어요.', 1500);
+  toast(ambient.on ? '짐 소리를 켰어요.' : '짐 소리를 껐어요.', 1500);
 });
 let toastTimer = null;
 function toast(text, ms = 0) {
@@ -1359,39 +2022,52 @@ function toast(text, ms = 0) {
   if (ms) toastTimer = setTimeout(() => (t.hidden = true), ms);
 }
 
+// 브라우저는 사용자가 한 번 누른 뒤에야 소리를 허락한다
+function wakeSound() {
+  sound.unlock();
+  ambient.apply();
+  music.apply();
+}
+document.addEventListener('pointerdown', wakeSound, { once: true });
+document.addEventListener('keydown', wakeSound, { once: true });
+
 // ------------------------------------------------------------------ boot
 (async function boot() {
-  S.me.nick = store.get('jg.nick', '');
-  const c = store.get('jg.color', 'orange');
-  S.me.color = COLOR_DEFS[c] ? c : 'orange';
-  $('#nick').value = S.me.nick;
+  S.me.nick = store.get('jg.nick', '') || randomNick();
+  store.set('jg.nick', S.me.nick);
+  S.me.color = validColor(store.get('jg.color', 'orange'));
+  S.me.band = validColor(store.get('jg.band', BAND_DEFAULT), BAND_DEFAULT);
+  S.me.pants = validColor(store.get('jg.pants', PANTS_DEFAULT), PANTS_DEFAULT);
   renderSoundBtn();
-  for (const b of document.querySelectorAll('.shop')) b.disabled = true;
-  try { await buildSprites(); } catch { /* 원본 그림 사용 */ }
-  renderColorPicker();
-  showLobby();
+  buildStudio($('#colorPickerGym'), 'g');
+  paintStudios(false);
+  buildPayPlans();
+  renderLog();
 
-  capability('sample').then((s) => { sample = s; updatePtUI(); });
   capability('room').then((r) => {
     if (!r) return;
     room = r;
     const dead = () => { room = null; lobbyCounts(); syncScene(); };
-    r.onPeers(() => { lobbyCounts(); syncScene(); }, dead);
+    let peersQueued = false;
+    r.onPeers(() => {
+      if (peersQueued) return;
+      peersQueued = true;
+      setTimeout(() => { peersQueued = false; lobbyCounts(); syncScene(); }, 120);
+    }, dead);
     r.on('chat', onChat, dead);
     if (S.shop) syncPresence(true);
     lobbyCounts();
   });
-  setInterval(() => { if (!S.shop) lobbyCounts(); }, 2000);
-  if (FAST) window.__jg = { S, G, RULES, sound, ambient }; // 시험용
+  setInterval(lobbyCounts, 3000);
+  if (FAST) window.__jg = { S, G, RULES, sound, ambient, music, WORLD, SHOPS, setHover, ptLive: () => ptSessionLive(), PT_KNOW, ptAnswer, shiftClass: (s) => { classShift = s; }, classNow }; // 시험용
 
   try {
     await Promise.all(['jjak', 'buri'].map((id) => G.loadTemplate(id)));
     S.modelsReady = true;
-    $('#loadNote').hidden = true;
-    for (const b of document.querySelectorAll('.shop')) b.disabled = false;
+    const last = store.get('jg.shop', 'weight');
+    enterGym(SHOPS[last] ? last : 'weight');
   } catch (e) {
     console.error(e);
-    $('#loadNote').textContent = '3D 캐릭터를 불러오지 못했어요. 새로고침해 주세요.';
-    $('#loadNote').classList.add('err');
+    $('#loadNote').textContent = '캐릭터를 불러오지 못했어요. 새로고침해 주세요.';
   }
 })();

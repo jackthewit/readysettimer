@@ -1,143 +1,156 @@
-<!-- ============================================================ LOBBY -->
-<div id="lobby" class="screen lobby">
-  <header class="brand">
-    <img src="jjack.png" alt="" class="brand-mark" />
-    <div>
-      <p class="brand-kicker">짹짹이 바른자세 스튜디오</p>
-      <h1>짹짹이짐 <span>ONLINE 3D</span></h1>
-    </div>
-  </header>
+<section id="stage" class="stage" aria-label="3D 운동 공간">
+  <div id="view"></div>
+  <div id="tags" class="tags"></div>
+  <div id="hoverTag" class="hover-tag" hidden><b></b><small></small></div>
 
-  <section class="hero">
-    <div class="hero-copy">
-      <h2>말 없이 함께,<br />한 번씩 꾹.</h2>
-      <p id="lobbyCount" class="lobby-count" hidden></p>
-    </div>
-    <div class="hero-art" aria-hidden="true">
-      <img src="buri.png" alt="" class="hero-buri" />
-      <img src="jjack.png" alt="" class="hero-jjack" />
-    </div>
-  </section>
-
-  <form id="joinForm" class="join card" autocomplete="off">
-    <label class="field">
-      <span>닉네임</span>
-      <input id="nick" name="nick" maxlength="12" placeholder="예) 거북목탈출" required />
-    </label>
-    <fieldset class="field">
-      <legend>나시 색깔</legend>
-      <div id="colorPicker" class="colors" role="radiogroup"></div>
-    </fieldset>
-    <p class="field-label">샵 고르기</p>
-    <div class="shops">
-      <button type="submit" class="shop shop-pilates" name="room" value="pilates" id="shopPilates">
-        <span class="shop-name">필라테스샵</span>
-        <span class="shop-tag">리포머 2대 · 매트 4장</span>
-        <span class="shop-live" data-live="pilates">불러오는 중…</span>
-      </button>
-      <button type="submit" class="shop shop-weight" name="room" value="weight" id="shopWeight">
-        <span class="shop-name">웨이트샵</span>
-        <span class="shop-tag">스쿼트 랙 · 벤치 · 덤벨 · 케틀벨 · 매트</span>
-        <span class="shop-live" data-live="weight">불러오는 중…</span>
-      </button>
-    </div>
-    <p id="loadNote" class="load-note">3D 캐릭터를 불러오는 중이에요…</p>
-  </form>
-
-  <ul class="rules">
-    <li><b>기구</b> 한 기구는 한 명만. 쓰는 중이면 줄을 서고, 비면 차례대로 시작해요</li>
-    <li><b>운동</b> 「한 번!」이나 스페이스바를 누를 때마다 동작 한 번</li>
-    <li><b>쉬는 시간</b> 세트가 끝나면 1~3분 랜덤 휴식. 이때만 채팅이 열려요</li>
-    <li><b>몸짓</b> 인사·박수·엄지척·만세로 말 없이 응원해요</li>
-    <li><b>PT</b> AI 트레이너 부리부리 쌤. 체험 1회 무료, 그다음은 PT 이용권이 필요해요</li>
-  </ul>
-  <p class="fineprint">3D 캐릭터·기구·동작은 「짹짹이 모션 스튜디오」의 모델링을 그대로 써요. 부리부리 쌤은 AI이고, 답변은 보는 사람의 Claude 계정으로 만들어져요. 통증이나 질환은 꼭 전문가와 상담하세요.</p>
-</div>
-
-<!-- ============================================================ GYM -->
-<div id="gym" class="screen gym" hidden>
-  <section id="stage" class="stage" aria-label="3D 운동 공간">
-    <div id="view"></div>
-    <div id="tags" class="tags"></div>
-
+  <div id="gymUi">
     <header class="top">
       <div class="top-left">
-        <button id="leaveBtn" class="chip" type="button" aria-label="샵에서 나가기">←</button>
-        <span id="shopName" class="shop-title">샵</span>
+        <span class="gym-mark">ONLINE GYM</span>
+        <span id="shopName" class="shop-title"></span>
       </div>
       <p id="memberCount" class="together" aria-live="polite">지금은 혼자 운동 중</p>
       <div class="top-right">
-        <button id="ambientBtn" class="chip" type="button" aria-pressed="true" title="짐 소리 끄기">🎧</button>
-        <button id="soundBtn" class="chip" type="button" aria-pressed="true" title="모든 소리 켜기·끄기">🔊</button>
-        <button id="openChat" class="chip" type="button" aria-pressed="false" aria-label="채팅 열기" title="채팅">💬<span id="chatBadge" class="badge" hidden></span></button>
-        <button id="openPt" class="chip" type="button" aria-pressed="false" aria-label="부리부리 쌤 PT 열기" title="부리부리 쌤 PT">🐦</button>
+        <button id="menuBtn" class="ctl" type="button" aria-pressed="false">메뉴</button>
+        <button id="openChat" class="ctl" type="button" aria-pressed="false" aria-label="채팅 열기">채팅<span id="chatBadge" class="badge" hidden></span></button>
+        <button id="openPt" class="ctl" type="button" aria-pressed="false" aria-label="부리부리 쌤 PT 열기">PT</button>
       </div>
     </header>
 
+    <div id="menu" class="menu" hidden>
+      <p class="menu-title">운동하는 삶</p>
+      <form id="nickForm" class="menu-sec">
+        <label for="nickInput">닉네임</label>
+        <div class="nick-row">
+          <input id="nickInput" maxlength="12" autocomplete="off" />
+          <button id="nickSave" class="ctl" type="submit">바꾸기</button>
+        </div>
+      </form>
+      <div class="menu-sec">
+        <span>옷 색</span>
+        <div id="colorPickerGym" class="shirt-studio"></div>
+      </div>
+      <div class="menu-sec">
+        <span>샵 이동</span>
+        <div class="shops">
+          <button type="button" class="shop" data-go="weight" id="go-weight"><b>웨이트샵</b><small data-live="weight"></small></button>
+          <button type="button" class="shop" data-go="pilates" id="go-pilates"><b>필라테스샵</b><small data-live="pilates"></small></button>
+        </div>
+      </div>
+      <div class="menu-sec">
+        <span>오늘 기록</span>
+        <p id="logLine" class="log-line"></p>
+      </div>
+      <div id="channelSec" class="menu-sec" hidden>
+        <span>방</span>
+        <div class="nick-row"><p id="channelText" class="log-line"></p><button id="channelNext" class="ctl" type="button">다른 방</button></div>
+      </div>
+      <div id="shareSec" class="menu-sec" hidden>
+        <span>나누기</span>
+        <div class="sound-row"><button id="photoBtn" class="ctl" type="button">사진 찍기</button><button id="linkBtn" class="ctl" type="button">링크 복사</button></div>
+      </div>
+      <button id="menuPt" class="ctl menu-pt" type="button">온라인짐 후원</button>
+      <div class="menu-sec">
+        <span>소리</span>
+        <input id="volume" class="volume" type="range" min="0" max="100" aria-label="소리 크기" />
+        <div class="sound-row">
+          <button id="musicBtn" class="ctl" type="button" aria-pressed="true">음악</button>
+          <button id="ambientBtn" class="ctl" type="button" aria-pressed="true">짐 소리</button>
+          <button id="soundBtn" class="ctl" type="button" aria-pressed="true">전체 소리</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="gestures" role="group" aria-label="몸짓으로 인사하기">
+      <button type="button" id="gest-wave" data-gesture="wave">인사</button>
+      <button type="button" id="gest-clap" data-gesture="clap">박수</button>
+      <button type="button" id="gest-thumbs" data-gesture="thumbs">엄지척</button>
+      <button type="button" id="gest-hooray" data-gesture="hooray">만세</button>
+      <button type="button" id="gest-rest" data-gesture="rest" aria-pressed="false">앉기</button>
+    </div>
+
+    <div id="routine" class="routine" aria-label="오늘의 루틴">
+      <b id="todayReps">오늘 0회</b>
+      <span data-r="cardio">유산소</span><span data-r="strength">근력</span><span data-r="stretch">스트레칭</span>
+    </div>
+
+    <div id="classBar" class="class-bar" hidden>
+      <span id="classText"></span>
+      <button id="classBtn" class="ctl" type="button" hidden>같이 하기</button>
+    </div>
+
     <div class="dock">
       <div class="dock-status" aria-live="polite">
-        <span id="exName">빈 기구를 골라 시작해요</span>
+        <span id="exName">비어 있는 기구를 눌러 보세요</span>
         <b id="clock" class="clock" hidden>—</b>
       </div>
       <div class="dock-actions">
-        <button id="repBtn" class="rep-btn" type="button" hidden>💪 한 번!</button>
-        <button id="releaseBtn" class="chip wide" type="button" hidden>기구 반납</button>
-        <button id="leaveQueueBtn" class="chip wide" type="button" hidden>줄 나가기</button>
+        <button id="repBtn" class="rep-btn" type="button" hidden>하나</button>
+        <button id="ptChanceBtn" class="ctl" type="button" hidden>PT 쌤 부르기</button>
+        <button id="releaseBtn" class="ctl" type="button" hidden>기구 반납</button>
+        <button id="leaveQueueBtn" class="ctl" type="button" hidden>줄에서 나오기</button>
       </div>
       <nav id="stnbar" class="stnbar" aria-label="기구 고르기"></nav>
     </div>
 
-    <div class="gestures" role="group" aria-label="몸짓으로 인사하기">
-      <button type="button" id="gest-wave" data-gesture="wave" title="인사" aria-label="인사">👋</button>
-      <button type="button" id="gest-clap" data-gesture="clap" title="박수" aria-label="박수">👏</button>
-      <button type="button" id="gest-thumbs" data-gesture="thumbs" title="엄지척" aria-label="엄지척">👍</button>
-      <button type="button" id="gest-hooray" data-gesture="hooray" title="만세" aria-label="만세">🙌</button>
-    </div>
+    <button id="joinBtn" class="join-btn" type="button">온라인짐 후원</button>
+
+    <section id="chatFloat" class="chat-float" aria-label="채팅">
+      <ol id="chatLog" class="log"></ol>
+      <form id="chatForm" class="composer">
+        <div id="chatLock" class="lock">
+          <span id="chatLockTitle">쉬는 시간에만 채팅할 수 있어요</span>
+          <small id="chatLockSub">세트를 끝내면 열려요</small>
+        </div>
+        <input id="chatInput" maxlength="140" placeholder="메시지를 입력하세요" aria-label="채팅 입력" />
+        <button type="submit" id="chatSend">보내기</button>
+      </form>
+    </section>
 
     <aside id="panel" class="panel" hidden>
-      <div class="tabs" role="tablist">
-        <button role="tab" id="tabChat" aria-selected="true" aria-controls="chatPane">채팅</button>
-        <button role="tab" id="tabPt" aria-selected="false" aria-controls="ptPane">부리부리 쌤 PT</button>
-        <button id="closePanel" class="panel-close" type="button" aria-label="닫기">✕</button>
+      <div class="panel-head">
+        <b>부리부리 쌤 PT</b>
+        <button id="closePanel" class="panel-close" type="button" aria-label="닫기">닫기</button>
       </div>
 
-      <div id="chatPane" class="pane" role="tabpanel">
-        <ol id="chatLog" class="log"></ol>
-        <form id="chatForm" class="composer">
-          <div id="chatLock" class="lock">
-            <span id="chatLockTitle">🔒 세트를 끝내야 수다를 떨 수 있어요</span>
-            <small id="chatLockSub">빈 기구를 골라 세트를 시작해 보세요</small>
-          </div>
-          <input id="chatInput" maxlength="140" placeholder="쉬는 시간! 수다 OK" aria-label="채팅 입력" />
-          <button type="submit" id="chatSend">보내기</button>
-        </form>
-      </div>
-
-      <div id="ptPane" class="pane" role="tabpanel" hidden>
+      <div id="ptPane" class="pane">
         <div class="pt-intro">
           <img src="buri.png" alt="" />
-          <p>자세가 궁금하면 물어봐! 지금 쓰는 기구 기준으로 알려줄게.<br /><small id="ptQuota"></small> <small id="ptMode"></small></p>
+          <p>기구와 자세에 대해 물어보세요. 지금 쓰는 기구에 맞춰 알려 줘요.<br /><small id="ptQuota"></small></p>
         </div>
         <ol id="ptLog" class="log pt-log"></ol>
-        <div id="ptPaywall" class="paywall" hidden>
-          <strong>체험 PT가 끝났어요</strong>
-          <p>부리부리 쌤 PT를 계속 받으려면 PT 이용권이 필요해요.</p>
-          <button id="buyBtn" type="button" class="buy-btn">PT 이용권 구매</button>
-          <p id="buyNote" class="buy-note" hidden>결제 시스템을 준비하고 있어요. 열리면 바로 이용할 수 있어요!</p>
-        </div>
         <div class="chips" id="ptChips">
-          <button type="button">지금 기구 자세 포인트 알려줘</button>
-          <button type="button">이 운동 어디에 좋아?</button>
-          <button type="button">허리가 뻐근한데 괜찮을까?</button>
-          <button type="button">더 쉬운 버전 있어?</button>
+          <button type="button">이 기구 자세 좀 봐 주세요</button>
+          <button type="button">이 운동은 어디에 좋아요?</button>
+          <button type="button">허리가 뻐근한데 해도 될까요?</button>
+          <button type="button">더 쉽게 하는 방법 있어요?</button>
         </div>
         <form id="ptForm" class="composer">
-          <input id="ptInput" maxlength="300" placeholder="부리부리 쌤에게 질문하기" aria-label="PT 질문 입력" />
+          <input id="ptInput" maxlength="300" placeholder="궁금한 걸 물어보세요" aria-label="PT 질문 입력" />
           <button type="submit" id="ptSend">질문</button>
         </form>
       </div>
     </aside>
-  </section>
+  </div>
+</section>
+
+<div id="payModal" class="pay-modal" hidden>
+  <div class="pay-box" role="dialog" aria-modal="true" aria-labelledby="payTitle">
+    <h2 id="payTitle">온라인짐 후원</h2>
+    <p>이 짐은 누구나 무료로 쓸 수 있어요. 후원은 서버를 유지하는 데 쓰여요.</p>
+    <div id="payPlans" class="plans"></div>
+    <p id="payMsg" class="pay-msg" role="status" hidden></p>
+    <div class="pay-actions">
+      <button id="payClose" class="ctl plain" type="button">닫기</button>
+      <button id="payGo" class="ctl pay-go" type="button">후원하기</button>
+    </div>
+  </div>
+</div>
+
+<div id="loading" class="loading">
+  <h1>ONLINE GYM</h1>
+  <p>운동하는 삶</p>
+  <small id="loadNote">불러오는 중이에요</small>
 </div>
 
 <div id="toast" class="toast" role="status" hidden></div>

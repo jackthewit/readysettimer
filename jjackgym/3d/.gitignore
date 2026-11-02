@@ -3,5 +3,6 @@ index.html
 check.mjs
 models/
 lib/
-jjack.png
 buri.png
+web/
+supabase.config.json
