@@ -1,5 +1,5 @@
 import re
-prev=open('../jjackgym-artifact/index.html',encoding='utf-8').read()
+prev=open('../artifact/index.html',encoding='utf-8').read()
 css=prev.split('<style>',1)[1].split('</style>',1)[0]
 css=css.replace("url('assets/buri.png')","url('buri.png')")
 extra=open('extra3d.part.css',encoding='utf-8').read()
@@ -29,5 +29,4 @@ out=f"""<title>짹짹이짐 ONLINE 3D</title>
 """
 open('index.html','w',encoding='utf-8').write(out)
 bad=[hex(ord(c)) for c in out if 0x200b<=ord(c)<=0x200f or 0x2028<=ord(c)<=0x202e or 0x2066<=ord(c)<=0x2069]
-open('check.mjs','w',encoding='utf-8').write(js)
 print('bytes',len(out.encode()),'bad',bad)

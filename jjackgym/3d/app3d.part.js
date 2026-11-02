@@ -1,7 +1,7 @@
 // 짹짹이짐 ONLINE 3D — claude.ai 공유 페이지 버전
 // 3D 엔진·캐릭터·기구·동작: 「짹짹이 모션 스튜디오」 (window.GymEngine)
-// 규칙: 기구는 한 명씩 / 누를 때마다 동작 1회 / 세트를 끝내면 1~3분 랜덤 휴식, 그때만 채팅 / PT는 체험 1회 후 이용권.
-// 접속자·기구 점유·위치·채팅은 room(실시간), 부리부리 쌤은 sample(보는 사람의 Claude).
+// 규칙: 기구는 한 명씩(쓰는 중이면 줄 서기) / 누를 때마다 동작 1회 / 세트를 끝내면 1~3분 랜덤 휴식, 그때만 채팅 / PT는 체험 1회 후 이용권.
+// 접속자·기구 점유·줄·위치·몸짓은 room presence, 채팅은 room 이벤트, 부리부리 쌤은 sample(보는 사람의 Claude).
 const $ = (s, el = document) => el.querySelector(s);
 const G = window.GymEngine;
 const T = G.THREE;
@@ -16,6 +16,10 @@ const RULES = {
   repSpeed: 1.4,     // 동작 재생 속도
   walkAnim: 3.0,     // 걷기 동작 재생 속도
   moveSpeed: 1.25,   // 걷는 속도 (m/초)
+  queueStep: 0.7,    // 줄 간격 (m)
+  idleHoldSec: 90,   // 줄이 있는데 이만큼 멈춰 있으면 다음 사람에게 넘김
+  coachWalkSec: 30,  // 부리부리 쌤이 자리를 옮기는 간격
+  gestureGapMs: 900, // 몸짓 연타 막기
 };
 
 // ------------------------------------------------------------------ 샵 · 기구
@@ -23,7 +27,7 @@ const RULES = {
 const SHOPS = {
   pilates: {
     id: 'pilates', set: 'pilates', name: '필라테스샵', tagline: '리포머 2대 · 매트 4장', reps: 10,
-    coach: { x: 0, z: -2.4 }, spawn: { x: 0, z: 2.2 },
+    coachSpots: [{ x: 3.1, z: -1.5 }, { x: 0, z: -2.6 }, { x: -3.1, z: -1.2 }, { x: 3.1, z: 1.2 }], spawn: { x: 0, z: 2.2 },
     stations: [
       { id: 'rf1', prop: 'reformer', idx: 0, name: '리포머 1', ex: '풋워크', preset: 'rfFootwork', cue: '발바닥 전체로 밀고, 골반은 중립! 허리 들리지 않게~' },
       { id: 'rf2', prop: 'reformer', idx: 1, name: '리포머 2', ex: '암 풀', preset: 'rfArmPull', cue: '어깨 으쓱 말고 날개뼈부터! 팔로만 당기지 마~' },
@@ -35,7 +39,7 @@ const SHOPS = {
   },
   weight: {
     id: 'weight', set: 'gym', name: '웨이트샵', tagline: '스쿼트 랙 · 벤치 · 덤벨 · 케틀벨 · 매트', reps: 12,
-    coach: { x: -0.2, z: -2.3 }, spawn: { x: 0, z: 2.0 },
+    coachSpots: [{ x: 3.2, z: 0.4 }, { x: 2.0, z: -2.6 }, { x: -3.4, z: 1.0 }, { x: 2.6, z: -1.6 }], spawn: { x: 0, z: 2.0 },
     stations: [
       { id: 'rack', prop: 'squatRack', idx: 0, stand: { dx: 0, dz: 0 }, name: '스쿼트 랙', ex: '백 스쿼트', preset: 'backSquat', cue: '엉덩이를 뒤로 빼면서 앉아! 무릎은 발끝 방향~' },
       { id: 'bench', prop: 'flatBench', idx: 0, name: '벤치', ex: '벤치프레스', preset: 'bench', cue: '어깨 말리지 않게 가슴 활짝! 날개뼈는 벤치에 붙여~' },
@@ -58,7 +62,13 @@ const COLOR_DEFS = {
   purple: { label: '보라', h: 268, s: 0.6, v: 0.95, hex: 0xA486E0 },
   red: { label: '빨강', h: 356, s: 1.0, v: 0.88, hex: 0xE04848 },
 };
-const CHEERS = ['💪', '🔥', '👏', '🐥', '💦'];
+const GESTURES = {
+  wave: { label: '인사', preset: 'wave', emoji: '👋' },
+  clap: { label: '박수', preset: 'clap', emoji: '👏' },
+  thumbs: { label: '엄지척', preset: 'thumbs', emoji: '👍' },
+  hooray: { label: '만세', preset: 'hooray', emoji: '🙌' },
+};
+const COACH_MURMURS = ['숨 참지 말고 천천히~', '어깨 힘 빼고!', '허리 말고 엉덩이로!', '쉬는 것도 운동이야.', '오늘 자세 좋은데?'];
 const LIMIT = { nick: 12, chat: 140, ask: 300 };
 const BAD_CHARS = new RegExp('[' + [[0, 31], [127, 127], [0x200b, 0x200f], [0x2028, 0x202e], [0x2066, 0x2069]]
   .map(([a, b]) => String.fromCharCode(a) + '-' + String.fromCharCode(b)).join('') + ']', 'g');
@@ -132,10 +142,83 @@ const sound = {
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g).connect(this.ctx.destination); o.start(t); o.stop(t + dur + 0.02);
   },
-  rep() { this.beep(620, 0.07, 0, 0.12); },
+  rep() { this.repPlayed = (this.repPlayed || 0) + 1; this.beep(620, 0.07, 0, 0.12); }, // 운동 효과음은 누른 사람에게만 난다
   setDone() { this.beep(784, 0.14); this.beep(988, 0.14, 0.13); this.beep(1319, 0.24, 0.26); },
   restOver() { this.beep(523, 0.14); this.beep(784, 0.22, 0.15); },
   tick() { this.beep(660, 0.09); },
+  gesture() { this.beep(740, 0.06, 0, 0.06); },
+  turn() { this.beep(659, 0.14); this.beep(880, 0.2, 0.14); },
+};
+
+// 은은한 짐 소리: 파일 없이 합성 (공기 소리 + 가끔 먼 곳의 쇠 부딪는 소리 / 매트 소리)
+const ambient = {
+  on: store.get('jg.ambient', '1') === '1',
+  kind: null, master: null, src: null, timer: null,
+  level() { return this.on && sound.on ? 1 : 0; },
+  start(kind) {
+    this.kind = kind;
+    this.apply();
+  },
+  stop() { this.kind = null; this.apply(); },
+  apply() {
+    const want = this.kind && this.level() && sound.ctx;
+    if (!want) { this.teardown(); return; }
+    if (this.master) return;
+    const ctx = sound.ctx;
+    this.master = ctx.createGain();
+    this.master.gain.setValueAtTime(0, ctx.currentTime);
+    this.master.gain.linearRampToValueAtTime(1, ctx.currentTime + 2.5);
+    this.master.connect(ctx.destination);
+    const len = ctx.sampleRate * 4, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < len; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; }
+    this.src = ctx.createBufferSource();
+    this.src.buffer = buf; this.src.loop = true;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = this.kind === 'weight' ? 420 : 300;
+    const g = ctx.createGain();
+    g.gain.value = 0.05;
+    this.src.connect(lp).connect(g).connect(this.master);
+    this.src.start();
+    this.schedule();
+  },
+  teardown() {
+    clearTimeout(this.timer); this.timer = null;
+    if (!this.master) return;
+    const m = this.master, s = this.src, ctx = sound.ctx;
+    this.master = null; this.src = null;
+    m.gain.cancelScheduledValues(ctx.currentTime);
+    m.gain.setValueAtTime(m.gain.value, ctx.currentTime);
+    m.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.4);
+    setTimeout(() => { try { s.stop(); } catch { /* 이미 멈춤 */ } m.disconnect(); }, 500);
+  },
+  schedule() {
+    this.timer = setTimeout(() => {
+      if (!this.master) return;
+      if (this.kind === 'weight') this.clink(); else this.mat();
+      this.schedule();
+    }, 7000 + Math.random() * 16000);
+  },
+  voice(type, freq, dur, vol, when, pan) {
+    const ctx = sound.ctx, t = ctx.currentTime + when, o = ctx.createOscillator(), g = ctx.createGain(), p = ctx.createStereoPanner();
+    o.type = type; o.frequency.value = freq; p.pan.value = pan;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(p).connect(this.master); o.start(t); o.stop(t + dur + 0.02);
+  },
+  clink() {
+    const pan = Math.random() * 1.4 - 0.7, n = 1 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < n; i++) {
+      const w = i * (0.16 + Math.random() * 0.1), f = 0.9 + Math.random() * 0.25;
+      this.voice('triangle', 1760 * f, 0.32, 0.016, w, pan);
+      this.voice('triangle', 2790 * f, 0.2, 0.009, w, pan);
+    }
+    if (Math.random() < 0.4) this.voice('sine', 92, 0.2, 0.04, 0, pan);
+  },
+  mat() {
+    const pan = Math.random() * 1.2 - 0.6;
+    this.voice('sine', 118, 0.26, 0.035, 0, pan);
+    if (Math.random() < 0.5) this.voice('sine', 330, 0.5, 0.006, 0.05, pan);
+  },
 };
 
 // ------------------------------------------------------------------ state
@@ -144,7 +227,10 @@ const S = {
   tab: 'chat',
   unread: 0,
   lastChatAt: 0,
-  lastCheerAt: 0,
+  lastGestureAt: 0,
+  panelAuto: false,
+  coachSlot: null,
+  coachBusyUntil: 0,
   lastBeep: null,
   lastPresenceAt: 0,
   ptTurns: [],
@@ -153,7 +239,9 @@ const S = {
   me: {
     nick: '', color: 'orange',
     station: null, claimedAt: 0, on: false, // on: 기구에 올라가 있음
-    state: 'idle', reps: 0, set: 1, restUntil: 0,
+    queue: null, queuedAt: 0,               // 줄 서 있는 기구
+    gest: null, gestN: 0,                   // 몸짓: 숫자가 올라가면 한 번 재생
+    state: 'idle', reps: 0, set: 1, restUntil: 0, lastActAt: 0,
   },
   meA: null,          // 내 3D 짹짹이
   coach: null,        // 부리부리 쌤 3D
@@ -176,6 +264,7 @@ function syncPresence(force = false) {
   room.presence({
     nick: m.nick, color: m.color, shop: S.shop,
     station: m.station, claimedAt: m.claimedAt, on: m.on,
+    queue: m.queue, queuedAt: m.queuedAt, gest: m.gest, gestN: m.gestN,
     state: m.state, reps: m.reps, set: m.set, restUntil: m.restUntil,
     x: A ? Math.round(A.place.x * 100) / 100 : null,
     z: A ? Math.round(A.place.z * 100) / 100 : null,
@@ -263,14 +352,48 @@ function playRep(A) { A.start = G.clock.t; }
 function repBusy(A) { return (G.clock.t - A.start) * A.speed < G.clipDur(A.clip) - 0.05; }
 function unmountActor(A, st) {
   const ap = st ? approachPoint(st) : { x: A.place.x, z: A.place.z + 0.6 };
-  G.leaveStation(A, ap.x, ap.z + (st && !st.stand ? 0 : 0.3));
+  G.leaveStation(A, ap.x, ap.z + (st && !st.stand ? 0 : 1.0)); // 다음 사람과 겹치지 않게 비켜 섬
   A.speed = 1;
 }
 
+function faceTo(A, x, z) {
+  A.place.ry = Math.atan2(x - A.place.x, z - A.place.z) * 180 / Math.PI;
+  G.applyPlace(A);
+}
 function playCoach(id) {
   const B = S.coach;
   if (!B) return;
+  S.walk.delete(B);
+  B.speed = 1;
+  S.coachBusyUntil = Date.now() + 4000;
   G.playOnce(B, id, 'armsCross', { blend: 0.25 });
+}
+/** 새로 온 사람을 쳐다보고 손 흔들며 인사 (각자 화면에서 똑같이 일어남) */
+function coachGreet(nick, A) {
+  const B = S.coach;
+  if (!B) return;
+  if (A) faceTo(B, A.place.x, A.place.z);
+  S.lastGreet = nick;
+  playCoach('wave');
+  coachSay(`어서 와 ${nick}! 빈 기구 하나 골라봐~`, 6000);
+}
+// 쌤 자리: 시각으로 정해져서 접속한 사람 모두에게 같은 곳으로 보임
+const coachSlotAt = (ms) => Math.floor(ms / (RULES.coachWalkSec * 1000));
+const slotPick = (slot, n) => ((Math.imul(slot, 2654435761) >>> 0) >>> 13) % n;
+function stepCoach(now) {
+  const B = S.coach, shop = SHOPS[S.shop];
+  if (!B || !B.root.parent) return;
+  const slot = coachSlotAt(now);
+  if (slot === S.coachSlot || now < S.coachBusyUntil) return;
+  S.coachSlot = slot;
+  const p = shop.coachSpots[slotPick(slot, shop.coachSpots.length)];
+  if (Math.hypot(p.x - B.place.x, p.z - B.place.z) < 0.1) return;
+  walkTo(B, p.x, p.z, () => {
+    B.speed = 1;
+    B.place.ry = 0; G.applyPlace(B);
+    G.setClip(B, presetClip('armsCross'), { blend: 0.25 });
+    if (slot % 3 === 0) coachSay(COACH_MURMURS[slotPick(slot, COACH_MURMURS.length)], 3500);
+  });
 }
 
 // ------------------------------------------------------------------ 3D 장면 만들기
@@ -298,7 +421,10 @@ function buildShop(shopId) {
   }
   set.updateMatrixWorld(true);
   // 부리부리 쌤
-  const B = G.addActor('buri', { x: shop.coach.x, z: shop.coach.z });
+  S.coachSlot = coachSlotAt(Date.now());
+  S.coachBusyUntil = 0;
+  const cs = shop.coachSpots[slotPick(S.coachSlot, shop.coachSpots.length)];
+  const B = G.addActor('buri', { x: cs.x, z: cs.z });
   B.place.s = 0.8; G.applyPlace(B);
   G.setClip(B, presetClip('armsCross'), { blend: 0 });
   S.coach = B;
@@ -308,9 +434,11 @@ function buildShop(shopId) {
   S.meA.place.ry = 180; G.applyPlace(S.meA);
   // 카메라
   const narrow = matchMedia('(max-width: 860px)').matches;
-  G.cam.position.set(sx * 0.5, narrow ? 7.4 : 6.0, sz + (narrow ? 8.6 : 8.4));
-  G.orbit.target.set(sx * 0.5, 0.6, sz - 2.2);
-  G.orbit.enablePan = false; G.orbit.minDistance = 3; G.orbit.maxDistance = 16; G.orbit.maxPolarAngle = Math.PI * 0.45;
+  if (narrow) G.sun.shadow.mapSize.set(1024, 1024); // 휴대폰은 그림자를 가볍게
+  S.followX = narrow ? 1 : 0.5; // 휴대폰은 화면이 좁아 내 짹짹이를 가운데에 둔다
+  G.cam.position.set(sx * S.followX, narrow ? 8.8 : 6.0, sz + (narrow ? 11 : 8.4));
+  G.orbit.target.set(sx * S.followX, 0.6, sz - 2.2);
+  G.orbit.enablePan = false; G.orbit.minDistance = 3; G.orbit.maxDistance = narrow ? 24 : 16; G.orbit.maxPolarAngle = Math.PI * 0.45;
   G.orbit.update();
   buildTags();
 }
@@ -320,7 +448,7 @@ const _tgt = new T.Vector3();
 function followCam(dt) {
   const A = S.meA;
   if (!A || !A.root.parent) return;
-  _tgt.set(A.place.x * 0.5, 0.6, A.place.z - 1.6);
+  _tgt.set(A.place.x * S.followX, 0.6, A.place.z - 1.6);
   const k = 1 - Math.exp(-dt * 2.5);
   const dx = (_tgt.x - G.orbit.target.x) * k, dz = (_tgt.z - G.orbit.target.z) * k;
   G.orbit.target.x += dx; G.orbit.target.z += dz;
@@ -334,18 +462,6 @@ function buildTags() {
   const box = $('#tags');
   box.textContent = '';
   S.tags.clear();
-  for (const st of SHOPS[S.shop].stations) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'stn';
-    b.id = `station-${st.id}`;
-    const nm = document.createElement('b');
-    nm.textContent = st.name;
-    const sub = document.createElement('small');
-    b.append(nm, sub);
-    b.addEventListener('click', () => claimStation(st.id));
-    box.append(b);
-  }
   const bar = $('#stnbar');
   bar.textContent = '';
   for (const st of SHOPS[S.shop].stations) {
@@ -363,7 +479,7 @@ function buildTags() {
   tagFor('me', true);
   const ct = tagFor('coach');
   ct.classList.add('coach');
-  ct.querySelector('.nm').textContent = '부리부리 쌤 · AI PT';
+  ct.querySelector('.nm').textContent = '부리부리 쌤 · AI';
 }
 function tagFor(key, me = false) {
   let el = S.tags.get(key);
@@ -412,15 +528,6 @@ function updateTags() {
     el.classList.toggle('resting', R.state === 'rest');
     placeTag(el, R.A, 0.42);
   }
-  for (const st of SHOPS[S.shop].stations) {
-    const b = $(`#station-${st.id}`), o = S.stationObj[st.id];
-    if (!b || !o) continue;
-    const p = o.getWorldPosition(_v.clone());
-    const top = (o.userData.top || 0.05) * o.scale.x;
-    const q = project(p.x, Math.max(0.15, Math.min(top, 1.2)) + 0.12, p.z + (st.stand ? 0 : 0.45));
-    b.classList.toggle('hidden', !q.vis);
-    b.style.transform = `translate(${q.x.toFixed(1)}px, ${q.y.toFixed(1)}px) translate(-50%, -50%)`;
-  }
 }
 function statusText(m, now) {
   if (m.state === 'rest') return `휴식 ${fmt(m.restUntil - now)}`;
@@ -430,18 +537,23 @@ function statusText(m, now) {
 
 // ------------------------------------------------------------------ 사람들 · 기구 주인
 function members() {
-  const list = [{ peer: 'me', me: true, ...S.me }];
+  const self = room?.peers().find((p) => p.sameTab);
+  const list = [{ ...S.me, peer: 'me', me: true, pid: self ? self.peer : '' }];
   if (!room) return list;
   for (const p of room.peers()) {
     if (p.kind !== 'viewer' || p.sameTab) continue;
     const pr = p.presence || {};
     if (pr.shop !== S.shop) continue;
     list.push({
-      peer: p.peer, me: false,
+      peer: p.peer, pid: p.peer, me: false,
       nick: cleanText(pr.nick, LIMIT.nick) || '익명 짹짹이',
       color: COLOR_DEFS[pr.color] ? pr.color : 'orange',
       station: stationOf(S.shop, pr.station) ? pr.station : null,
       claimedAt: num(pr.claimedAt, Infinity),
+      queue: stationOf(S.shop, pr.queue) ? pr.queue : null,
+      queuedAt: num(pr.queuedAt, Infinity),
+      gest: GESTURES[pr.gest] ? pr.gest : null,
+      gestN: Math.max(0, Math.floor(num(pr.gestN))),
       on: pr.on === true,
       state: ['idle', 'set', 'rest'].includes(pr.state) ? pr.state : 'idle',
       reps: Math.max(0, Math.min(99, Math.floor(num(pr.reps)))),
@@ -458,8 +570,19 @@ function owners(list) {
   for (const m of list) {
     if (!m.station) continue;
     const cur = map.get(m.station);
-    if (!cur || m.claimedAt < cur.claimedAt || (m.claimedAt === cur.claimedAt && String(m.peer) < String(cur.peer))) map.set(m.station, m);
+    if (!cur || m.claimedAt < cur.claimedAt || (m.claimedAt === cur.claimedAt && String(m.pid) < String(cur.pid))) map.set(m.station, m);
   }
+  return map;
+}
+/** 기구별 줄: 먼저 선 사람부터 */
+function lines(list) {
+  const map = new Map();
+  for (const m of list) {
+    if (!m.queue || m.station === m.queue) continue;
+    if (!map.has(m.queue)) map.set(m.queue, []);
+    map.get(m.queue).push(m);
+  }
+  for (const line of map.values()) line.sort((p, q) => p.queuedAt - q.queuedAt || (String(p.pid) < String(q.pid) ? -1 : 1));
   return map;
 }
 
@@ -467,15 +590,29 @@ function owners(list) {
 function syncScene() {
   if (!S.shop || !S.modelsReady) return;
   const list = members();
-  const own = owners(list);
-  // 내가 늦게 잡았으면 양보
+  const own = owners(list), queue = lines(list);
+  // 내가 늦게 잡았으면 양보하고 줄을 선다
   if (S.me.station) {
     const o = own.get(S.me.station);
     if (o && !o.me) {
-      toast(`${o.nick} 님이 ${stationOf(S.shop, S.me.station)?.name || '기구'}를 먼저 잡았어요.`, 2500);
+      const id = S.me.station;
+      toast(`${o.nick} 님이 ${stationOf(S.shop, id)?.name || '기구'}를 먼저 잡았어요. 줄을 섰어요.`, 2800);
       releaseStation(true);
+      joinQueue(id, true);
       return;
     }
+  }
+  // 내 차례가 오면 바로 기구로 (자리를 비운 탭은 차례를 넘긴다)
+  if (S.me.queue) {
+    const line = queue.get(S.me.queue) || [], idx = line.findIndex((m) => m.me), id = S.me.queue;
+    if (!own.get(id) && idx === 0) {
+      if (document.hidden) { leaveQueue(); return; }
+      sound.turn();
+      toast(`차례가 왔어요! ${stationOf(S.shop, id).name}로 가요.`, 2800);
+      claimStation(id);
+      return;
+    }
+    standInLine(stationOf(S.shop, id), Math.max(0, idx));
   }
   const seen = new Set();
   for (const m of list) {
@@ -487,9 +624,9 @@ function syncScene() {
       const x = m.x ?? sp.x, z = m.z ?? sp.z;
       const A = makeJjak(x, z, m.color);
       if (!A) continue;
-      R = { A, mounted: null, lastReps: m.reps };
+      R = { A, mounted: null, lastReps: m.reps, lastGestN: m.gestN };
       S.remotes.set(m.peer, R);
-      if (S.announce) sysLine(`${m.nick} 님이 들어왔어요`, '');
+      if (S.announce) { sysLine(`${m.nick} 님이 들어왔어요`, ''); coachGreet(m.nick, A); }
     }
     Object.assign(R, { nick: m.nick, color: m.color, state: m.state, reps: m.reps, set: m.set, restUntil: m.restUntil, on: m.on });
     paint(R.A, m.color);
@@ -503,10 +640,14 @@ function syncScene() {
       unmountActor(R.A, stationOf(S.shop, R.mounted));
       R.mounted = null;
     }
+    if (m.gestN !== R.lastGestN) {
+      R.lastGestN = m.gestN;
+      if (m.gest) playGesture(R.A, m.peer, m.gest, !!R.mounted);
+    }
     if (R.mounted) {
       if (m.reps > R.lastReps && m.state !== 'idle') playRep(R.A);
       R.lastReps = m.reps;
-    } else if (m.x != null && m.z != null) {
+    } else if (m.x != null && m.z != null && !gesturing(R.A)) {
       const w = S.walk.get(R.A);
       const tx = w ? w.x : R.A.place.x, tz = w ? w.z : R.A.place.z;
       if (Math.hypot(m.x - tx, m.z - tz) > 0.05) {
@@ -524,26 +665,24 @@ function syncScene() {
     dropTag(peer);
     if (S.announce && R.nick) sysLine(`${R.nick} 님이 나갔어요`, '');
   }
-  // 기구 표시
+  // 기구 목록
   for (const st of SHOPS[S.shop].stations) {
-    const b = $(`#station-${st.id}`);
-    if (!b) continue;
-    const o = own.get(st.id);
-    b.classList.toggle('busy', !!o && !o.me);
-    b.classList.toggle('mine', !!o && o.me);
-    b.disabled = !!o && !o.me;
-    b.querySelector('small').textContent = !o ? `비어 있음 · ${st.ex}` : o.me ? '사용 중 (나)' : `사용 중 · ${o.nick}`;
-    b.setAttribute('aria-label', `${st.name} ${st.ex}, ${!o ? '비어 있음 — 눌러서 사용' : o.me ? '내가 사용 중' : `${o.nick} 님 사용 중`}`);
     const c = $(`#pick-${st.id}`);
-    if (c) {
-      c.classList.toggle('busy', !!o && !o.me);
-      c.classList.toggle('mine', !!o && o.me);
-      c.disabled = !!o && !o.me;
-      c.querySelector('small').textContent = !o ? st.ex : o.me ? '사용 중 (나)' : `사용 중 · ${o.nick}`;
-      c.setAttribute('aria-label', b.getAttribute('aria-label'));
-    }
+    if (!c) continue;
+    const o = own.get(st.id), line = queue.get(st.id) || [], myIdx = line.findIndex((m) => m.me);
+    c.classList.toggle('busy', !!o && !o.me);
+    c.classList.toggle('mine', !!o && o.me);
+    c.classList.toggle('lined', myIdx >= 0);
+    const wait = line.length ? ` · 대기 ${line.length}` : '';
+    c.querySelector('small').textContent = myIdx >= 0 ? `내 앞에 ${myIdx + (o ? 1 : 0)}명` : !o ? (line.length ? `대기 ${line.length}` : st.ex) : o.me ? '사용 중 (나)' : `사용 중${wait}`;
+    c.setAttribute('aria-label', `${st.name} ${st.ex}, ${!o ? '비어 있음 — 눌러서 사용' : o.me ? '내가 사용 중' : `${o.nick} 님 사용 중, 대기 ${line.length}명 — 눌러서 줄 서기`}`);
   }
-  $('#memberCount').textContent = list.length;
+  renderCount(list.length);
+  S.lineAhead = S.me.queue ? (queue.get(S.me.queue) || []).findIndex((m) => m.me) + (own.get(S.me.queue) ? 1 : 0) : 0;
+  S.lineBehind = S.me.station ? (queue.get(S.me.station) || []).length : 0;
+}
+function renderCount(n) {
+  $('#memberCount').textContent = room ? `지금 ${n}명이 함께 운동 중` : '지금은 혼자 운동 중';
 }
 
 // ------------------------------------------------------------------ 내 행동
@@ -551,13 +690,13 @@ function claimStation(id) {
   if (!S.shop || !S.meA) return;
   const st = stationOf(S.shop, id);
   if (!st || S.me.station === id) return;
-  const own = owners(members()).get(id);
-  if (own && !own.me) { toast(`${own.nick} 님이 쓰는 중이에요. 비면 다시 눌러 주세요.`, 2200); return; }
+  const list = members(), own = owners(list).get(id), line = lines(list).get(id) || [];
+  if ((own && !own.me) || (line.length && !line[0].me)) { joinQueue(id); return; }
   if (S.me.on && S.me.state === 'set' && S.me.reps > 0) { toast('지금 세트 중이에요. 기구 반납 후 옮겨 주세요.', 2200); return; }
   sound.unlock();
   if (S.me.on) dismount(true);
   const resting = S.me.state === 'rest';
-  Object.assign(S.me, { station: id, claimedAt: Date.now(), on: false, reps: 0, set: resting ? 0 : 1 });
+  Object.assign(S.me, { station: id, claimedAt: Date.now(), on: false, reps: 0, set: resting ? 0 : 1, queue: null, queuedAt: 0, lastActAt: Date.now() });
   if (!resting) S.me.state = 'set';
   syncPresence(true);
   const ap = approachPoint(st);
@@ -565,6 +704,7 @@ function claimStation(id) {
     if (S.me.station !== id) { setIdle(S.meA); return; }
     mountActor(S.meA, st);
     S.me.on = true;
+    S.me.lastActAt = Date.now();
     syncPresence(true);
     coachSay(`${st.name}! ${st.cue}`, 8000);
     sysLine(`🏋️ ${st.name} 사용 시작 — ${st.ex} ${SHOPS[S.shop].reps}회 × ${RULES.setsPerStation}세트`, 'work');
@@ -592,12 +732,80 @@ function releaseStation(silent = false) {
 }
 $('#releaseBtn').addEventListener('click', () => releaseStation());
 
+// ------------------------------------------------------------------ 줄 서기
+function joinQueue(id, quiet = false) {
+  const st = stationOf(S.shop, id);
+  if (!st || S.me.queue === id) return;
+  if (S.me.station) { toast('지금 쓰는 기구를 반납하면 줄을 설 수 있어요.', 2400); return; }
+  S.me.queue = id;
+  S.me.queuedAt = Date.now();
+  if (!quiet) toast(`${st.name} 줄에 섰어요. 차례가 오면 바로 시작해요.`, 2400);
+  sound.unlock();
+  syncPresence(true);
+  syncScene();
+  renderHud();
+}
+function leaveQueue() {
+  if (!S.me.queue) return;
+  S.me.queue = null;
+  S.me.queuedAt = 0;
+  syncPresence(true);
+  syncScene();
+  renderHud();
+}
+$('#leaveQueueBtn').addEventListener('click', leaveQueue);
+/** 기구 앞에 차례대로 선다. 앞사람이 빠지면 한 칸씩 당겨짐 */
+function standInLine(st, idx) {
+  const A = S.meA;
+  if (!A || gesturing(A)) return;
+  const ap = approachPoint(st);
+  let x = ap.x, z = ap.z + 1.25 + RULES.queueStep * idx;
+  if (z > BOUNDS.z1) { x += (z - BOUNDS.z1) * (x > 0 ? -1 : 1); z = BOUNDS.z1; }
+  const w = S.walk.get(A), tx = w ? w.x : A.place.x, tz = w ? w.z : A.place.z;
+  if (Math.hypot(x - tx, z - tz) < 0.06) return;
+  walkTo(A, x, z, () => {
+    faceTo(A, ap.x, ap.z);
+    setIdle(A);
+  });
+  syncPresence(true);
+}
+
+// ------------------------------------------------------------------ 몸짓: 말 없이 소통 (내 짹짹이가 직접, 모두에게 보임)
+function gesturing(A) { return G.clock.t < (A._gestUntil || 0); }
+/** 기구 위에서는 몸이 묶여 있으니 머리 위 그림만 띄운다 */
+function playGesture(A, tagKey, id, busy) {
+  const g = GESTURES[id];
+  if (!g || !A) return;
+  floatEmoji(tagKey, g.emoji);
+  A._gest = id;
+  if (busy) return;
+  S.walk.delete(A);
+  A.speed = 1;
+  G.playOnce(A, g.preset, 'idle', { blend: 0.2 });
+  A._gestUntil = G.clock.t + G.clipDur(A.clip) + 0.1;
+}
+for (const btn of document.querySelectorAll('[data-gesture]')) {
+  btn.addEventListener('click', () => {
+    btn.blur();
+    const id = btn.dataset.gesture, now = Date.now(), m = S.me;
+    if (!S.shop || !S.meA || now - S.lastGestureAt < RULES.gestureGapMs) return;
+    S.lastGestureAt = now;
+    sound.unlock();
+    sound.gesture();
+    m.gest = id;
+    m.gestN += 1;
+    playGesture(S.meA, 'me', id, !!m.station);
+    syncPresence(true);
+  });
+}
+
 function doRep() {
   const m = S.me, A = S.meA;
   if (!S.shop || m.state !== 'set' || !m.on || !A) return;
   if (repBusy(A)) return;
   const target = SHOPS[S.shop].reps;
   m.reps = Math.min(target, m.reps + 1);
+  m.lastActAt = Date.now();
   playRep(A);
   sound.rep();
   if (m.reps >= target) finishSet();
@@ -620,12 +828,18 @@ function finishSet() {
     setTimeout(() => { if (S.me.station === st?.id && S.me.state === 'rest') { dismount(true); S.me.station = null; S.me.claimedAt = 0; syncPresence(true); syncScene(); renderHud(); } }, 1600);
   } else {
     sysLine(`☕ ${m.set}세트 끝! 쉬는 시간 ${secs}초 — 수다 OK`, 'rest');
-    coachSay(`좋아~ ${m.set}세트 끝! 쉬면서 수다 떨어도 돼. 자세 궁금하면 PT 탭에서 물어봐~`, 7000);
+    coachSay(`좋아~ ${m.set}세트 끝! 쉬면서 수다 떨어도 돼. 자세 궁금하면 나한테 물어봐~`, 7000);
   }
+  // 넓은 화면은 수다창을 알아서 열어 준다
+  if (panelIsHidden() && !matchMedia('(max-width: 860px)').matches) { openPanel('chat'); S.panelAuto = true; }
+  else if (panelIsHidden()) toast('쉬는 시간! 💬 를 누르면 수다를 떨 수 있어요.', 3000);
 }
 function endRest() {
   const m = S.me;
   sound.restOver();
+  if (S.panelAuto && S.tab === 'chat') closePanel();
+  S.panelAuto = false;
+  m.lastActAt = Date.now();
   if (m.station) {
     m.set += 1; m.reps = 0; m.state = 'set';
     const st = stationOf(S.shop, m.station);
@@ -666,7 +880,7 @@ $('#view').addEventListener('pointerup', (e) => {
   // 부리부리 쌤
   if (S.coach) {
     const hit = ray.intersectObject(S.coach.root, true)[0];
-    if (hit) { setTab('pt'); playCoach('wave'); return; }
+    if (hit) { openPanel('pt'); playCoach('wave'); return; }
   }
   // 기구
   let best = null;
@@ -684,6 +898,8 @@ $('#view').addEventListener('pointerup', (e) => {
   const t = -o.y / d.y;
   const x = o.x + d.x * t, z = o.z + d.z * t;
   if (S.me.station && !S.me.on) { S.me.station = null; S.me.claimedAt = 0; if (S.me.state === 'set') S.me.state = 'idle'; renderHud(); syncScene(); }
+  if (S.me.queue) { leaveQueue(); toast('줄에서 나왔어요.', 1600); }
+  S.meA._gestUntil = 0;
   walkTo(S.meA, x, z);
   syncPresence(true);
 });
@@ -692,43 +908,35 @@ $('#view').addEventListener('pointerup', (e) => {
 function renderHud() {
   if (!S.shop) return;
   const now = Date.now(), m = S.me, shop = SHOPS[S.shop];
-  const st = stationOf(S.shop, m.station);
-  const stage = $('#stage'), repBtn = $('#repBtn'), dots = $('#dots');
-  dots.textContent = '';
+  const st = stationOf(S.shop, m.station), qst = stationOf(S.shop, m.queue);
+  const stage = $('#stage'), repBtn = $('#repBtn');
+  $('#clock').hidden = false;
   if (m.state === 'set' && st) {
     stage.dataset.phase = 'work';
-    $('#phasePill').textContent = m.on ? `세트 중 · ${m.set}/${RULES.setsPerStation}세트` : '기구로 가는 중';
+    $('#exName').textContent = m.on ? `${st.ex} · ${m.set}/${RULES.setsPerStation}세트` : `${st.name}로 가는 중`;
     $('#clock').textContent = `${m.reps}/${shop.reps}`;
-    $('#exName').textContent = `${st.name} · ${st.ex}`;
-    $('#exMeta').textContent = m.on ? '한 번 누를 때마다 1회 · 스페이스바도 OK' : '도착하면 시작할 수 있어요';
-    for (let i = 0; i < shop.reps; i++) {
-      const li = document.createElement('li');
-      if (i < m.reps) li.className = 'done'; else if (i === m.reps) li.className = 'now';
-      dots.append(li);
-    }
     repBtn.hidden = false;
     repBtn.disabled = !m.on;
   } else if (m.state === 'rest') {
     stage.dataset.phase = 'rest';
-    $('#phasePill').textContent = '쉬는 시간 · 채팅 열림';
+    $('#exName').textContent = st ? `쉬는 시간 · 다음 ${st.name} ${m.set + 1}세트` : qst ? `쉬는 시간 · ${qst.name} 줄 ${S.lineAhead || 0}명 앞` : '쉬는 시간 · 수다 OK';
     $('#clock').textContent = fmt(m.restUntil - now);
-    $('#exName').textContent = st ? `다음: ${st.name} ${m.set + 1}세트` : '기구 완료! 푹 쉬어요';
-    $('#exMeta').textContent = '쉬는 시간은 세트마다 1~3분 랜덤';
-    repBtn.hidden = !st;
-    repBtn.disabled = true;
+    repBtn.hidden = true;
   } else {
     stage.dataset.phase = 'idle';
-    $('#phasePill').textContent = '기구 고르기';
+    $('#exName').textContent = qst ? `${qst.name} 줄 서는 중 · 내 앞에 ${S.lineAhead || 0}명` : '빈 기구를 골라 시작해요';
+    $('#clock').hidden = true;
     $('#clock').textContent = '—';
-    $('#exName').textContent = '빈 기구를 눌러 시작해요';
-    $('#exMeta').textContent = `세트당 ${shop.reps}회 × ${RULES.setsPerStation}세트 · 바닥을 누르면 걸어가요`;
     repBtn.hidden = true;
   }
   $('#releaseBtn').hidden = !m.station;
+  $('#leaveQueueBtn').hidden = !m.queue;
+  $('#stnbar').hidden = !!m.station;
   updateChatLock();
 }
 
-let lastSecond = 0, lastHook = performance.now();
+// 화면 그리기 (탭이 내려가 있으면 멈춘다)
+let lastHook = performance.now();
 G.hooks.push((dt) => {
   const nowMs = performance.now(), realDt = Math.min(0.5, (nowMs - lastHook) / 1000);
   lastHook = nowMs;
@@ -736,20 +944,27 @@ G.hooks.push((dt) => {
   stepWalkers(realDt); // 화면이 느려도 걷는 속도는 그대로
   followCam(dt);
   updateTags();
+});
+// 1초마다 규칙 돌리기 (탭이 내려가 있어도 휴식·줄이 멈추지 않게 그리기와 분리)
+setInterval(() => {
+  if (!S.shop || !S.meA) return;
   const now = Date.now(), m = S.me;
   if (m.state === 'rest') {
     const left = m.restUntil - now, sec = Math.ceil(left / 1000);
     if (sec <= 3 && sec > 0 && S.lastBeep !== `${m.restUntil}:${sec}`) { S.lastBeep = `${m.restUntil}:${sec}`; sound.tick(); }
     if (left <= 0) endRest();
   }
-  const second = Math.floor(now / 1000);
-  if (second !== lastSecond) {
-    lastSecond = second;
-    renderHud();
-    syncScene();
-    document.title = m.state === 'rest' ? `☕ ${fmt(m.restUntil - now)} · 짹짹이짐` : m.state === 'set' ? `💪 ${m.reps}/${SHOPS[S.shop].reps} · 짹짹이짐` : '짹짹이짐 ONLINE 3D';
+  syncScene();
+  // 줄이 있는데 오래 멈춰 있으면 다음 사람에게
+  if (m.station && m.state !== 'rest' && S.lineBehind > 0 && now - m.lastActAt > RULES.idleHoldSec * 1000) {
+    const st = stationOf(S.shop, m.station);
+    toast(`오래 멈춰 있어서 ${st?.name || '기구'}를 다음 분께 넘겼어요.`, 3500);
+    releaseStation();
   }
-});
+  stepCoach(now);
+  renderHud();
+  document.title = m.state === 'rest' ? `☕ ${fmt(m.restUntil - now)} · 짹짹이짐` : m.state === 'set' ? `💪 ${m.reps}/${SHOPS[S.shop].reps} · 짹짹이짐` : '짹짹이짐 ONLINE 3D';
+}, 1000);
 
 // ------------------------------------------------------------------ 로비
 function renderColorPicker() {
@@ -785,9 +1000,15 @@ function lobbyCounts() {
     const total = SHOPS[id].stations.length;
     el.textContent = room ? `🐥 ${counts[id]}명 · 빈 기구 ${total - busy[id].size}/${total}` : `기구 ${total}개 · 세트당 ${SHOPS[id].reps}회`;
   }
+  const all = counts.pilates + counts.weight;
+  $('#lobbyCount').hidden = !room;
+  $('#lobbyCount').textContent = all ? `지금 ${all}명이 함께 운동 중` : '지금은 조용해요. 첫 번째로 들어가 볼까요?';
 }
 function showLobby() {
   if (S.shop) { releaseStation(true); }
+  S.me.queue = null; S.me.queuedAt = 0;
+  ambient.stop();
+  closePanel();
   S.shop = null;
   S.meA = null; S.coach = null;
   for (const A of G.actors.slice()) G.removeActor(A);
@@ -796,7 +1017,7 @@ function showLobby() {
   $('#gym').hidden = true;
   $('#lobby').hidden = false;
   document.title = '짹짹이짐 ONLINE 3D';
-  room?.presence({ shop: null, station: null, state: 'idle', on: false }).catch(() => {});
+  room?.presence({ shop: null, station: null, queue: null, state: 'idle', on: false }).catch(() => {});
   lobbyCounts();
 }
 $('#joinForm').addEventListener('submit', (e) => {
@@ -812,7 +1033,7 @@ $('#joinForm').addEventListener('submit', (e) => {
 });
 function enterGym(shopId) {
   S.shop = shopId;
-  Object.assign(S.me, { station: null, claimedAt: 0, on: false, state: 'idle', reps: 0, set: 1, restUntil: 0 });
+  Object.assign(S.me, { station: null, claimedAt: 0, on: false, queue: null, queuedAt: 0, state: 'idle', reps: 0, set: 1, restUntil: 0 });
   S.ptTurns = [];
   S.announce = false;
   setTimeout(() => { S.announce = true; }, 2500);
@@ -821,15 +1042,15 @@ function enterGym(shopId) {
   setTab('chat');
   const shop = SHOPS[shopId];
   $('#shopName').textContent = shop.name;
-  $('#shopTag').textContent = shop.tagline;
   $('#lobby').hidden = true;
   $('#gym').hidden = false;
   document.body.classList.add('in-gym');
   buildShop(shopId);
   syncPresence(true);
+  ambient.start(shopId);
   sysLine(`🐥 ${shop.name}에 입장! 바닥을 누르면 걸어가고, 빈 기구를 누르면 운동을 시작해요.`, '');
   if (!room) sysLine('지금은 혼자 운동 모드예요. claude.ai에 로그인한 상태로 열면 다른 짹짹이들과 함께해요.', '');
-  coachSay(`어서 와 ${S.me.nick}! 빈 기구 하나 골라봐~`, 6000);
+  setTimeout(() => { if (S.shop === shopId) coachGreet(S.me.nick, S.meA); }, 700);
   renderHud();
   syncScene();
   updatePtUI();
@@ -896,7 +1117,7 @@ function chatLine(who, text, mine) {
   log.append(li);
   trimLog(log);
   if (mine) log.scrollTop = log.scrollHeight; else done();
-  if (S.tab !== 'chat') bumpUnread();
+  if (S.tab !== 'chat' || panelIsHidden()) bumpUnread();
 }
 function updateChatLock() {
   const m = S.me, open = m.state === 'rest';
@@ -927,11 +1148,6 @@ function onChat(msg) {
   chatLine(msg.sameTab ? S.me.nick : R?.nick || '짹짹이', text, msg.sameTab);
   showBubble(msg.sameTab ? 'me' : msg.peer, text);
 }
-function onCheer(msg) {
-  const d = msg.data || {};
-  if (!S.shop || d.shop !== S.shop || !CHEERS.includes(d.emoji)) return;
-  floatEmoji(msg.sameTab ? 'me' : msg.peer, d.emoji);
-}
 async function sendChat(text) {
   if (S.me.state !== 'rest') return;
   const now = Date.now();
@@ -955,17 +1171,6 @@ $('#chatForm').addEventListener('submit', (e) => {
   input.value = '';
   sendChat(text);
 });
-for (const btn of document.querySelectorAll('[data-cheer]')) {
-  btn.addEventListener('click', () => {
-    const emoji = btn.dataset.cheer, now = Date.now();
-    if (now - S.lastCheerAt < 1200) return;
-    S.lastCheerAt = now;
-    if (room && room.connected()) {
-      room.emit('cheer', { shop: S.shop, emoji }).catch((e) => { if (e?.code === 'not_permitted') toast('이 링크 권한으로는 응원을 보낼 수 없어요.', 2500); });
-    } else floatEmoji('me', emoji);
-  });
-}
-
 // ------------------------------------------------------------------ 부리부리 쌤 PT (체험 1회, 이후 이용권)
 // 결제 시스템이 생기면 hasPtPass()가 실제 이용권을 확인하게 바꾸면 된다.
 function hasPtPass() { return false; }
@@ -1088,14 +1293,36 @@ $('#ptForm').addEventListener('submit', (e) => {
 for (const chip of $('#ptChips').children) chip.addEventListener('click', () => ptAsk(chip.textContent));
 
 // ------------------------------------------------------------------ tabs / misc
+const panelIsHidden = () => $('#panel').hidden;
+function openPanel(tab) {
+  S.panelAuto = false;
+  $('#panel').hidden = false;
+  setTab(tab);
+  syncPanelBtns();
+}
+function closePanel() {
+  $('#panel').hidden = true;
+  S.panelAuto = false;
+  syncPanelBtns();
+}
+function syncPanelBtns() {
+  const open = !panelIsHidden();
+  $('#openChat').setAttribute('aria-pressed', open && S.tab === 'chat');
+  $('#openPt').setAttribute('aria-pressed', open && S.tab === 'pt');
+}
+function togglePanel(tab) { if (!panelIsHidden() && S.tab === tab) closePanel(); else openPanel(tab); }
+$('#openChat').addEventListener('click', () => togglePanel('chat'));
+$('#openPt').addEventListener('click', () => togglePanel('pt'));
+$('#closePanel').addEventListener('click', closePanel);
 function setTab(tab) {
   S.tab = tab;
   $('#tabChat').setAttribute('aria-selected', tab === 'chat');
   $('#tabPt').setAttribute('aria-selected', tab === 'pt');
   $('#chatPane').hidden = tab !== 'chat';
   $('#ptPane').hidden = tab !== 'pt';
-  if (tab === 'chat') { S.unread = 0; $('#chatBadge').hidden = true; const log = $('#chatLog'); log.scrollTop = log.scrollHeight; }
-  else updatePtUI();
+  if (tab === 'chat' && !panelIsHidden()) { S.unread = 0; $('#chatBadge').hidden = true; const log = $('#chatLog'); log.scrollTop = log.scrollHeight; }
+  if (tab === 'pt') updatePtUI();
+  syncPanelBtns();
 }
 function bumpUnread() {
   S.unread++;
@@ -1105,8 +1332,25 @@ function bumpUnread() {
 }
 $('#tabChat').addEventListener('click', () => setTab('chat'));
 $('#tabPt').addEventListener('click', () => setTab('pt'));
-function renderSoundBtn() { const b = $('#soundBtn'); b.textContent = sound.on ? '🔊' : '🔇'; b.setAttribute('aria-pressed', sound.on); }
-$('#soundBtn').addEventListener('click', () => { sound.on = !sound.on; store.set('jg.sound', sound.on ? '1' : '0'); sound.unlock(); renderSoundBtn(); });
+function renderSoundBtn() {
+  const b = $('#soundBtn'), a = $('#ambientBtn');
+  b.textContent = sound.on ? '🔊' : '🔇';
+  b.setAttribute('aria-pressed', sound.on);
+  b.setAttribute('aria-label', sound.on ? '모든 소리 끄기' : '소리 켜기');
+  a.setAttribute('aria-pressed', ambient.on && sound.on);
+  a.setAttribute('aria-label', ambient.on ? '은은한 짐 소리 끄기' : '은은한 짐 소리 켜기');
+  a.title = ambient.on ? '짐 소리 끄기' : '짐 소리 켜기';
+  a.disabled = !sound.on;
+}
+$('#soundBtn').addEventListener('click', () => { sound.on = !sound.on; store.set('jg.sound', sound.on ? '1' : '0'); sound.unlock(); ambient.apply(); renderSoundBtn(); });
+$('#ambientBtn').addEventListener('click', () => {
+  ambient.on = !ambient.on;
+  store.set('jg.ambient', ambient.on ? '1' : '0');
+  sound.unlock();
+  ambient.apply();
+  renderSoundBtn();
+  toast(ambient.on ? '은은한 짐 소리를 켰어요.' : '은은한 짐 소리를 껐어요.', 1500);
+});
 let toastTimer = null;
 function toast(text, ms = 0) {
   const t = $('#toast');
@@ -1134,11 +1378,11 @@ function toast(text, ms = 0) {
     const dead = () => { room = null; lobbyCounts(); syncScene(); };
     r.onPeers(() => { lobbyCounts(); syncScene(); }, dead);
     r.on('chat', onChat, dead);
-    r.on('cheer', onCheer, dead);
     if (S.shop) syncPresence(true);
     lobbyCounts();
   });
   setInterval(() => { if (!S.shop) lobbyCounts(); }, 2000);
+  if (FAST) window.__jg = { S, G, RULES, sound, ambient }; // 시험용
 
   try {
     await Promise.all(['jjak', 'buri'].map((id) => G.loadTemplate(id)));

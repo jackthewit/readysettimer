@@ -1,78 +1,163 @@
-/* ================================================================ 3D */
+/* ================================================================ 3D
+   화면 구상: 3D 공간이 화면 전체. 조작은 네 귀퉁이에 작게, 공간을 가리지 않는다. */
 .brand h1 span { letter-spacing: .04em; }
 .load-note { margin: 0; font-size: 13px; font-weight: 700; color: var(--ink-soft); }
 .load-note.err { color: #d43d1a; }
 .shop:disabled { opacity: .55; cursor: wait; transform: none; }
+.lobby-count { font-weight: 800; color: var(--ink); }
+.lobby-count::before { content: ''; display: inline-block; width: 9px; height: 9px; margin-right: 8px; border-radius: 50%; background: var(--rest); }
 
-.stage { background: #2b2e33; container-type: size; }
+/* 3D 위에 뜨는 것들: 테마와 상관없이 같은 색 (뒤가 늘 3D 장면) */
+.gym {
+  --float: rgba(255, 255, 255, .86); --float-ink: #2b2b2b; --float-soft: #6b6458;
+  display: block; height: 100%; padding: 0; gap: 0;
+}
+.stage {
+  position: relative; height: 100%; width: 100%; overflow: hidden; background: #2b2e33;
+  container-type: size; border: 0; border-radius: 0;
+}
 .stage::after { display: none; }
 #view { position: absolute; inset: 0; }
 #view canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: pointer; }
+
+/* 이름표 */
 .tags { position: absolute; inset: 0; z-index: 12; pointer-events: none; overflow: hidden; }
 .tag3 {
   position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); white-space: nowrap;
   display: grid; justify-items: center; gap: 2px; will-change: transform;
 }
 .tag3 .nm {
-  font-size: 12px; font-weight: 800; color: #2b2b2b; background: #fff; border: 2px solid #2b2b2b;
-  border-radius: 999px; padding: 0 8px; line-height: 1.45; max-width: 14ch; overflow: hidden; text-overflow: ellipsis;
+  font-size: 12px; font-weight: 700; color: var(--float-ink); background: var(--float);
+  border-radius: 999px; padding: 0 8px; line-height: 1.5; max-width: 18ch; overflow: hidden; text-overflow: ellipsis;
 }
 .tag3.me .nm { background: var(--yellow); }
-.tag3.coach .nm { background: #eef8f6; border-color: #2b2b2b; }
-.tag3 .st { font-size: 11px; font-weight: 800; color: #fff; background: #2b2b2b; border-radius: 8px; padding: 0 6px; line-height: 1.5; }
+.tag3 .st { font-size: 11px; font-weight: 800; color: #fff; background: rgba(43, 43, 43, .82); border-radius: 8px; padding: 0 6px; line-height: 1.5; }
 .tag3 .st:empty { display: none; }
-.tag3.resting .st { background: var(--rest); }
-.tag3 .bubble { position: static; transform: none; max-width: 220px; width: max-content; white-space: normal; margin-bottom: 4px; }
-.tag3 .bubble::after { content: ''; position: absolute; left: 50%; bottom: -9px; width: 12px; height: 12px; background: #fff; border-right: 2.5px solid #2b2b2b; border-bottom: 2.5px solid #2b2b2b; transform: translateX(-50%) rotate(45deg); }
-.tag3 .bubble { position: relative; }
-.tag3 .float-emoji { position: absolute; left: 50%; bottom: 100%; }
+.tag3.resting .st { background: #1f8f83; }
+.tag3 .bubble {
+  position: relative; transform: none; max-width: 220px; width: max-content; white-space: normal; margin-bottom: 5px;
+  border: 0; box-shadow: 0 2px 10px rgba(30, 28, 25, .22); font-size: 13px; color: var(--float-ink);
+}
+.tag3 .bubble::after { content: ''; position: absolute; left: 50%; bottom: -5px; width: 10px; height: 10px; background: #fff; transform: translateX(-50%) rotate(45deg); }
+.tag3 .float-emoji { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); font-size: 30px; }
 .tag3.hidden { display: none; }
 
-.stn {
-  position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); pointer-events: auto; white-space: nowrap;
-  display: grid; justify-items: center; line-height: 1.25; padding: 2px 9px;
-  font: 800 12px var(--body); color: #2b2b2b; background: rgba(255, 255, 255, .92);
-  border: 2px dashed #2b2b2b; border-radius: 10px; will-change: transform;
+/* 공통 동그라미 버튼 */
+.chip {
+  position: relative; display: inline-grid; place-items: center; min-width: 38px; height: 38px; padding: 0 10px;
+  font: 700 15px var(--body); color: var(--float-ink); background: var(--float);
+  border: 0; border-radius: 999px; box-shadow: 0 1px 6px rgba(30, 28, 25, .16); cursor: pointer; touch-action: manipulation;
 }
-.stn small { font-size: 10.5px; font-weight: 700; color: #6b6458; }
-.stn:hover:not(:disabled) { background: var(--yellow); }
-.stn.busy { border-style: solid; cursor: not-allowed; }
-.stn.busy small { color: #c24a1b; }
-.stn.mine { border-style: solid; background: var(--yellow); }
-.stn.hidden { display: none; }
-.stn:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+.chip:hover:not(:disabled) { background: #fff; }
+.chip[aria-pressed='true'] { background: var(--yellow); }
+#ambientBtn[aria-pressed='false'], #soundBtn[aria-pressed='false'] { background: var(--float); opacity: .72; }
+.chip:disabled { opacity: .4; cursor: default; }
+.chip.wide { font-size: 13px; padding: 0 14px; }
+.chip .badge { position: absolute; right: -4px; top: -4px; }
+.chip:focus-visible, .gestures button:focus-visible, .pick:focus-visible, .rep-btn:focus-visible, .panel-close:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
 
-.stnbar {
-  position: absolute; z-index: 22; left: 10px; right: 64px; bottom: 10px; display: flex; gap: 6px;
-  overflow-x: auto; scrollbar-width: none; padding: 2px;
+/* 위 */
+.top {
+  position: absolute; z-index: 25; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px));
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; pointer-events: none;
 }
+.top > * { pointer-events: auto; }
+.top-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.top-right { display: flex; justify-content: flex-end; gap: 6px; }
+.shop-title { font: 18px var(--display); color: var(--float-ink); background: var(--float); border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
+.together {
+  margin: 0; font-size: 13.5px; font-weight: 700; color: var(--float-ink); background: var(--float);
+  border-radius: 999px; padding: 6px 14px; white-space: nowrap; font-variant-numeric: tabular-nums; pointer-events: none;
+}
+
+/* 아래 가운데: 지금 할 일 */
+.dock {
+  position: absolute; z-index: 22; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  width: min(620px, calc(100% - 24px)); display: grid; justify-items: center; gap: 8px; pointer-events: none;
+}
+.dock > * { pointer-events: auto; }
+.dock-status {
+  display: flex; align-items: baseline; gap: 10px; color: var(--float-ink); background: var(--float);
+  border-radius: 999px; padding: 5px 16px; font-size: 14px; font-weight: 700; max-width: 100%;
+}
+.dock-status span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dock .clock {
+  font: 22px var(--display); line-height: 1.1; min-width: 0; text-align: right; flex: none;
+  font-variant-numeric: tabular-nums; color: var(--float-ink); grid-area: auto;
+}
+.stage[data-phase='work'] .dock .clock { color: #d9502f; }
+.stage[data-phase='rest'] .dock .clock { color: #1f8f83; }
+.dock-actions { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.dock-actions:not(:has(button:not([hidden]))) { display: none; }
+.dock .rep-btn {
+  flex: none; min-width: 190px; height: 56px; padding: 0 28px; font: 24px var(--display); color: #2b2b2b; background: var(--yellow);
+  border: 0; border-radius: 999px; box-shadow: 0 4px 14px rgba(30, 28, 25, .28); touch-action: manipulation; user-select: none;
+}
+.dock .rep-btn:active, .dock .rep-btn.pressed { transform: translateY(2px); box-shadow: 0 1px 6px rgba(30, 28, 25, .28); }
+.dock .rep-btn:disabled { opacity: .55; cursor: wait; }
+
+.stnbar { display: flex; gap: 6px; max-width: 100%; overflow-x: auto; scrollbar-width: none; padding: 2px; }
 .pick {
-  flex: none; display: grid; justify-items: start; line-height: 1.25; padding: 4px 10px; text-align: left;
-  font: 800 12.5px var(--body); color: #2b2b2b; background: #fff; border: 2px solid #2b2b2b; border-radius: 10px;
-  box-shadow: 2px 2px 0 #2b2b2b;
+  flex: none; display: grid; justify-items: start; line-height: 1.25; padding: 5px 12px; text-align: left; cursor: pointer;
+  font: 700 12.5px var(--body); color: var(--float-ink); background: var(--float); border: 0; border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(30, 28, 25, .16);
 }
-.pick small { font-size: 11px; font-weight: 700; color: #6b6458; }
-.pick:hover:not(:disabled) { background: var(--yellow); }
-.pick.mine { background: var(--yellow); }
-.pick.busy { background: #ececec; box-shadow: none; cursor: not-allowed; }
-.pick.busy small { color: #c24a1b; }
-.pick:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
-.hint {
-  position: absolute; z-index: 20; left: 10px; bottom: 62px; margin: 0; font-size: 11.5px; font-weight: 700;
-  color: #2b2b2b; background: rgba(255, 255, 255, .85); border: 1.5px solid #2b2b2b; border-radius: 8px; padding: 2px 8px;
+.pick small { font-size: 11px; font-weight: 500; color: var(--float-soft); }
+.pick:hover { background: #fff; }
+.pick.mine, .pick.lined { background: var(--yellow); }
+.pick.busy:not(.lined) { background: rgba(255, 255, 255, .62); }
+.pick.busy small { color: #b5431a; }
+
+/* 왼쪽 가운데: 몸짓 */
+.gestures {
+  position: absolute; z-index: 22; left: max(12px, env(safe-area-inset-left, 0px)); top: 50%; transform: translateY(-50%);
+  display: grid; gap: 6px;
 }
-.loading {
-  position: absolute; inset: 0; z-index: 40; display: grid; place-items: center;
-  background: rgba(43, 46, 51, .55); color: #fff; font: 20px var(--display);
+.gestures button {
+  width: 44px; height: 44px; font-size: 21px; display: grid; place-items: center; cursor: pointer; touch-action: manipulation;
+  background: var(--float); border: 0; border-radius: 50%; box-shadow: 0 1px 6px rgba(30, 28, 25, .16);
 }
-.loading span { background: #2b2b2b; border-radius: 14px; padding: 10px 18px; }
+.gestures button:hover { background: #fff; transform: scale(1.06); }
+.gestures button:active { transform: scale(.94); }
+
+/* 채팅·PT: 필요할 때만 뜨는 창 */
+.panel {
+  position: absolute; z-index: 30; right: max(12px, env(safe-area-inset-right, 0px)); top: calc(58px + env(safe-area-inset-top, 0px));
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: min(340px, calc(100% - 24px)); color: var(--ink);
+  display: grid; grid-template-rows: auto 1fr; min-height: 0; background: var(--card); border: 0; border-radius: 16px; overflow: hidden;
+  box-shadow: 0 6px 26px rgba(30, 28, 25, .3);
+}
+.panel[hidden] { display: none; }
+.panel .tabs { grid-template-columns: 1fr 1fr 40px; border-bottom: 1px solid var(--muted-line); }
+.panel .tabs button { font-size: 14px; padding: 10px 6px; }
+.panel .composer { border-top: 1px solid var(--muted-line); }
+.panel-close { background: transparent; border: 0; color: var(--ink-soft); cursor: pointer; }
+
+/* 안내는 위쪽에: 아래의 「한 번!」 버튼을 가리지 않게 */
+.toast { max-width: calc(100% - 32px); bottom: auto; top: calc(96px + env(safe-area-inset-top, 0px)); width: max-content; }
 
 @media (max-width: 860px) {
-  .hint { display: none; }
-  .stnbar { right: 48px; bottom: 6px; }
-  .pick { font-size: 11px; padding: 3px 8px; }
-  .pick small { font-size: 10px; }
+  .top { grid-template-columns: 1fr auto; row-gap: 6px; }
+  .top-left { grid-column: 1; }
+  .top-right { grid-column: 2; }
+  .together { grid-column: 1 / -1; grid-row: 2; justify-self: center; font-size: 12.5px; padding: 4px 12px; }
+  .shop-title { font-size: 15px; }
+  .chip { min-width: 34px; height: 34px; padding: 0 8px; font-size: 14px; }
+  .chip.wide { font-size: 13px; height: 38px; }
+  .gestures { top: auto; bottom: calc(150px + env(safe-area-inset-bottom, 0px)); transform: none; grid-auto-flow: row; }
+  .gestures button { width: 40px; height: 40px; font-size: 19px; }
+  .panel { left: 8px; right: 8px; top: auto; bottom: 0; width: auto; height: 62%; border-radius: 16px 16px 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .dock .rep-btn { min-width: 170px; height: 54px; }
+  .pick { font-size: 12px; padding: 4px 10px; }
+  .pick small { font-size: 10.5px; }
   .tag3 .nm { font-size: 10.5px; padding: 0 6px; }
-  .stn { font-size: 10.5px; padding: 1px 6px; }
-  .stn small { font-size: 9.5px; }
+}
+
+/* 짐 안에서는 3D가 화면 끝까지 */
+body.in-gym { padding-left: 0; padding-right: 0; }
+.gym { margin: 0; max-width: none; width: 100%; }
+@media (max-width: 860px) {
+  .hero-art { display: none; }
+  .hero { margin-bottom: 0; }
 }

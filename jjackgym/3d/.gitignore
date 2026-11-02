@@ -1,0 +1,7 @@
+# 빌드 결과 · 저장소에 올리지 않는 큰 파일
+index.html
+check.mjs
+models/
+lib/
+jjack.png
+buri.png
