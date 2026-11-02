@@ -55,49 +55,8 @@ const PT_KNOW = {
   butterfly: { tags: ['스트레칭', '다리', '엉덩이'], works: '허벅지 안쪽과 고관절 주변을 풀어 주는 스트레칭이야.', point: '발바닥을 붙이고 허리를 세워. 편한 만큼만 무릎을 내려.', mistake: '손으로 무릎을 억지로 누르거나 등이 구부정해지기 쉬워.', easier: '엉덩이 밑에 수건을 깔고 앉아 봐.' },
 };
 
-// 질문에서 뜻을 찾아 답한다. 운동과 상관없는 얘기는 받지 않는다.
-const PT_BODY = [['하체', /하체|허벅지|다리/], ['엉덩이', /엉덩이|힙/], ['등', /등\b|등근육|등 |굽은/], ['가슴', /가슴/], ['어깨', /어깨/], ['팔', /팔|이두|삼두/], ['코어', /코어|복근|뱃살|배 /], ['유산소', /유산소|살\s*빼|다이어트|심폐/], ['스트레칭', /스트레칭|풀어|뻣뻣|유연/], ['균형', /균형/]];
-function ptAnswer(q, shop, current) {
-  const text = String(q);
-  // 1. 아프다는 말이 먼저
-  if (/통증|아파|아프|저려|저림|찌릿|부상|다쳤|수술|임신|디스크/.test(text)) {
-    return '아프거나 저린 곳이 있으면 그 동작은 바로 멈춰. 나는 진단을 할 수 없으니까 병원에서 꼭 확인받고, 괜찮다고 할 때 다시 하자.';
-  }
-  // 2. 어느 기구 얘기인지: 질문에 나온 기구, 없으면 지금 쓰는 기구
-  const named = shop.stations.filter((s) => text.includes(s.ex) || text.includes(s.name)).sort((a, b) => b.ex.length - a.ex.length)[0];
-  const st = named || current;
-  const k = st && PT_KNOW[st.preset];
-  if (/뻐근|결려|결림|불편/.test(text)) {
-    const easy = k ? ` ${k.easier}` : '';
-    return `뻐근한 정도면 범위를 줄이고 천천히 해 봐.${easy} 날카롭게 아프거나 저리면 바로 멈추고 병원에 가 보고.`;
-  }
-  // 3. 부위로 운동 찾기
-  if (!named) {
-    for (const [tag, re] of PT_BODY) {
-      if (!re.test(text) || (k && /이 운동|이 기구/.test(text))) continue;
-      const names = shop.stations.filter((s) => PT_KNOW[s.preset]?.tags.includes(tag)).map((s) => s.ex);
-      const uniq = [...new Set(names)].slice(0, 4);
-      if (uniq.length) return `${tag} 쪽이면 여기서는 ${uniq.join(', ')}부터 해 봐.`;
-      return `${tag} 운동은 이 샵보다 다른 샵에 더 많아. 메뉴에서 샵을 옮겨 봐.`;
-    }
-  }
-  // 4. 일반 요령
-  if (/숨|호흡/.test(text)) return '숨은 참지 마. 힘 쓸 때 내쉬고 돌아올 때 들이마셔.';
-  if (/몇\s*(번|개|회|세트)|횟수|무게|중량/.test(text)) return '횟수보다 자세가 먼저야. 마지막 두세 번이 조금 힘든 정도면 알맞아. 자세가 무너지면 무게를 줄여.';
-  if (/얼마나 쉬|휴식|쉬는 시간/.test(text)) return '여기서는 세트가 끝나면 20초 쉬어. 그동안 숨을 고르면 돼.';
-  if (/뭐부터|어떤 운동|추천|순서|시작/.test(text) && !k) {
-    const first = shop.stations.slice(0, 1).map((s) => s.ex)[0];
-    return shop.id === 'weight'
-      ? '러닝머신이나 천국의 계단으로 몸을 데운 다음, 스쿼트나 벤치프레스처럼 큰 운동부터 해. 작은 운동은 그다음이야.'
-      : `매트에서 캣 카우로 척추를 풀고, ${first} 같은 리포머 운동으로 넘어가 봐.`;
-  }
-  // 5. 지금 기구에 대한 답
-  if (k) {
-    if (/어디|효과|좋아|부위|자극/.test(text)) return `${st.ex}는 ${k.works}`;
-    if (/쉽|쉬운|대체|못\s*하|힘들|어려/.test(text)) return k.easier;
-    if (/실수|틀|잘못/.test(text)) return k.mistake;
-    return `${k.point} ${k.mistake}`;
-  }
-  if (/자세|봐\s*주|포인트|어떻게/.test(text)) return '먼저 비어 있는 기구에 올라가 봐. 그 운동에 맞춰 알려 줄게.';
-  return '그건 잘 모르겠어. 기구나 운동, 자세에 대해 물어봐.';
+// PT를 부르면 선생님이 차례로 말해 줄 자세 안내
+function ptLines(st) {
+  const k = PT_KNOW[st.preset];
+  return k ? [k.point, k.mistake, `힘들면, ${k.easier}`] : [];
 }

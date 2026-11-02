@@ -4,8 +4,9 @@ const WORLD = (() => {
   const G = window.GymEngine, T = G.THREE, AS = G.AS;
   const { put, rod, rbox, cyl, sph, colors: C } = AS;
   const plane = (w, h) => new T.PlaneGeometry(w, h);
-  const ROOM = { x: 11, back: -9, front: 16 }; // 방 크기: x ±11, 뒤 벽 z=-9, 앞은 열려 있음
-  const DOOR = { x: 8, w: 2.6, h: 2.5 };
+  const ROOM = { x: 9.5, back: -9, front: 7.5 }; // 방 크기: x ±9.5, 뒤 벽 z=-9, 앞벽 z=7.5
+  const OUTER = ROOM.front + 8; // 앞벽 바깥에 있는 카메라에서 허공이 안 보이게 바닥과 옆벽은 이만큼 더 그린다
+  const DOOR = { x: 7.4, w: 2.6, h: 2.5 };
 
   function group(id, top, footprint) {
     const g = new T.Group();
@@ -91,6 +92,27 @@ const WORLD = (() => {
       return g;
     },
   };
+  // 래더 바렐: 나무 받침 위에 둥근 등판, 앞에 사다리, 바닥 레일로 이어진다
+  AS.props.ladderBarrel = {
+    label: '래더 바렐', category: 'pilates', build() {
+      const g = group('ladderBarrel', 0.88, [1.5, 0.7]);
+      const R = 0.36, bx = 0.25;
+      const dome = new T.Shape();
+      dome.moveTo(-R, 0);
+      dome.absarc(0, 0, R, Math.PI, 0, true);
+      dome.closePath();
+      const geo = new T.ExtrudeGeometry(dome, { depth: 0.58, curveSegments: 24, bevelEnabled: true, bevelSize: 0.012, bevelThickness: 0.012, bevelSegments: 2 });
+      geo.translate(0, 0, -0.29);
+      put(g, geo, C.padCream, { p: [bx, 0.52, 0], ol: 0.006 });
+      put(g, rbox(0.76, 0.05, 0.64, 0.012), C.wood, { p: [bx, 0.5, 0], ol: 0.005 }); // 등판 받침
+      for (const s of [-1, 1]) put(g, rbox(0.66, 0.46, 0.05, 0.012), C.woodL, { p: [bx, 0.25, s * 0.27], ol: 0.005 }); // 옆판
+      for (const x of [-0.26, 0.76]) put(g, rbox(0.06, 0.06, 0.6, 0.01), C.wood, { p: [bx + x - 0.25, 0.14, 0], ol: 0.004 }); // 옆판 잇는 나무
+      for (const s of [-1, 1]) put(g, rbox(1.32, 0.05, 0.06, 0.01), C.wood, { p: [-0.1, 0.025, s * 0.3], ol: 0.004 }); // 바닥 레일
+      for (const s of [-1, 1]) rod(g, [-0.68, 0, s * 0.3], [-0.68, 1.3, s * 0.3], 0.028, C.wood, { ol: 0.005 });
+      for (let i = 0; i < 7; i++) rod(g, [-0.68, 0.2 + i * 0.17, -0.3], [-0.68, 0.2 + i * 0.17, 0.3], 0.018, C.woodD, { ol: 0.004 });
+      return g;
+    },
+  };
   AS.props.rowingMachine = {
     label: '로잉 머신', category: 'weights', build() {
       const g = group('rowingMachine', 0.3, [2.5, 0.6]);
@@ -165,13 +187,14 @@ const WORLD = (() => {
 
   // ---------------------------------------------------------------- 방
   function room(g, o) {
-    const fl = put(g, plane(ROOM.x * 2, ROOM.front - ROOM.back), o.floor, { r: [-90, 0, 0], p: [0, 0, (ROOM.front + ROOM.back) / 2], ol: false });
+    const fl = put(g, plane(ROOM.x * 2, OUTER - ROOM.back), o.floor, { r: [-90, 0, 0], p: [0, 0, (OUTER + ROOM.back) / 2], ol: false });
     fl.userData.floor = true;
     const H = 8;
     put(g, plane(ROOM.x * 2, H), o.wall, { p: [0, H / 2, ROOM.back], ol: false }).userData.floor = true;
     for (const s of [-1, 1]) {
-      put(g, plane(ROOM.front - ROOM.back, H), o.side, { p: [s * ROOM.x, H / 2, (ROOM.front + ROOM.back) / 2], r: [0, -s * 90, 0], ol: false }).userData.floor = true;
+      put(g, plane(OUTER - ROOM.back, H), o.side, { p: [s * ROOM.x, H / 2, (OUTER + ROOM.back) / 2], r: [0, -s * 90, 0], ol: false }).userData.floor = true;
     }
+    put(g, plane(ROOM.x * 2, H), o.side, { p: [0, H / 2, ROOM.front], r: [0, 180, 0], ol: false }).userData.floor = true; // 앞벽: 바깥에 있는 카메라에서는 안 보이고, 돌려서 보면 막혀 있다
     put(g, plane(ROOM.x * 2, 0.45), o.band, { flat: true, ol: false, p: [0, 3.05, ROOM.back + 0.005] });
   }
   /** 뒤 벽 거울: Reflector가 장면을 한 번 더 그려서 실제로 비친다. 느린 기기는 mirrorOff()로 끔 */
@@ -205,6 +228,25 @@ const WORLD = (() => {
     }
     put(f, rbox(0.04, 1.9, 0.05, 0.01), frame, { p: [0, 0, 0.02], ol: 0.003 });
   }
+
+  // 벽에 거는 부리부리 포즈 사진 (posters.part.js: 3D로 포즈를 잡아 찍은 것)
+  const posterTex = {};
+  function poster(g, s, z, i) {
+    const src = (window.GYM_POSTERS || [])[i];
+    if (!src) return;
+    const f = new T.Group();
+    f.position.set(s * (ROOM.x - 0.02), 2.05, z);
+    f.rotation.y = -s * 90 * Math.PI / 180;
+    g.add(f);
+    put(f, rbox(1.62, 2.0, 0.05, 0.01), C.black, { p: [0, 0, 0.01], ol: 0.004 });
+    const tex = posterTex[i] || (posterTex[i] = new T.TextureLoader().load(src));
+    tex.encoding = T.sRGBEncoding;
+    const m = put(f, plane(1.5, 1.875), 0xFFFFFF, { flat: true, ol: false, p: [0, 0, 0.04] });
+    m.material = m.material.clone();
+    m.material.map = tex;
+    m.material.needsUpdate = true;
+  }
+  const hangPosters = (g, order) => [[-1, -3.2], [-1, 1.6], [1, 3.2], [1, 5.8]].forEach(([s, z], n) => poster(g, s, z, order[n]));
 
   // ---------------------------------------------------------------- 입구
   let doorL = null, doorR = null, doorAmt = 0, doorOpenUntil = 0;
@@ -268,13 +310,18 @@ const WORLD = (() => {
       }
     }
   }
-  function waterCooler(g, x, z) {
+  const COOLER = { x: ROOM.x - 0.6, z: -2.1 };
+  function waterCooler(g) {
     const w = new T.Group();
-    w.position.set(x, 0, z);
+    w.position.set(COOLER.x, 0, COOLER.z);
+    w.rotation.y = -Math.PI / 2; // 방 안쪽을 본다
     g.add(w);
-    put(w, rbox(0.36, 0.95, 0.36, 0.02), C.white, { p: [0, 0.475, 0], ol: 0.006 });
-    put(w, cyl(0.15, 0.15, 0.42, 18), 0xBFE3F2, { p: [0, 1.17, 0], ol: 0.005 });
-    put(w, rbox(0.2, 0.1, 0.03, 0.01), C.steel, { p: [0, 0.72, 0.18], ol: 0.003 });
+    put(w, rbox(0.42, 1.0, 0.42, 0.02), C.white, { p: [0, 0.5, 0], ol: 0.006 });
+    put(w, cyl(0.17, 0.17, 0.46, 20), 0xBFE3F2, { p: [0, 1.24, 0], ol: 0.005 }); // 물통
+    put(w, rbox(0.28, 0.2, 0.02, 0.006), C.dark, { p: [0, 0.76, 0.21], ol: false }); // 물 받는 곳
+    for (const [x, col] of [[-0.06, C.sky], [0.06, C.coral]]) put(w, rbox(0.05, 0.05, 0.04, 0.008), col, { p: [x, 0.84, 0.22], ol: 0.003 });
+    put(w, rbox(0.24, 0.03, 0.08, 0.006), C.steel, { p: [0, 0.65, 0.24], ol: 0.003 }); // 물받이
+    put(w, cyl(0.045, 0.045, 0.24, 12), C.cream, { p: [0.28, 0.72, 0.1], ol: 0.003 }); // 컵 꽂이
   }
   function plant(g, x, z, s, pot) {
     const p = new T.Group();
@@ -293,18 +340,19 @@ const WORLD = (() => {
       room(g, { floor: 0x3E4248, wall: 0xE9E6E1, side: 0xDCD8D2, band: C.orange });
       put(g, plane(ROOM.x * 2, 0.1), C.yellow, { flat: true, ol: false, p: [0, 2.78, ROOM.back + 0.005] });
       // 고무 바닥 줄눈
-      for (let i = -11; i <= 11; i++) put(g, plane(0.02, ROOM.front - ROOM.back), 0x33373C, { flat: true, ol: false, r: [-90, 0, 0], p: [i, 0.002, (ROOM.front + ROOM.back) / 2] });
-      for (let j = ROOM.back + 1; j <= ROOM.front; j++) put(g, plane(ROOM.x * 2, 0.02), 0x33373C, { flat: true, ol: false, r: [-90, 0, 0], p: [0, 0.002, j] });
+      for (let i = -9; i <= 9; i++) put(g, plane(0.02, OUTER - ROOM.back), 0x33373C, { flat: true, ol: false, r: [-90, 0, 0], p: [i, 0.002, (OUTER + ROOM.back) / 2] });
+      for (let j = ROOM.back + 1; j <= OUTER; j++) put(g, plane(ROOM.x * 2, 0.02), 0x33373C, { flat: true, ol: false, r: [-90, 0, 0], p: [0, 0.002, j] });
       // 입구 쪽 밝은 바닥 (로비)
       put(g, plane(ROOM.x - 3.4, 5), 0xCFCAC0, { r: [-90, 0, 0], p: [(ROOM.x + 3.4) / 2, 0.004, ROOM.back + 2.5], ol: false });
-      mirror(g, -3.6, 13.8, 2.45);
+      mirror(g, -3.2, 12, 2.45);
       entrance(g, { frame: C.dark, title: 'ONLINE GYM 웨이트', signBg: '#26272B', signFg: '#F5D33F', mat: C.dark });
-      counter(g, { x: 5, z: -6.9, body: C.dark, top: C.orange, signBg: '#3A3C40', signFg: '#FFFFFF', towel: C.white });
+      counter(g, { x: 4.6, z: -6.9, body: C.dark, top: C.orange, signBg: '#3A3C40', signFg: '#FFFFFF', towel: C.white });
       lockers(g, ROOM.x - 0.3, -6.6, 6, 0x5D7382);
-      waterCooler(g, 10.4, -2.1);
-      plant(g, 10.3, -8.3, 1.2, C.coral);
-      plant(g, 5.9, -8.4, 1, C.cream);
+      waterCooler(g);
+      plant(g, ROOM.x - 0.5, -8.3, 1.2, C.coral);
+      plant(g, 5.3, -8.4, 1, C.cream);
       for (const z of [-5.6, -0.8, 4]) windowOnSide(g, -1, z, C.white, 0xCFE9F5);
+      hangPosters(g, [0, 1, 2, 3]);
       g.userData = { id: 'gymWide', floorY: 0, stage: { cx: 0, cz: 0, w: 18, d: 12 }, sky: '#2B2E33', cam: { pos: [0, 6, 11], target: [0, 0.8, -2] } };
       return g;
     },
@@ -316,20 +364,21 @@ const WORLD = (() => {
       const g = new T.Group();
       g.name = 'set-pilatesWide';
       room(g, { floor: 0xE6CFA8, wall: 0xF8F5EF, side: 0xF1ECE3, band: C.sage });
-      for (let i = -39; i <= 39; i++) put(g, plane(0.012, ROOM.front - ROOM.back), 0xD8BE94, { flat: true, ol: false, r: [-90, 0, 0], p: [i * 0.28, 0.002, (ROOM.front + ROOM.back) / 2] });
+      for (let i = -33; i <= 33; i++) put(g, plane(0.012, OUTER - ROOM.back), 0xD8BE94, { flat: true, ol: false, r: [-90, 0, 0], p: [i * 0.28, 0.002, (OUTER + ROOM.back) / 2] });
       put(g, plane(ROOM.x - 3.4, 5), 0xF1E7D6, { r: [-90, 0, 0], p: [(ROOM.x + 3.4) / 2, 0.004, ROOM.back + 2.5], ol: false });
-      mirror(g, -3.6, 13.8, 2.45);
+      mirror(g, -3.2, 12, 2.45);
       entrance(g, { frame: 0xFFFFFF, title: 'ONLINE GYM 필라테스', signBg: '#9CC3A8', signFg: '#2B2B2B', mat: 0x8DA893 });
-      counter(g, { x: 5, z: -6.9, body: C.woodL, top: C.cream, signBg: '#9CC3A8', signFg: '#2B2B2B', towel: C.sky });
+      counter(g, { x: 4.6, z: -6.9, body: C.woodL, top: C.cream, signBg: '#9CC3A8', signFg: '#2B2B2B', towel: C.sky });
       lockers(g, ROOM.x - 0.3, -6.6, 5, 0xE7DCC8);
-      waterCooler(g, 10.4, -2.6);
-      plant(g, 10.3, -8.3, 1.2, C.cream);
-      plant(g, 5.9, -8.4, 1, C.coral);
+      waterCooler(g);
+      plant(g, ROOM.x - 0.5, -8.3, 1.2, C.cream);
+      plant(g, 5.3, -8.4, 1, C.coral);
       for (const z of [-5.6, -0.8, 4]) windowOnSide(g, -1, z, 0xFFFFFF, 0xDCEFE6);
       for (const x of [-7, -2, 3]) {
         rod(g, [x, 4, -3.6], [x, 2.9, -3.6], 0.008, C.ink, { ol: false });
         put(g, cyl(0.04, 0.3, 0.22, 20), C.cream, { p: [x, 2.82, -3.6], ol: 0.006 });
       }
+      hangPosters(g, [2, 3, 0, 1]);
       g.userData = { id: 'pilatesWide', floorY: 0, stage: { cx: 0, cz: 0, w: 18, d: 12 }, sky: '#F3EEE6', cam: { pos: [0, 6, 11], target: [0, 0.8, -2] } };
       return g;
     },
@@ -337,10 +386,13 @@ const WORLD = (() => {
 
   return {
     ROOM, DOOR, openDoor, placeStep,
-    bounds: { x0: -10.4, x1: 10.2, z0: -8.3, z1: 5.4 },
+    bounds: { x0: -ROOM.x + 0.6, x1: ROOM.x - 0.8, z0: -8.3, z1: 5.4 },
     doorSpot: { x: DOOR.x, z: ROOM.back + 0.5 },
     doorBox: new T.Box3(new T.Vector3(DOOR.x - DOOR.w / 2, 0, ROOM.back - 0.2), new T.Vector3(DOOR.x + DOOR.w / 2, DOOR.h, ROOM.back + 0.3)),
-    deskBox: new T.Box3(new T.Vector3(3.3, 0, -7.4), new T.Vector3(6.7, 1.5, -6.4)),
+    cooler: COOLER,
+    coolerSpot: { x: COOLER.x - 0.72, z: COOLER.z },
+    coolerBox: new T.Box3(new T.Vector3(COOLER.x - 0.32, 0, COOLER.z - 0.32), new T.Vector3(COOLER.x + 0.32, 1.5, COOLER.z + 0.32)),
+    deskBox: new T.Box3(new T.Vector3(2.9, 0, -7.4), new T.Vector3(6.3, 1.5, -6.4)),
     /** 줄 달린 손잡이: 줄은 고정점에서 손까지 */
     makeBar(width, from) {
       const group = new T.Group();

@@ -1,6 +1,6 @@
 // ONLINE GYM — claude.ai 공유 페이지 버전
 // 3D 엔진·캐릭터·기구·동작: 「짹짹이 모션 스튜디오」 (window.GymEngine)
-// 규칙: 기구는 한 명씩(쓰는 중이면 줄 서기) / 누를 때마다 동작 1회 / 세트를 끝내면 1~3분 랜덤 휴식, 그때만 채팅 / PT는 체험 1회 후 이용권.
+// 규칙: 기구는 한 명씩(쓰는 중이면 줄 서기) / 누를 때마다 동작 1회 / 세트를 끝내면 휴식, 그때만 채팅 / PT를 부르면 사람마다 선생님이 한 명씩 옆으로 온다.
 // 접속자·기구 점유·줄·위치·몸짓은 room presence, 채팅은 room 이벤트, 부리부리 쌤은 pt-knowledge.part.js의 지식으로 답한다(AI 안 씀).
 const $ = (s, el = document) => el.querySelector(s);
 const G = window.GymEngine;
@@ -15,7 +15,6 @@ const RULES = {
   repSpeed: 1.4,     // 동작 재생 속도
   walkAnim: 4.2,     // 걷기 동작 재생 속도
   moveSpeed: 2.1,    // 걷는 속도 (m/초) — 방이 넓어져서 빨라짐
-  ptSessionSec: 180, // PT 한 번의 길이: 쌤이 옆에 머무는 시간
   classEveryMin: 30, // 함께 스트레칭: 몇 분마다
   classSec: 120,     // 함께 스트레칭 길이
   nearAvatars: 14,   // 화면에 그리는 다른 사람 수 (가까운 순). 휴대폰은 절반
@@ -23,14 +22,10 @@ const RULES = {
   idleHoldSec: 90,   // 줄이 있는데 이만큼 멈춰 있으면 다음 사람에게 넘김
   coachWalkSec: 30,  // 부리부리 쌤이 자리를 옮기는 간격
   gestureGapMs: 900, // 몸짓 연타 막기
+  durationRestSec: 20, // 시간 운동을 이만큼 넘게 하고 반납하면 쉬는 시간이 된다
+  durationShareSec: 300, // 줄이 있으면 시간 운동은 이만큼 하고 넘긴다
 };
 
-// 후원 금액 (임시. 결제를 붙일 때 여기만 바꾸면 됨)
-const DONATIONS = [
-  { id: 'd1', name: '물 한 잔', price: '1,000원' },
-  { id: 'd3', name: '단백질 한 잔', price: '3,000원' },
-  { id: 'd10', name: '하루 치 서버비', price: '10,000원' },
-];
 // 처음 온 사람에게 붙여 주는 닉네임 (메뉴에서 바꿀 수 있음)
 // 잔잔한 이름 (예: 느린 스쿼트, 작은 덤벨)
 const NICK_A = ['느린', '작은', '꾸준한', '고요한', '다정한', '가벼운', '조용한', '천천한', '단단한', '성실한', '포근한', '오늘의'];
@@ -43,68 +38,68 @@ const SHOPS = {
   pilates: {
     id: 'pilates', set: 'pilatesWide', name: '필라테스샵', tagline: '', reps: 10,
     // 쌤의 첫 자리는 안내 데스크 뒤
-    coachSpots: [{ x: 5, z: -7.7 }, { x: -3.2, z: -3.6 }, { x: -8.2, z: -2.6 }, { x: 2.6, z: 3.2 }, { x: 7.2, z: -1.6 }], spawn: { x: 7, z: -3.4 },
+    coachSpots: [{ x: 4.3, z: -7.7 }, { x: -2.75, z: -3.6 }, { x: -7.05, z: -2.6 }, { x: 2.24, z: 3.2 }, { x: 6.19, z: -1.6 }], spawn: { x: 6.02, z: -3.4 },
     stations: [
-      { id: 'rf1', at: { prop: 'reformer', x: -8.8, z: -6.4 }, name: '리포머 1', ex: '풋워크', preset: 'rfFootwork', cue: '발바닥 전체로 밀어 봐. 골반은 그대로 두고, 허리가 뜨지 않게.' },
-      { id: 'rf2', at: { prop: 'reformer', x: -5.4, z: -6.4 }, name: '리포머 2', ex: '암 풀', preset: 'rfArmPull', cue: '어깨가 올라가지 않게 날개뼈부터 내려. 팔로만 당기면 안 돼.' },
-      { id: 'rf3', at: { prop: 'reformer', x: -2.0, z: -6.4 }, name: '리포머 3', ex: '힐 프레스', preset: 'rfHeels', cue: '뒤꿈치로 밀어. 무릎은 발끝 쪽으로, 다 펴도 잠그지는 말고.' },
-      { id: 'rf4', at: { prop: 'reformer', x: 1.4, z: -6.4 }, name: '리포머 4', ex: '헌드레드', preset: 'rfHundred', cue: '목에 힘 빼고 배로 버텨. 팔은 짧고 가볍게.' },
-      { id: 'm1', at: { prop: 'yogaMat', x: -8.4, z: -1.0 }, name: '매트 1', ex: '브릿지', preset: 'bridge', cue: '허리로 들지 말고 엉덩이로 밀어 올려.' },
-      { id: 'm2', at: { prop: 'yogaMat', x: -5.0, z: -1.0 }, name: '매트 2', ex: '헌드레드', preset: 'hundred', cue: '목에 힘 빼고 배로 버텨. 숨은 짧게 끊어서 쉬고.' },
-      { id: 'm3', at: { prop: 'yogaMat', x: -1.6, z: -1.0 }, name: '매트 3', ex: '캣 / 카우', preset: 'catCow', cue: '목만 움직이지 말고 척추 전체를 움직여 봐.' },
-      { id: 'm4', at: { prop: 'yogaMat', x: -8.4, z: 1.6 }, name: '매트 4', ex: '데드버그', preset: 'deadBug', cue: '허리가 바닥에서 뜨지 않게, 배에 힘 주고.' },
-      { id: 'm5', at: { prop: 'yogaMat', x: -5.0, z: 1.6 }, name: '매트 5', ex: '롤업', preset: 'rollUp', cue: '반동 없이 척추를 하나씩 말아 올려. 힘들면 무릎을 굽혀도 돼.' },
-      { id: 'm6', at: { prop: 'yogaMat', x: -1.6, z: 1.6 }, name: '매트 6', ex: '스파인 트위스트', preset: 'spineTwist', cue: '골반은 고정하고 등부터 돌려. 숨을 내쉬면서 조금 더.' },
-      { id: 'ring', at: { prop: 'pilatesRing', x: 2.6, z: 0.4 }, stand: { dx: 0, dz: 0 }, name: '필라테스 링', ex: '링 조이기', preset: 'ringSqueeze', cue: '어깨는 내리고, 가슴 앞에서 천천히 조여. 숨은 참지 말고.' },
-      { id: 'rf5', at: { prop: 'reformer', x: 4.8, z: -2.6 }, name: '리포머 5', ex: '한 다리 풋워크', preset: 'rfSingleLeg', cue: '한 발로 천천히 밀어. 골반이 기울지 않게.' },
-      { id: 'm7', at: { prop: 'yogaMat', x: -8.4, z: -3.6 }, name: '매트 7', ex: '티저', preset: 'teaser', cue: '배로 들어 올려. 어려우면 다리를 조금만 들어도 돼.' },
-      { id: 'm8', at: { prop: 'yogaMat', x: -5.0, z: -3.6 }, name: '매트 8', ex: '사이드 킥', preset: 'sideKick', cue: '골반이 뒤로 넘어가지 않게 잡고, 다리만 움직여.' },
-      { id: 'm9', at: { prop: 'yogaMat', x: -1.6, z: -3.6 }, name: '매트 9', ex: '스완', preset: 'swan', cue: '허리로 꺾지 말고 가슴을 앞으로 길게 뽑아.' },
-      { id: 'm10', at: { prop: 'yogaMat', x: 1.6, z: -3.6 }, name: '매트 10', ex: '버드독', preset: 'birdDog', cue: '골반이 돌아가지 않게. 팔다리는 멀리 길게.' },
-      { id: 'step', at: { prop: 'stepBox', x: 8.4, z: -1.2 }, stand: { dx: 0, dz: 0 }, lift: 0.2, name: '스텝박스', ex: '카프 레이즈', preset: 'calfRaise', cue: '발목으로 천천히 올라갔다 천천히 내려와.' },
-      { id: 'cad', at: { prop: 'cadillac', x: -9.4, z: 4, ry: 0 }, name: '캐딜락', ex: '레그 스프링', preset: 'cadLegSpring', cue: '허리가 뜨지 않을 만큼만 내려. 배에 힘 주고 천천히.' },
-      { id: 'wunda', at: { prop: 'wundaChair', x: -6.3, z: 4 }, stand: { dx: 0, dz: 0.16 }, seat: 0.64, pedal: true, name: '운다 체어', ex: '시티드 풋워크', preset: 'wundaFootwork', cue: '허리 세우고 앉아서 발바닥으로 페달을 눌러. 올라올 때도 천천히.' },
-      { id: 'barrel', at: { prop: 'ladderBarrel', x: -3.8, z: 4 }, stand: { dx: 0.25, dz: 0 }, seat: 0.94, face: -90, name: '래더 바렐', ex: '숏 박스 라운드 백', preset: 'barrelRoundBack', cue: '등을 둥글게 말면서 배로 버텨. 허리가 꺾이면 범위를 줄여.' },
-      { id: 'ball1', at: { prop: 'gymBall', x: 5.6, z: 1.6 }, stand: { dx: 0, dz: 0 }, seat: 0.6, name: '짐볼 1', ex: '시티드 마치', preset: 'ballMarch', cue: '볼이 흔들려도 골반은 수평으로. 무릎은 조금만 들어도 돼.' },
-      { id: 'ball2', at: { prop: 'gymBall', x: 7.4, z: 1.6 }, stand: { dx: 0, dz: 0 }, seat: 0.6, name: '짐볼 2', ex: '시티드 트위스트', preset: 'ballTwist', cue: '골반은 앞을 보고 등부터 돌려. 숨 내쉬면서 천천히.' },
-      { id: 'ball3', at: { prop: 'gymBall', x: 9.2, z: 1.6 }, stand: { dx: 0, dz: 0 }, seat: 0.6, name: '짐볼 3', ex: '사이드 벤드', preset: 'ballSideBend', cue: '앞으로 숙이지 말고 옆으로만. 옆구리가 늘어나는 만큼만 해.' },
-      { id: 'roll1', at: { prop: 'foamRoller', x: 3.0, z: 4 }, name: '폼롤러 1', ex: '가슴 열기', preset: 'rollerChestOpen', cue: '롤러 위에 척추를 길게 놓고, 팔 무게로 가슴을 열어. 숨은 편하게.' },
-      { id: 'roll2', at: { prop: 'foamRoller', x: 5.8, z: 4 }, name: '폼롤러 2', ex: '데드버그', preset: 'rollerDeadBug', cue: '몸이 기울지 않게 배에 힘 주고. 작게 움직여도 충분해.' },
-      { id: 'mroll1', at: { prop: 'yogaMatRolled', x: 8.2, z: 3.8, ry: 90 }, stand: { dx: 0, dz: 0.95 }, name: '말린 매트 1', ex: '앞으로 숙이기', preset: 'seatedFold', cue: '허리를 말지 말고 고관절부터 접어. 당기는 데서 멈추고 숨 쉬어.' },
-      { id: 'mroll2', at: { prop: 'yogaMatRolled', x: 9.6, z: 3.8, ry: 90 }, stand: { dx: 0, dz: 0.95 }, name: '말린 매트 2', ex: '나비 자세', preset: 'butterfly', cue: '무릎을 억지로 누르지 마. 허리 세우고 편한 만큼만.' },
+      { id: 'rf1', at: { prop: 'reformer', x: -7.57, z: -6.4 }, name: '리포머 1', ex: '풋워크', preset: 'rfFootwork' },
+      { id: 'rf2', at: { prop: 'reformer', x: -4.64, z: -6.4 }, name: '리포머 2', ex: '암 풀', preset: 'rfArmPull' },
+      { id: 'rf3', at: { prop: 'reformer', x: -1.72, z: -6.4 }, name: '리포머 3', ex: '힐 프레스', preset: 'rfHeels' },
+      { id: 'rf4', hold: true, at: { prop: 'reformer', x: 1.2, z: -6.4 }, name: '리포머 4', ex: '헌드레드', preset: 'rfHundred' },
+      { id: 'm1', at: { prop: 'yogaMat', x: -7.22, z: -1.0 }, name: '매트 1', ex: '브릿지', preset: 'bridge' },
+      { id: 'm2', hold: true, at: { prop: 'yogaMat', x: -4.3, z: -1.0 }, name: '매트 2', ex: '헌드레드', preset: 'hundred' },
+      { id: 'm3', hold: true, at: { prop: 'yogaMat', x: -1.38, z: -1.0 }, name: '매트 3', ex: '캣 / 카우', preset: 'catCow' },
+      { id: 'm4', at: { prop: 'yogaMat', x: -7.22, z: 1.6 }, name: '매트 4', ex: '데드버그', preset: 'deadBug' },
+      { id: 'm5', at: { prop: 'yogaMat', x: -4.3, z: 1.6 }, name: '매트 5', ex: '롤업', preset: 'rollUp' },
+      { id: 'm6', hold: true, at: { prop: 'yogaMat', x: -1.38, z: 1.6 }, name: '매트 6', ex: '스파인 트위스트', preset: 'spineTwist' },
+      { id: 'ring', at: { prop: 'pilatesRing', x: 2.24, z: 0.4 }, stand: { dx: 0, dz: 0 }, name: '필라테스 링', ex: '링 조이기', preset: 'ringSqueeze' },
+      { id: 'rf5', at: { prop: 'reformer', x: 4.13, z: -2.6 }, name: '리포머 5', ex: '한 다리 풋워크', preset: 'rfSingleLeg' },
+      { id: 'm7', at: { prop: 'yogaMat', x: -7.22, z: -3.6 }, name: '매트 7', ex: '티저', preset: 'teaser' },
+      { id: 'm8', at: { prop: 'yogaMat', x: -4.3, z: -3.6 }, name: '매트 8', ex: '사이드 킥', preset: 'sideKick' },
+      { id: 'm9', at: { prop: 'yogaMat', x: -1.38, z: -3.6 }, name: '매트 9', ex: '스완', preset: 'swan' },
+      { id: 'm10', at: { prop: 'yogaMat', x: 1.38, z: -3.6 }, name: '매트 10', ex: '버드독', preset: 'birdDog' },
+      { id: 'step', at: { prop: 'stepBox', x: 7.22, z: -1.2 }, stand: { dx: 0, dz: 0 }, lift: 0.2, name: '스텝박스', ex: '카프 레이즈', preset: 'calfRaise' },
+      { id: 'cad', at: { prop: 'cadillac', x: -8.08, z: 4, ry: 0 }, name: '캐딜락', ex: '레그 스프링', preset: 'cadLegSpring' },
+      { id: 'wunda', at: { prop: 'wundaChair', x: -5.42, z: 4 }, stand: { dx: 0, dz: 0.16 }, seat: 0.64, pedal: true, name: '운다 체어', ex: '시티드 풋워크', preset: 'wundaFootwork' },
+      { id: 'barrel', at: { prop: 'ladderBarrel', x: -3.27, z: 4 }, stand: { dx: 0.25, dz: 0 }, seat: 0.94, face: -90, name: '래더 바렐', ex: '숏 박스 라운드 백', preset: 'barrelRoundBack' },
+      { id: 'ball1', at: { prop: 'gymBall', x: 4.82, z: 1.6 }, stand: { dx: 0, dz: 0 }, seat: 0.6, name: '짐볼 1', ex: '시티드 마치', preset: 'ballMarch' },
+      { id: 'ball2', at: { prop: 'gymBall', x: 6.36, z: 1.6 }, stand: { dx: 0, dz: 0 }, seat: 0.6, name: '짐볼 2', ex: '시티드 트위스트', preset: 'ballTwist' },
+      { id: 'ball3', hold: true, at: { prop: 'gymBall', x: 7.91, z: 1.6 }, stand: { dx: 0, dz: 0 }, seat: 0.6, name: '짐볼 3', ex: '사이드 벤드', preset: 'ballSideBend' },
+      { id: 'roll1', hold: true, at: { prop: 'foamRoller', x: 2.58, z: 4 }, name: '폼롤러 1', ex: '가슴 열기', preset: 'rollerChestOpen' },
+      { id: 'roll2', at: { prop: 'foamRoller', x: 4.99, z: 4 }, name: '폼롤러 2', ex: '데드버그', preset: 'rollerDeadBug' },
+      { id: 'mroll1', hold: true, at: { prop: 'yogaMatRolled', x: 7.05, z: 3.8, ry: 90 }, stand: { dx: 0, dz: 0.95 }, name: '말린 매트 1', ex: '앞으로 숙이기', preset: 'seatedFold' },
+      { id: 'mroll2', hold: true, at: { prop: 'yogaMatRolled', x: 8.26, z: 3.8, ry: 90 }, stand: { dx: 0, dz: 0.95 }, name: '말린 매트 2', ex: '나비 자세', preset: 'butterfly' },
     ],
   },
   weight: {
     id: 'weight', set: 'gymWide', name: '웨이트샵', tagline: '', reps: 12,
-    coachSpots: [{ x: 5, z: -7.7 }, { x: -3.2, z: -2.2 }, { x: -6.4, z: -1.2 }, { x: 2.6, z: 3.4 }, { x: 7.2, z: -1.8 }], spawn: { x: 7, z: -3.4 },
+    coachSpots: [{ x: 4.3, z: -7.7 }, { x: -2.75, z: -2.2 }, { x: -5.5, z: -1.2 }, { x: 2.24, z: 3.4 }, { x: 6.19, z: -1.8 }], spawn: { x: 6.02, z: -3.4 },
     stations: [
-      { id: 'rack', at: { prop: 'squatRack', x: -8.6, z: -6.6 }, stand: { dx: 0, dz: 0 }, name: '스쿼트 랙 1', ex: '백 스쿼트', preset: 'backSquat', cue: '엉덩이를 뒤로 빼면서 앉아. 무릎은 발끝 쪽으로.' },
-      { id: 'rack2', at: { prop: 'squatRack', x: -5.2, z: -6.6 }, stand: { dx: 0, dz: 0 }, name: '스쿼트 랙 2', ex: '백 스쿼트', preset: 'backSquat', cue: '가슴 펴고 발바닥 전체로 밀어 올려. 허리는 길게.' },
-      { id: 'lift', at: { prop: 'liftPlatform', x: -1.2, z: -6.5 }, stand: { dx: 0, dz: 0 }, name: '플랫폼', ex: '데드리프트', preset: 'deadlift', cue: '허리를 말지 말고 엉덩이를 접어. 바는 몸 가까이.' },
-      { id: 'bench', at: { prop: 'flatBench', x: -8.2, z: -2.6, ry: 90 }, name: '벤치 1', ex: '벤치프레스', preset: 'bench', cue: '어깨가 말리지 않게 가슴을 펴. 날개뼈는 벤치에 붙이고.' },
-      { id: 'bench2', at: { prop: 'flatBench', x: -4.8, z: -2.6, ry: 90 }, name: '벤치 2', ex: '벤치프레스', preset: 'bench', cue: '발은 바닥에 단단히. 천천히 내리고 숨 내쉬면서 밀어.' },
-      { id: 'db', at: { prop: 'dumbbellRack', x: -1.2, z: -3.2 }, stand: { dx: 0, dz: 0.85 }, name: '덤벨 랙 1', ex: '덤벨 컬', preset: 'curl', cue: '팔꿈치는 옆구리에 붙이고. 반동 없이 천천히.' },
-      { id: 'db2', at: { prop: 'dumbbellRack', x: 1.8, z: -3.2 }, stand: { dx: 0, dz: 0.85 }, name: '덤벨 랙 2', ex: '숄더 프레스', preset: 'press', cue: '갈비뼈가 들리지 않게 배에 힘 주고, 허리 꺾지 말고 밀어.' },
-      { id: 'db3', at: { prop: 'dumbbellRack', x: 4.8, z: -3.2 }, stand: { dx: 0, dz: 0.85 }, name: '덤벨 랙 3', ex: '사이드 레터럴', preset: 'lateral', cue: '어깨 으쓱하지 말고 팔꿈치부터 옆으로. 무게는 가볍게.' },
-      { id: 'kb', at: { prop: 'kettlebell', x: -8.2, z: 1.4 }, stand: { dx: 0.1, dz: 0.75 }, name: '케틀벨 1', ex: '케틀벨 스윙', preset: 'kbSwing', cue: '팔로 들지 말고 엉덩이로 튕겨. 허리는 길게.' },
-      { id: 'kb2', at: { prop: 'kettlebell', x: -5.2, z: 1.4 }, stand: { dx: 0.1, dz: 0.75 }, name: '케틀벨 2', ex: '고블릿 스쿼트', preset: 'gobletSquat', cue: '케틀벨은 가슴에 붙이고 엉덩이를 뒤로. 무릎은 발끝 쪽으로.' },
-      { id: 'mat', at: { prop: 'yogaMat', x: -1.8, z: 1.4 }, name: '매트 1', ex: '푸시업', preset: 'pushup', cue: '엉덩이가 처지지 않게 몸통을 일자로. 무릎을 대도 괜찮아.' },
-      { id: 'mat2', at: { prop: 'yogaMat', x: 1.4, z: 1.4 }, name: '매트 2', ex: '힙 브릿지', preset: 'hipBridge', cue: '허리 꺾지 말고 엉덩이에 힘 줘. 갈비뼈는 닫고.' },
-      { id: 'run', at: { prop: 'treadmill', x: 5.0, z: 1.2 }, stand: { dx: 0, dz: 0 }, lift: 0.09, cardio: 'run', name: '러닝머신 1', ex: '달리기', preset: 'run', cue: '누를수록 빨라져. 시선은 앞으로, 어깨 힘은 빼고.' },
-      { id: 'lat', at: { prop: 'latMachine', x: 2.4, z: -6.8 }, stand: { dx: 0, dz: 0 }, seat: 0.5, bar: { w: 1, from: [0, 2.3, 0.2] }, name: '랫풀다운', ex: '랫풀다운', preset: 'latPulldown', cue: '팔로 당기지 말고 팔꿈치를 옆구리로 끌어내려. 어깨는 내리고.' },
-      { id: 'rower', at: { prop: 'rowingMachine', x: -1.4, z: 4.4 }, stand: { dx: -0.1, dz: 0 }, seat: 0.3, face: 90, slide: -0.35, bar: { w: 0.36, from: [1.05, 0.52, 0] }, name: '로잉 머신', ex: '로잉', preset: 'rowerRow', cue: '다리부터 밀고, 그다음 등으로 당겨. 허리는 세운 채로.' },
-      { id: 'bike', at: { prop: 'spinBike', x: 1.6, z: 4.4 }, stand: { dx: 0, dz: 0 }, seat: 0.88, cardio: 'bike', name: '실내 자전거', ex: '자전거 타기', preset: 'bikePedal', cue: '누를수록 빨라져. 어깨 힘 빼고 허리는 길게.' },
-      { id: 'legext', at: { prop: 'legExtension', x: 4.4, z: 4.4 }, stand: { dx: 0, dz: 0 }, seat: 0.56, pedal: -1.1, name: '레그 익스텐션', ex: '레그 익스텐션', preset: 'legExtensionMove', cue: '반동 없이 무릎을 펴. 내릴 때도 천천히.' },
-      { id: 'db4', at: { prop: 'dumbbellRack', x: 8.4, z: -1.8 }, stand: { dx: 0, dz: 0.85 }, name: '덤벨 랙 4', ex: '벤트오버 로우', preset: 'row', cue: '허리를 편 채 숙이고, 팔꿈치를 뒤로 당겨.' },
-      { id: 'db5', at: { prop: 'dumbbellRack', x: -4.6, z: 3.8 }, stand: { dx: 0, dz: 0.95 }, name: '덤벨 랙 5', ex: '리버스 런지', preset: 'reverseLunge', cue: '뒤로 한 걸음 빼고 앉아. 앞무릎이 안쪽으로 모이지 않게.' },
-      { id: 'step', at: { prop: 'stepBox', x: -7, z: 4.4 }, stand: { dx: 0, dz: 0 }, lift: 0.2, name: '스텝박스', ex: '카프 레이즈', preset: 'calfRaise', cue: '발목으로 천천히 올라갔다 천천히 내려와.' },
-      { id: 'pull', at: { prop: 'pullupBar', x: -9.6, z: 4.2 }, stand: { dx: 0, dz: 0 }, lift: 0.86, name: '철봉', ex: '풀업', preset: 'pullUp', cue: '어깨부터 끌어내리고 가슴을 봉 쪽으로. 반동 없이 천천히.' },
-      { id: 'incline', at: { prop: 'inclineBench', x: 8.0, z: 4 }, stand: { dx: 0.18, dz: 0 }, seat: 0.48, face: 90, name: '인클라인 벤치', ex: '덤벨 프레스', preset: 'inclinePress', cue: '날개뼈를 등받이에 붙이고 가슴 위로 밀어. 허리는 너무 꺾지 말고.' },
-      { id: 'plate1', at: { prop: 'platesTree', x: -10.2, z: -4.8 }, stand: { dx: 0, dz: 1 }, plate: true, name: '원판 거치대 1', ex: '프런트 레이즈', preset: 'plateRaise', cue: '어깨 높이까지만 올려. 반동 없이, 내릴 때도 천천히.' },
-      { id: 'plate2', at: { prop: 'platesTree', x: -2.9, z: -8.1, s: 0.9 }, stand: { dx: 0, dz: 1 }, plate: true, name: '원판 거치대 2', ex: '원판 스쿼트', preset: 'plateSquat', cue: '원판은 가슴에 붙이고 엉덩이를 뒤로. 무릎은 발끝 쪽으로.' },
-      { id: 'run2', at: { prop: 'treadmill', x: 7.6, z: 1.2 }, stand: { dx: 0, dz: 0 }, lift: 0.09, cardio: 'run', name: '러닝머신 2', ex: '달리기', preset: 'run', cue: '누를수록 빨라져. 숨은 편하게, 발은 가볍게.' },
-      { id: 'stair', at: { prop: 'stairMill', x: 9.3, z: -4.6, ry: -90 }, stand: { dx: 0, dz: 0 }, face: -90, lift: 0.6, cardio: 'stair', name: '천국의 계단', ex: '계단 오르기', preset: 'stairClimb', cue: '누를수록 빨라져. 손잡이에 기대지 말고 발바닥 전체로 디뎌.' },
-      { id: 'stair2', at: { prop: 'stairMill', x: 9.7, z: 2.2, ry: -90 }, stand: { dx: 0, dz: 0 }, face: -90, lift: 0.6, cardio: 'stair', name: '천국의 계단 2', ex: '계단 오르기', preset: 'stairClimb', cue: '누를수록 빨라져. 상체는 세우고 엉덩이로 밀어 올려.' },
+      { id: 'rack', at: { prop: 'squatRack', x: -7.4, z: -6.6 }, stand: { dx: 0, dz: 0 }, name: '스쿼트 랙 1', ex: '백 스쿼트', preset: 'backSquat' },
+      { id: 'rack2', at: { prop: 'squatRack', x: -4.47, z: -6.6 }, stand: { dx: 0, dz: 0 }, name: '스쿼트 랙 2', ex: '백 스쿼트', preset: 'backSquat' },
+      { id: 'lift', at: { prop: 'liftPlatform', x: -1.03, z: -6.5 }, stand: { dx: 0, dz: 0 }, name: '플랫폼', ex: '데드리프트', preset: 'deadlift' },
+      { id: 'bench', at: { prop: 'flatBench', x: -7.05, z: -2.6, ry: 90 }, name: '벤치 1', ex: '벤치프레스', preset: 'bench' },
+      { id: 'bench2', at: { prop: 'flatBench', x: -4.13, z: -2.6, ry: 90 }, name: '벤치 2', ex: '벤치프레스', preset: 'bench' },
+      { id: 'db', at: { prop: 'dumbbellRack', x: -1.03, z: -3.2 }, stand: { dx: 0, dz: 0.85 }, name: '덤벨 랙 1', ex: '덤벨 컬', preset: 'curl' },
+      { id: 'db2', at: { prop: 'dumbbellRack', x: 1.55, z: -3.2 }, stand: { dx: 0, dz: 0.85 }, name: '덤벨 랙 2', ex: '숄더 프레스', preset: 'press' },
+      { id: 'db3', at: { prop: 'dumbbellRack', x: 4.13, z: -3.2 }, stand: { dx: 0, dz: 0.85 }, name: '덤벨 랙 3', ex: '사이드 레터럴', preset: 'lateral' },
+      { id: 'kb', at: { prop: 'kettlebell', x: -7.05, z: 1.4 }, stand: { dx: 0.1, dz: 0.75 }, name: '케틀벨 1', ex: '케틀벨 스윙', preset: 'kbSwing' },
+      { id: 'kb2', at: { prop: 'kettlebell', x: -4.47, z: 1.4 }, stand: { dx: 0.1, dz: 0.75 }, name: '케틀벨 2', ex: '고블릿 스쿼트', preset: 'gobletSquat' },
+      { id: 'mat', at: { prop: 'yogaMat', x: -1.55, z: 1.4 }, name: '매트 1', ex: '푸시업', preset: 'pushup' },
+      { id: 'mat2', at: { prop: 'yogaMat', x: 1.2, z: 1.4 }, name: '매트 2', ex: '힙 브릿지', preset: 'hipBridge' },
+      { id: 'run', at: { prop: 'treadmill', x: 3.44, z: 1.2 }, stand: { dx: 0, dz: 0 }, lift: 0.09, cardio: 'run', name: '러닝머신 1', ex: '달리기', preset: 'run' },
+      { id: 'lat', at: { prop: 'latMachine', x: 2.06, z: -6.8 }, stand: { dx: 0, dz: 0 }, seat: 0.5, bar: { w: 1, from: [0, 2.3, 0.2] }, name: '랫풀다운', ex: '랫풀다운', preset: 'latPulldown' },
+      { id: 'rower', cardio: 'row', at: { prop: 'rowingMachine', x: -1.2, z: 4.4 }, stand: { dx: -0.1, dz: 0 }, seat: 0.3, face: 90, slide: -0.35, bar: { w: 0.36, from: [1.05, 0.52, 0] }, name: '로잉 머신', ex: '로잉', preset: 'rowerRow' },
+      { id: 'bike', at: { prop: 'spinBike', x: 1.38, z: 4.4 }, stand: { dx: 0, dz: 0 }, seat: 0.88, cardio: 'bike', name: '실내 자전거', ex: '자전거 타기', preset: 'bikePedal' },
+      { id: 'legext', at: { prop: 'legExtension', x: 3.78, z: 4.4 }, stand: { dx: 0, dz: 0 }, seat: 0.56, pedal: -1.1, name: '레그 익스텐션', ex: '레그 익스텐션', preset: 'legExtensionMove' },
+      { id: 'db4', at: { prop: 'dumbbellRack', x: 7.22, z: -1.8 }, stand: { dx: 0, dz: 0.85 }, name: '덤벨 랙 4', ex: '벤트오버 로우', preset: 'row' },
+      { id: 'db5', at: { prop: 'dumbbellRack', x: -3.96, z: 3.8 }, stand: { dx: 0, dz: 0.95 }, name: '덤벨 랙 5', ex: '리버스 런지', preset: 'reverseLunge' },
+      { id: 'step', at: { prop: 'stepBox', x: -6.02, z: 4.4 }, stand: { dx: 0, dz: 0 }, lift: 0.2, name: '스텝박스', ex: '카프 레이즈', preset: 'calfRaise' },
+      { id: 'pull', at: { prop: 'pullupBar', x: -8.26, z: 4.2 }, stand: { dx: 0, dz: 0 }, lift: 0.86, name: '철봉', ex: '풀업', preset: 'pullUp' },
+      { id: 'incline', at: { prop: 'inclineBench', x: 6.88, z: 4 }, stand: { dx: 0.18, dz: 0 }, seat: 0.48, face: 90, name: '인클라인 벤치', ex: '덤벨 프레스', preset: 'inclinePress' },
+      { id: 'plate1', at: { prop: 'platesTree', x: -8.77, z: -4.8 }, stand: { dx: 0, dz: 1 }, plate: true, name: '원판 거치대 1', ex: '프런트 레이즈', preset: 'plateRaise' },
+      { id: 'plate2', at: { prop: 'platesTree', x: -2.49, z: -8.1, s: 0.9 }, stand: { dx: 0, dz: 1 }, plate: true, name: '원판 거치대 2', ex: '원판 스쿼트', preset: 'plateSquat' },
+      { id: 'run2', at: { prop: 'treadmill', x: 5.07, z: 1.2 }, stand: { dx: 0, dz: 0 }, lift: 0.09, cardio: 'run', name: '러닝머신 2', ex: '달리기', preset: 'run' },
+      { id: 'stair', at: { prop: 'stairMill', x: 6.71, z: 1.2 }, stand: { dx: 0, dz: 0 }, lift: 0.6, cardio: 'stair', name: '천국의 계단', ex: '계단 오르기', preset: 'stairClimb' },
+      { id: 'stair2', at: { prop: 'stairMill', x: 8.34, z: 1.2 }, stand: { dx: 0, dz: 0 }, lift: 0.6, cardio: 'stair', name: '천국의 계단 2', ex: '계단 오르기', preset: 'stairClimb' },
     ],
   },
 };
@@ -138,6 +133,7 @@ const GESTURES = {
   hooray: { label: '만세', preset: 'hooray' },
   rest: { label: '앉기', preset: 'butterfly', stay: true },
   stand: { label: '', preset: 'idle' },
+  drink: { label: '꿀꺽', preset: 'drinkWater' },
 };
 const LIMIT = { nick: 12, chat: 140, ask: 300 };
 const BAD_CHARS = new RegExp('[' + [[0, 31], [127, 127], [0x200b, 0x200f], [0x2028, 0x202e], [0x2066, 0x2069]]
@@ -416,14 +412,15 @@ const S = {
   stationBox: {},
   lastBeep: null,
   lastPresenceAt: 0,
-  ptBusy: false,
+  ptTeacher: null,    // 내 PT 선생님 3D
+  ptTimer: null,
   announce: false,
   me: {
     nick: '', color: 'orange', band: BAND_DEFAULT, pants: PANTS_DEFAULT,
     station: null, claimedAt: 0, on: false, // on: 기구에 올라가 있음
     queue: null, queuedAt: 0,               // 줄 서 있는 기구
     gest: null, gestN: 0,                   // 몸짓: 숫자가 올라가면 한 번 재생
-    ptUntil: 0,                             // PT 중: 이때까지 쌤이 옆에서 봐 줌
+    pt: 0,                                  // PT 중: 선생님 옷 색을 정하는 수 (모두에게 같은 색으로 보임)
     state: 'idle', reps: 0, set: 1, restUntil: 0, lastActAt: 0,
   },
   meA: null,          // 내 3D 짹짹이
@@ -446,7 +443,7 @@ function syncPresence(force = false) {
   room.presence({
     nick: m.nick, color: m.color, band: m.band, pants: m.pants, shop: S.shop,
     station: m.station, claimedAt: m.claimedAt, on: m.on,
-    queue: m.queue, queuedAt: m.queuedAt, gest: m.gest, gestN: m.gestN, ptUntil: m.ptUntil, cls: !!m.classOn,
+    queue: m.queue, queuedAt: m.queuedAt, gest: m.gest, gestN: m.gestN, pt: m.pt, lv: A?._cardio ? Math.round(A._cardio.lv * 10) / 10 : 0, cls: !!m.classOn,
     state: m.state, reps: m.reps, set: m.set, restUntil: m.restUntil,
     x: A ? Math.round(A.place.x * 100) / 100 : null,
     z: A ? Math.round(A.place.z * 100) / 100 : null,
@@ -533,7 +530,7 @@ function mountActor(A, st) {
     A.loop = false;
   }
   holdRep(A);
-  A._cardio = st.cardio ? newCardio(st, obj) : null;
+  A._cardio = st.cardio || st.hold ? newCardio(st, obj) : null;
   A._pedal = st.pedal ? obj.userData.moving.pedal : null;
   A._pedalAmp = st.pedal === true ? 0.32 : st.pedal || 0;
   if (st.bar && !A._barObj) {
@@ -547,26 +544,30 @@ function mountActor(A, st) {
   }
   if (st.plate && !A._plateObj) { A._plateObj = WORLD.makePlate(); G.actorLayer.add(A._plateObj); }
 }
-// 유산소 기구: 누를 때마다 단계가 오르고, 안 누르면 천천히 느려진다
+// 시간 운동. 유산소 기구는 연타할수록 빨라지고 안 누르면 천천히 느려진다. 스트레칭·헌드레드(hold)는 시작하면 멈출 때까지 이어진다
 const CARDIO_LABEL = {
   run: (lv) => `시속 ${(lv ? 5 + lv * 1.3 : 0).toFixed(1)}km`,
   stair: (lv) => `${lv ? Math.round(lv + 1) : 0}단계`,
   bike: (lv) => `${lv ? Math.round(40 + lv * 8) : 0}rpm`,
+  row: (lv) => `분당 ${lv ? Math.round(18 + lv * 2) : 0}회`,
 };
 function newCardio(st, obj) {
-  const mv = obj.userData.moving;
-  return { lv: 0, phase: 0, last: 0, moving: true, st, keepPose: !!st.seat, belt: mv.belt, steps: mv.steps, stepAt: 0, label: CARDIO_LABEL[st.cardio] };
+  const mv = obj.userData.moving || {};
+  return { lv: 0, phase: 0, sec: 0, moving: true, st, hold: !!st.hold, keepPose: !!st.seat || !!st.hold, belt: mv.belt, steps: mv.steps, stepAt: 0, label: CARDIO_LABEL[st.cardio] || (() => '') };
 }
 function cardioPress(A) {
   const c = A._cardio;
-  c.lv = Math.min(10, c.lv + 1);
-  c.last = G.clock.t;
+  if (c.hold) c.lv = c.lv ? 0 : 1;
+  else c.lv = Math.min(10, c.lv + 0.6);
 }
-function stepCardio(A, dt) {
-  const c = A._cardio;
-  if (G.clock.t - c.last > 1.6) c.lv = Math.max(0, c.lv - dt * 2.2);
+function stepCardio(A) {
+  const c = A._cardio, nowMs = performance.now(), dt = Math.min(1, (nowMs - (c.at || nowMs)) / 1000); // 화면이 느려도 시간은 실제대로
+  c.at = nowMs;
+  // 조금씩 계속 느려지므로 누르는 빠르기가 곧 속도가 된다 (1초에 1번 ≈ 2.4단계, 4번 ≈ 9.6단계)
+  if (!c.hold) { c.lv *= Math.exp(-dt * 0.25); if (c.lv < 0.15) c.lv = 0; }
   if (c.lv > 0) {
-    if (!c.moving) { c.moving = true; G.setClip(A, presetClip(c.st.preset), { blend: 0.15 }); }
+    c.sec += dt;
+    if (!c.moving) { c.moving = true; if (!c.keepPose) G.setClip(A, presetClip(c.st.preset), { blend: 0.15 }); }
     const speed = 0.6 + c.lv * 0.24;
     c.phase += dt * speed;
     A.speed = 1;
@@ -580,6 +581,9 @@ function stepCardio(A, dt) {
   } else if (c.moving) {
     c.moving = false;
     if (!c.keepPose) { A.speed = 1; G.setClip(A, presetClip('idle'), { blend: 0.3 }); }
+  } else if (c.keepPose) { // 멈춘 자세 그대로
+    A.speed = 1;
+    A.start = G.clock.t - c.phase;
   }
 }
 function dropPlate(A) {
@@ -593,13 +597,14 @@ function dropPlate(A) {
 G.hooks.push((dt) => {
   if (S.repQueued && S.meA && S.me.on && S.me.state === 'set' && !S.meA._cardio && !repBusy(S.meA)) doRep();
   for (const A of G.actors) {
-    if (A._cardio) stepCardio(A, dt);
+    if (A._cardio) stepCardio(A);
     if (A._plateObj) {
       const l = G.wp(A, A.hands.L.wrist), r = G.wp(A, A.hands.R.wrist);
       A._plateObj.position.copy(l).add(r).multiplyScalar(0.5);
       A._plateObj.rotation.y = A.place.ry * Math.PI / 180;
     }
-    const u = A.clip ? (G.clock.t - A.start) * A.speed / G.clipDur(A.clip) : 2;
+    let u = A.clip ? (G.clock.t - A.start) * A.speed / G.clipDur(A.clip) : 2;
+    if (A._cardio) u %= 1; // 되풀이
     const wave = u >= 0 && u <= 1 ? Math.sin(Math.PI * u) : 0;
     if (A._pedal) A._pedal.rotation.x = wave * A._pedalAmp;
     if (A._slide) {
@@ -631,7 +636,6 @@ function faceTo(A, x, z) {
 function playCoach(id) {
   const B = S.coach;
   if (!B) return;
-  if (S.walk.has(B) && S.coachVisiting) return; // 봐 주러 가는 길에는 멈추지 않음
   S.walk.delete(B);
   B.speed = 1;
   S.coachBusyUntil = Date.now() + 4000;
@@ -650,47 +654,36 @@ const coachSlotAt = (ms) => Math.floor(ms / (RULES.coachWalkSec * 1000));
 // 쌤은 절반은 안내 데스크에, 나머지는 짐 안을 둘러본다
 const coachSpotAt = (slot, spots) => (slot % 2 === 0 ? spots[0] : spots[1 + slotPick(slot, spots.length - 1)]);
 const slotPick = (slot, n) => ((Math.imul(slot, 2654435761) >>> 0) >>> 13) % n;
-/** PT 찬스: 내 찬스가 먼저, 아니면 찬스를 쓴 다른 사람 옆으로 간다 (모두의 화면에서 쌤이 그쪽으로 감) */
-function coachPupil(now) {
-  if (S.me.ptUntil > now) return { A: S.meA, me: true };
-  let best = null, bestUntil = Infinity;
-  for (const m of members()) {
-    if (m.me || !(m.ptUntil > now) || m.ptUntil >= bestUntil) continue;
-    const R = S.remotes.get(m.peer);
-    if (R) { best = R.A; bestUntil = m.ptUntil; }
-  }
-  return best ? { A: best, me: false } : null;
+// 선생님 옷 색: 같은 수면 누구 화면에서나 같은 색
+function dressTeacher(B, seed) {
+  const hue = (seed * 137.508) % 360;
+  paintPart(B, 'tank_sky', parseInt(hslToHex(hue, 0.72, 0.5).slice(1), 16));
+  paintPart(B, 'pants_gray', parseInt(hslToHex((seed * 53.1) % 360, 0.3, 0.24).slice(1), 16));
 }
-function coachSpotBeside(A) {
+/** PT 선생님: 입구로 들어와 그 사람 옆에 선다 */
+function teacherCome(A, seed, then) {
+  const d = WORLD.doorSpot, B = G.addActor('buri', { x: d.x, z: d.z });
+  if (!B) return null;
+  B.place.s = 0.8; G.applyPlace(B);
+  dressTeacher(B, seed);
+  WORLD.openDoor();
   const side = A.place.x > 0 ? -1 : 1;
-  return { x: clamp(A.place.x + side * 1.5, BOUNDS.x0, BOUNDS.x1), z: clamp(A.place.z + 0.75, BOUNDS.z0, BOUNDS.z1) };
+  walkTo(B, A.place.x + side * 1.5, A.place.z + 0.75, () => {
+    B.speed = 1;
+    faceTo(B, A.place.x, A.place.z);
+    G.setClip(B, presetClip('armsCross'), { blend: 0.25 });
+    if (then) then();
+  }, 2.5);
+  return B;
 }
-function stepCoachVisit(now) {
-  const B = S.coach, p = coachPupil(now);
-  if (!B || !B.root.parent) return false;
-  if (!p) {
-    if (S.coachVisiting) { S.coachVisiting = false; S.coachSlot = null; S.coachBusyUntil = 0; } // 자기 자리로 돌아감
-    return false;
-  }
-  S.coachVisiting = true;
-  const sp = coachSpotBeside(p.A), w = S.walk.get(B);
-  const tx = w ? w.x : B.place.x, tz = w ? w.z : B.place.z;
-  if (Math.hypot(sp.x - tx, sp.z - tz) > 0.5) {
-    walkTo(B, sp.x, sp.z, () => {
-      B.speed = 1;
-      faceTo(B, p.A.place.x, p.A.place.z);
-      G.setClip(B, presetClip('armsCross'), { blend: 0.25 });
-      if (p.me && !S.ptBusy) coachSay('옆에서 볼게. 천천히 해 봐.', 3500);
-    });
-  } else if (!w) {
-    faceTo(B, p.A.place.x, p.A.place.z);
-  }
-  return true;
+/** 일이 끝난 선생님은 입구로 나가서 사라진다 */
+function teacherGo(B) {
+  const d = WORLD.doorSpot;
+  walkTo(B, d.x, d.z, () => G.removeActor(B), 2);
 }
 function stepCoach(now) {
   const B = S.coach, shop = SHOPS[S.shop];
   if (!B || !B.root.parent) return;
-  if (stepCoachVisit(now)) return;
   if (S.coachClass) return;
   const slot = coachSlotAt(now);
   if (slot === S.coachSlot || now < S.coachBusyUntil) return;
@@ -707,7 +700,7 @@ function stepCoach(now) {
 // ------------------------------------------------------------------ 3D 장면 만들기
 function buildShop(shopId) {
   const shop = SHOPS[shopId];
-  for (const A of G.actors.slice()) G.removeActor(A);
+  for (const A of G.actors.slice()) { dropCup(A); G.removeActor(A); }
   S.walk.clear();
   S.remotes.clear();
   const set = G.setSet(shop.set);
@@ -737,8 +730,12 @@ function buildShop(shopId) {
   const cs = coachSpotAt(S.coachSlot, shop.coachSpots);
   const B = G.addActor('buri', { x: cs.x, z: cs.z });
   B.place.s = 0.8; G.applyPlace(B);
+  dressTeacher(B, Math.floor(Date.now() / 864e5) * (shopId === 'weight' ? 7 : 13) + 1); // 상주 쌤 옷은 날마다 바뀜
   G.setClip(B, presetClip('armsCross'), { blend: 0 });
   S.coach = B;
+  S.ptTeacher = null;
+  clearTimeout(S.ptTimer);
+  S.me.pt = 0;
   // 나
   // 입구로 들어와서 안으로 걸어 들어온다
   const sx = shop.spawn.x + (Math.random() - 0.5) * 2.4, sz = shop.spawn.z + Math.random() * 0.8;
@@ -844,6 +841,7 @@ function updateTags() {
     placeTag(meTag, S.meA, 0.42);
   }
   if (S.coach) placeTag(S.tags.get('coach'), S.coach, 0.3);
+  if (S.ptTeacher && S.tags.get('pt')) placeTag(S.tags.get('pt'), S.ptTeacher, 0.3);
   for (const [peer, R] of S.remotes) {
     const el = tagFor(peer);
     el.querySelector('.nm').textContent = R.nick;
@@ -855,6 +853,8 @@ function updateTags() {
 }
 function statusText(m, now) {
   if (m.state === 'rest') return `휴식 ${fmt(m.restUntil - now)}`;
+  const c = (m === S.me ? S.meA : m.A)?._cardio;
+  if (c) return m.on ? c.label(c.lv) : '';
   if (m.state === 'set' && m.on) return `${m.reps}/${SHOPS[S.shop].reps}`;
   return '';
 }
@@ -881,7 +881,8 @@ function members() {
       gest: GESTURES[pr.gest] ? pr.gest : null,
       gestN: Math.max(0, Math.floor(num(pr.gestN))),
       cls: pr.cls === true,
-      ptUntil: Math.min(num(pr.ptUntil), Date.now() + RULES.ptSessionSec * 1000), // 너무 긴 값은 잘라서 받음
+      pt: Math.max(0, Math.min(1e6, Math.floor(num(pr.pt)))),
+      lv: Math.max(0, Math.min(10, num(pr.lv))),
       on: pr.on === true,
       state: ['idle', 'set', 'rest'].includes(pr.state) ? pr.state : 'idle',
       reps: Math.max(0, Math.min(99, Math.floor(num(pr.reps)))),
@@ -967,11 +968,16 @@ function syncScene() {
       unmountActor(R.A, stationOf(S.shop, R.mounted));
       R.mounted = null;
     }
+    // 그 사람의 PT 선생님 (멀어서 안 그리는 사람은 뺀다)
+    if (m.pt && R.mounted && !R.hiddenFar) { if (!R.teacher) R.teacher = teacherCome(R.A, m.pt); }
+    else if (R.teacher) { teacherGo(R.teacher); R.teacher = null; }
     // 함께 스트레칭: 같은 시각 같은 동작
     const cl = classNow(Date.now());
     if (m.cls && cl.on && !R.mounted) classClip(R.A, cl.idx);
     else if (R.A._classIdx != null) classEnd(R.A);
-    if (m.gestN !== R.lastGestN) {
+    // 정수기까지 걸어간 뒤에 마신다
+    const drinkWait = m.gest === 'drink' && m.x != null && Math.hypot(m.x - R.A.place.x, m.z - R.A.place.z) > 0.15;
+    if (m.gestN !== R.lastGestN && !drinkWait) {
       R.lastGestN = m.gestN;
       if (m.gest) {
         playGesture(R.A, m.peer, m.gest, !!R.mounted);
@@ -979,7 +985,8 @@ function syncScene() {
       }
     }
     if (R.mounted) {
-      if (m.reps > R.lastReps && m.state !== 'idle') { if (R.A._cardio) cardioPress(R.A); else playRep(R.A); }
+      if (R.A._cardio) R.A._cardio.lv = m.lv;
+      else if (m.reps > R.lastReps && m.state !== 'idle') playRep(R.A);
       R.lastReps = m.reps;
     } else if (m.x != null && m.z != null && !gesturing(R.A)) {
       const w = S.walk.get(R.A);
@@ -992,6 +999,8 @@ function syncScene() {
   }
   for (const [peer, R] of S.remotes) {
     if (seen.has(peer)) continue;
+    if (R.teacher) teacherGo(R.teacher);
+    dropCup(R.A);
     if (R.mounted) unmountActor(R.A, stationOf(S.shop, R.mounted));
     S.walk.delete(R.A);
     G.removeActor(R.A);
@@ -1047,7 +1056,6 @@ function claimStation(id) {
     S.me.on = true;
     S.me.lastActAt = Date.now();
     syncPresence(true);
-    coachSay(st.cue, 8000);
     renderHud();
   }, 2.5); // 아무리 멀어도 2.5초 안에 도착
   renderHud();
@@ -1055,8 +1063,11 @@ function claimStation(id) {
 }
 function dismount(silent) {
   const st = stationOf(S.shop, S.me.station);
+  const c = S.me.on && S.meA?._cardio;
+  if (c) noteTime(st, c.sec);
   if (S.me.on) unmountActor(S.meA, st);
   S.me.on = false;
+  ptDismiss();
 }
 function releaseStation(silent = false) {
   if (!S.me.station) return;
@@ -1069,7 +1080,11 @@ function releaseStation(silent = false) {
   renderHud();
   syncScene();
 }
-$('#releaseBtn').addEventListener('click', () => releaseStation());
+$('#releaseBtn').addEventListener('click', () => {
+  const sec = S.meA?._cardio?.sec || 0;
+  releaseStation();
+  if (sec >= RULES.durationRestSec && S.me.state !== 'rest') startRest('수고했어요.');
+});
 
 // ------------------------------------------------------------------ 줄 서기
 function joinQueue(id, quiet = false) {
@@ -1131,6 +1146,7 @@ function noteGreeting(nick, id) {
 function playGesture(A, tagKey, id, busy) {
   const g = GESTURES[id];
   if (!g || !A) return;
+  if (id === 'drink') { faceTo(A, WORLD.cooler.x, WORLD.cooler.z); holdCup(A); }
   if (g.label) floatWord(tagKey, g.label);
   A._gest = id;
   if (busy) return;
@@ -1140,6 +1156,49 @@ function playGesture(A, tagKey, id, busy) {
   if (g.stay) { G.setClip(A, presetClip(g.preset), { blend: 0.3 }); A._gestUntil = Infinity; return; }
   G.playOnce(A, g.preset, 'idle', { blend: 0.2 });
   A._gestUntil = G.clock.t + G.clipDur(A.clip) + 0.1;
+}
+// 정수기: 걸어가서 컵으로 물을 마신다 (모두에게 보임)
+function holdCup(A) {
+  if (A._cup) return;
+  const cup = new T.Group();
+  cup.add(new T.Mesh(new T.CylinderGeometry(0.05, 0.038, 0.11, 14), new T.MeshLambertMaterial({ color: 0xF6F0E4 })));
+  const water = new T.Mesh(new T.CylinderGeometry(0.044, 0.04, 0.07, 14), new T.MeshLambertMaterial({ color: 0x8CCDEB }));
+  water.position.y = 0.022;
+  cup.add(water);
+  cup.userData.until = G.clock.t + 4.2;
+  A._cup = cup;
+  G.actorLayer.add(cup);
+}
+function dropCup(A) {
+  if (A._cup) { A._cup.parent?.remove(A._cup); A._cup = null; }
+}
+G.hooks.push(() => {
+  for (const A of G.actors) {
+    if (!A._cup) continue;
+    if (G.clock.t > A._cup.userData.until || !gesturing(A)) { dropCup(A); continue; }
+    A._cup.position.copy(G.wp(A, A.hands.R.wrist));
+    A._cup.position.y += 0.03;
+    A._cup.rotation.y = A.place.ry * Math.PI / 180;
+  }
+});
+function drinkWater() {
+  const m = S.me, A = S.meA;
+  if (!A) return;
+  if (m.on) { toast('기구를 반납하면 물을 마실 수 있어요.', 2200); return; }
+  sound.unlock();
+  if (m.station) { m.station = null; m.claimedAt = 0; if (m.state === 'set') m.state = 'idle'; }
+  leaveQueue();
+  standUp();
+  const sp = WORLD.coolerSpot;
+  walkTo(A, sp.x, sp.z, () => {
+    m.gest = 'drink';
+    m.gestN += 1;
+    sound.gesture();
+    playGesture(A, 'me', 'drink', false);
+    syncPresence(true);
+  }, 2.5);
+  syncPresence(true);
+  renderHud();
 }
 for (const btn of document.querySelectorAll('[data-gesture]')) {
   btn.addEventListener('click', () => {
@@ -1208,7 +1267,7 @@ function stepClass(nowMs) {
     $('#classBtn').hidden = false;
     $('#classBtn').textContent = m.classOn ? '그만하기' : '같이 하기';
     if (m.classOn && S.meA) classClip(S.meA, c.idx);
-    if (S.coach && !coachPupil(nowMs)) {
+    if (S.coach) {
       const spot = SHOPS[S.shop].coachSpots[1];
       if (!S.coachClass) { S.coachClass = true; walkTo(S.coach, spot.x, spot.z, () => { S.coach.place.ry = 0; G.applyPlace(S.coach); S.coach._classIdx = null; }); }
       if (!S.walk.has(S.coach)) classClip(S.coach, c.idx);
@@ -1242,8 +1301,13 @@ function noteRep() {
   LOG.reps++; LOG.total = (LOG.total || 0) + 1;
   saveLog();
 }
-function noteSet(st) {
-  LOG.sets++;
+function noteTime(st, sec) {
+  LOG.sec = (LOG.sec || 0) + sec;
+  if (sec >= RULES.durationRestSec) noteSet(st, false); else saveLog();
+  renderLog();
+}
+function noteSet(st, isSet = true) {
+  if (isSet) LOG.sets++;
   if (st) LOG.routine[routineOf(st)] = true;
   if (LOG.routine.cardio && LOG.routine.strength && LOG.routine.stretch) {
     LOG.routine = {};
@@ -1258,21 +1322,30 @@ function renderLog() {
   const r = LOG.routine, el = $('#routine');
   if (!el) return;
   for (const k of ['cardio', 'strength', 'stretch']) el.querySelector(`[data-r="${k}"]`).classList.toggle('done', !!r[k]);
-  $('#todayReps').textContent = `오늘 ${LOG.reps}회`;
-  $('#logLine').textContent = `오늘 ${LOG.reps}회 · ${LOG.sets}세트 · 루틴 ${LOG.routines}번 · ${LOG.streak}일째`;
+  const min = Math.floor((LOG.sec || 0) / 60), mins = min ? ` · ${min}분` : '';
+  $('#todayReps').textContent = `오늘 ${LOG.reps}회${mins}`;
+  $('#logLine').textContent = `오늘 ${LOG.reps}회${mins} · ${LOG.sets}세트 · 루틴 ${LOG.routines}번 · ${LOG.streak}일째`;
 }
 
 const COUNT_WORDS = ['하나', '둘', '셋', '넷', '다섯', '여섯', '일곱', '여덟', '아홉', '열', '열하나', '열둘', '열셋', '열넷', '열다섯'];
 function doRep() {
   const m = S.me, A = S.meA;
   if (!S.shop || m.state !== 'set' || !m.on || !A) return;
-  // 동작이 끝나기 전에 누르면 버리지 않고 끝나자마자 이어서 한다 (유산소 기구는 바로바로)
-  if (!A._cardio && repBusy(A)) { S.repQueued = true; return; }
+  if (A._cardio) { // 시간 운동: 횟수와 세트가 없다
+    cardioPress(A);
+    m.lastActAt = Date.now();
+    sound.rep();
+    syncPresence();
+    renderHud();
+    return;
+  }
+  // 동작이 끝나기 전에 누르면 버리지 않고 끝나자마자 이어서 한다
+  if (repBusy(A)) { S.repQueued = true; return; }
   S.repQueued = false;
   const target = SHOPS[S.shop].reps;
   m.reps = Math.min(target, m.reps + 1);
   m.lastActAt = Date.now();
-  if (A._cardio) cardioPress(A); else playRep(A);
+  playRep(A);
   sound.rep();
   noteRep();
   if (m.reps >= target) finishSet();
@@ -1301,6 +1374,18 @@ function finishSet() {
   // 넓은 화면은 수다창을 알아서 열어 준다
   if (matchMedia('(max-width: 860px)').matches) toast('쉬는 시간이에요. 채팅을 할 수 있어요.', 3000);
 }
+/** 시간 운동을 마치고 반납했을 때의 쉬는 시간 */
+function startRest(word) {
+  const m = S.me, ms = randomRestMs();
+  m.state = 'rest';
+  m.restUntil = Date.now() + ms;
+  sound.setDone();
+  playCoach('thumbs');
+  sysLine(`${word} ${Math.round(ms / 1000)}초 쉬어요`, 'rest');
+  if (matchMedia('(max-width: 860px)').matches) toast('쉬는 시간이에요. 채팅을 할 수 있어요.', 3000);
+  syncPresence(true);
+  renderHud();
+}
 function endRest() {
   const m = S.me;
   sound.restOver();
@@ -1308,9 +1393,6 @@ function endRest() {
   m.lastActAt = Date.now();
   if (m.station) {
     m.set += 1; m.reps = 0; m.state = 'set';
-    const st = stationOf(S.shop, m.station);
-    
-    coachSay(st ? st.cue : '다음 세트 가자.', 6000);
   } else {
     m.state = 'idle'; m.reps = 0;
     sysLine('쉬는 시간이 끝났어요. 다음 기구를 골라 보세요.', '');
@@ -1356,7 +1438,7 @@ function stepKeys() {
   walkTo(A, A.place.x + x / len * 0.7, A.place.z + z / len * 0.7);
 }
 
-// 3D 화면 누르기: 기구 → 사용, 부리부리 → PT, 바닥 → 이동 (드래그는 시점 돌리기)
+// 3D 화면 누르기: 기구 → 사용, 쌤 → PT 부르기, 바닥 → 이동 (드래그는 시점 돌리기)
 const ray = new T.Raycaster();
 let downAt = null;
 $('#view').addEventListener('pointerdown', (e) => { downAt = { x: e.clientX, y: e.clientY, t: performance.now() }; });
@@ -1372,10 +1454,11 @@ $('#view').addEventListener('pointerup', (e) => {
   // 부리부리 쌤
   if (S.coach) {
     const hit = ray.intersectObject(S.coach.root, true)[0];
-    if (hit) { openPanel(); playCoach('wave'); return; }
+    if (hit) { playCoach('wave'); if (S.me.on) callPt(); else say('coach', '기구에 올라가서 PT 부르기를 눌러 봐. 옆에서 자세를 봐 줄게.', 5000); return; }
   }
   // 안내 데스크 · 기구
   if (ray.ray.intersectsBox(WORLD.doorBox)) { moveShop(otherShop()); return; }
+  if (ray.ray.intersectsBox(WORLD.coolerBox)) { drinkWater(); return; }
   if (ray.ray.intersectsBox(WORLD.deskBox)) { openPay(); return; }
   const best = stationUnderRay();
   if (best) { claimStation(best.id); return; }
@@ -1440,9 +1523,9 @@ function setHover(id, desk = false) {
 function paintHover() {
   const el = $('#hoverTag');
   if (!S.shop || !hoverMark) { if (el) el.hidden = true; return; }
-  const box = S.hoverDesk === 'door' ? WORLD.doorBox : S.hoverDesk ? WORLD.deskBox : S.hover && S.stationBox[S.hover];
+  const box = S.hoverDesk === 'door' ? WORLD.doorBox : S.hoverDesk === 'cooler' ? WORLD.coolerBox : S.hoverDesk ? WORLD.deskBox : S.hover && S.stationBox[S.hover];
   if (!box) { el.hidden = true; hoverMark.visible = false; return; }
-  let title = S.hoverDesk === 'door' ? '입구' : '안내 데스크', state = S.hoverDesk === 'door' ? `${SHOPS[otherShop()].name}으로 가기` : '온라인짐 후원', cls = 'free';
+  let title = S.hoverDesk === 'door' ? '입구' : S.hoverDesk === 'cooler' ? '정수기' : '안내 데스크', state = S.hoverDesk === 'door' ? `${SHOPS[otherShop()].name}으로 가기` : S.hoverDesk === 'cooler' ? '눌러서 물 마시기' : '온라인짐 후원', cls = 'free';
   if (!S.hoverDesk) { const i = hoverInfo(S.hover); title = i.st.name; state = i.state; cls = i.cls; }
   hoverMark.position.set((box.min.x + box.max.x) / 2, 0.02, (box.min.z + box.max.z) / 2);
   hoverMark.scale.set(box.max.x - box.min.x + 0.2, box.max.z - box.min.z + 0.2, 1);
@@ -1464,7 +1547,7 @@ $('#view').addEventListener('pointermove', (e) => {
   const r = $('#view').getBoundingClientRect();
   ray.setFromCamera(new T.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), G.cam);
   const best = stationUnderRay();
-  setHover(best ? best.id : null, best ? false : ray.ray.intersectsBox(WORLD.doorBox) ? 'door' : ray.ray.intersectsBox(WORLD.deskBox));
+  setHover(best ? best.id : null, best ? false : ray.ray.intersectsBox(WORLD.doorBox) ? 'door' : ray.ray.intersectsBox(WORLD.coolerBox) ? 'cooler' : ray.ray.intersectsBox(WORLD.deskBox));
 });
 $('#view').addEventListener('pointerleave', () => setHover(null));
 
@@ -1477,15 +1560,15 @@ function renderHud() {
   $('#clock').hidden = false;
   if (m.state === 'set' && st) {
     stage.dataset.phase = 'work';
-    const c = S.meA?._cardio;
-    $('#exName').textContent = !m.on ? `${st.name} 앞으로 가는 중` : c ? `${st.ex} · ${c.label(c.lv)} · ${m.set}/${RULES.setsPerStation}세트` : `${st.ex} · ${m.set}/${RULES.setsPerStation}세트`;
-    $('#clock').textContent = `${m.reps}/${shop.reps}`;
+    const c = m.on ? S.meA?._cardio : null;
+    $('#exName').textContent = !m.on ? `${st.name} 앞으로 가는 중` : !c ? `${st.ex} · ${m.set}/${RULES.setsPerStation}세트` : c.hold ? st.ex : `${st.ex} · ${c.label(c.lv)}`;
+    $('#clock').textContent = c ? fmt(c.sec * 1000) : st.cardio || st.hold ? fmt(0) : `${m.reps}/${shop.reps}`;
     repBtn.hidden = false;
     repBtn.disabled = !m.on;
-    repBtn.textContent = m.on ? COUNT_WORDS[m.reps] || String(m.reps + 1) : '가는 중';
+    repBtn.textContent = !m.on ? '가는 중' : !c ? COUNT_WORDS[m.reps] || String(m.reps + 1) : !c.hold ? '빠르게' : c.lv ? '멈추기' : '시작';
   } else if (m.state === 'rest') {
     stage.dataset.phase = 'rest';
-    $('#exName').textContent = st ? `쉬는 시간 · 다음 ${st.name} ${m.set + 1}세트` : qst ? `쉬는 시간 · ${qst.name} 줄, 내 앞에 ${S.lineAhead || 0}명` : '쉬는 시간이에요';
+    $('#exName').textContent = st ? `쉬는 시간 · 다음 ${st.name}${st.cardio || st.hold ? '' : ` ${m.set + 1}세트`}` : qst ? `쉬는 시간 · ${qst.name} 줄, 내 앞에 ${S.lineAhead || 0}명` : '쉬는 시간이에요';
     $('#clock').textContent = fmt(m.restUntil - now);
     repBtn.hidden = !st;
     repBtn.disabled = true;
@@ -1499,8 +1582,8 @@ function renderHud() {
   }
   $('#releaseBtn').hidden = !m.station;
   const chance = $('#ptChanceBtn');
-  chance.hidden = S.ptBusy;
-  chance.textContent = ptSessionLive() ? 'PT 받는 중' : 'PT 쌤 부르기';
+  chance.hidden = !m.on; // 운동할 때만
+  chance.textContent = S.ptTeacher ? '자세 다시 듣기' : 'PT 부르기';
   $('#leaveQueueBtn').hidden = !m.queue;
   $('#stnbar').hidden = !!m.station;
   updateChatLock();
@@ -1545,11 +1628,16 @@ setInterval(() => {
     toast('한동안 움직임이 없어서 다음 분께 자리를 넘겼어요.', 3500);
     releaseStation();
   }
-  endPtIfOver();
+  // 시간 운동은 줄이 있으면 정해진 시간까지만
+  const cardio = m.on ? S.meA._cardio : null;
+  if (cardio) {
+    syncPresence();
+    if (S.lineBehind > 0 && cardio.sec > RULES.durationShareSec) { toast('기다리는 분이 있어서 자리를 넘겼어요. 수고했어요.', 3500); releaseStation(); }
+  }
   stepClass(now);
   stepCoach(now);
   renderHud();
-  document.title = m.state === 'rest' ? `휴식 ${fmt(m.restUntil - now)} · ONLINE GYM` : m.state === 'set' ? `${m.reps}/${SHOPS[S.shop].reps} · ONLINE GYM` : 'ONLINE GYM';
+  document.title = m.state === 'rest' ? `휴식 ${fmt(m.restUntil - now)} · ONLINE GYM` : m.state === 'set' ? `${cardio ? fmt(cardio.sec * 1000) : `${m.reps}/${SHOPS[S.shop].reps}`} · ONLINE GYM` : 'ONLINE GYM';
 }, 1000);
 
 // ------------------------------------------------------------------ 로비
@@ -1565,6 +1653,7 @@ function hexToHl(hex) {
   if (d) { h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4; h = (h * 60 + 360) % 360; }
   return [h, (max + min) / 2];
 }
+const randomColor = () => hslToHex(Math.random() * 360, 0.6 + Math.random() * 0.35, 0.32 + Math.random() * 0.42);
 const studios = [];
 const PARTS = { shirt: { label: '나시', key: 'color', store: 'jg.color' }, band: { label: '머리띠', key: 'band', store: 'jg.band' }, pants: { label: '바지', key: 'pants', store: 'jg.pants' } };
 let shirtPart = 'shirt';
@@ -1621,7 +1710,7 @@ function buildStudio(host, prefix) {
   const dice = document.createElement('button');
   dice.type = 'button'; dice.className = 'shirt-dice'; dice.id = `${prefix}dice`;
   dice.textContent = '아무 색이나';
-  dice.addEventListener('click', () => setShirt(hslToHex(Math.random() * 360, 0.6 + Math.random() * 0.35, 0.32 + Math.random() * 0.42), true));
+  dice.addEventListener('click', () => setShirt(randomColor(), true));
   host.append(dice);
   studios.push({ radios, hue, tone, partBtns });
 }
@@ -1642,7 +1731,7 @@ function setShirt(color, done) {
   syncPresence(done);
   paintStudios(!done);
 }
-// 메뉴: 닉네임 · 옷 색 · 샵 이동 · PT 신청 · 소리
+// 메뉴: 닉네임 · 옷 색 · 샵 이동 · 후원 · 소리
 function toggleMenu(open) {
   const m = $('#menu'), show = open ?? m.hidden;
   m.hidden = !show;
@@ -1710,30 +1799,16 @@ $('#linkBtn').addEventListener('click', async () => {
 });
 $('#joinBtn').addEventListener('click', openPay);
 
-// 후원 창. 결제를 붙일 때 startCheckout()만 채우면 된다. 지금은 아무 정보도 받지 않고 돈도 나가지 않는다.
-function buildPayPlans() {
-  const box = $('#payPlans');
-  box.textContent = '';
-  DONATIONS.forEach((p, i) => {
-    const label = document.createElement('label');
-    label.className = 'plan';
-    const input = document.createElement('input');
-    input.type = 'radio'; input.name = 'plan'; input.value = p.id; input.id = `plan-${p.id}`; input.checked = i === 0;
-    const name = document.createElement('b'); name.textContent = p.name;
-    const price = document.createElement('span'); price.textContent = p.price;
-    label.append(input, name, price);
-    box.append(label);
-  });
-}
-function openPay() { $('#payMsg').hidden = true; $('#payModal').hidden = false; }
+// 후원 창과 도움말 창
+function openPay() { $('#payModal').hidden = false; }
 function closePay() { $('#payModal').hidden = true; }
-function startCheckout() {
-  $('#payMsg').textContent = '후원은 아직 준비 중이에요. 돈은 나가지 않았어요. 마음만 고맙게 받을게요.';
-  $('#payMsg').hidden = false;
-}
-$('#payGo').addEventListener('click', () => startCheckout(document.querySelector('[name="plan"]:checked')?.value));
 $('#payClose').addEventListener('click', closePay);
 $('#payModal').addEventListener('pointerdown', (e) => { if (e.target === $('#payModal')) closePay(); });
+function closeHelp() { $('#helpModal').hidden = true; }
+$('#helpBtn').addEventListener('click', () => { toggleMenu(false); $('#helpModal').hidden = false; });
+$('#helpClose').addEventListener('click', closeHelp);
+$('#helpModal').addEventListener('pointerdown', (e) => { if (e.target === $('#helpModal')) closeHelp(); });
+document.addEventListener('keydown', (e) => { if (e.code === 'Escape') { closePay(); closeHelp(); } });
 
 function renderChannel() {
   const info = room?.channelInfo?.(), el = $('#channelSec');
@@ -1786,23 +1861,20 @@ function enterGym(shopId) {
   setTimeout(() => { if (S.shop === shopId && S.coach) coachGreet(S.me.nick, S.meA); }, 1500);
   renderHud();
   syncScene();
-  updatePtUI();
   lobbyCounts();
 }
 
 // ------------------------------------------------------------------ 말풍선 · 응원
-let coachTimer = null;
-function coachSay(text, ms = 7000) {
-  const el = S.tags.get('coach');
+function say(tagKey, text, ms) {
+  const el = S.tags.get(tagKey);
   if (!el) return;
   el.querySelector('.bubble')?.remove();
-  if (!text) return;
   const b = document.createElement('div');
   b.className = 'bubble';
   b.textContent = text;
   el.prepend(b);
-  clearTimeout(coachTimer);
-  coachTimer = setTimeout(() => b.remove(), ms);
+  clearTimeout(el._sayTimer);
+  el._sayTimer = setTimeout(() => b.remove(), ms);
 }
 function floatWord(tagKey, word) {
   const el = S.tags.get(tagKey);
@@ -1849,8 +1921,8 @@ function updateChatLock() {
   $('#chatSend').disabled = !open;
   if (!open) {
     if (m.state === 'set' && m.on) {
-      $('#chatLockTitle').textContent = '세트 중에는 채팅할 수 없어요';
-      $('#chatLockSub').textContent = `${SHOPS[S.shop].reps - m.reps}회 더 하면 쉬는 시간이에요`;
+      $('#chatLockTitle').textContent = '운동 중에는 채팅할 수 없어요';
+      $('#chatLockSub').textContent = S.meA?._cardio ? '기구를 반납하면 쉬는 시간이에요' : `${SHOPS[S.shop].reps - m.reps}회 더 하면 쉬는 시간이에요`;
     } else {
       $('#chatLockTitle').textContent = '쉬는 시간에만 채팅할 수 있어요';
       $('#chatLockSub').textContent = '세트를 끝내면 열려요';
@@ -1892,80 +1964,44 @@ $('#chatForm').addEventListener('submit', (e) => {
   input.value = '';
   sendChat(text);
 });
-// ------------------------------------------------------------------ 부리부리 쌤 PT (체험 1회, 이후 이용권)
-const ptSessionLive = () => !!S.ptSession && S.ptSession.until > Date.now();
-function startPtSession() {
-  S.ptSession = { until: Date.now() + RULES.ptSessionSec * 1000 };
-  S.me.ptUntil = S.ptSession.until;
-  S.coachSlot = null;
-  syncPresence(true);
-  stepCoach(Date.now());
-}
-function endPtIfOver() {
-  if (S.ptSession && S.ptSession.until <= Date.now()) {
-    S.ptSession = null;
-    S.me.ptUntil = 0;
-    syncPresence(true);
-    updatePtUI();
-    renderHud();
-  }
-}
-function updatePtUI() {
-  $('#ptQuota').textContent = ptSessionLive() ? '쌤이 옆에서 보고 있어요.' : '질문하면 쌤이 옆으로 와요.';
-  $('#ptInput').disabled = S.ptBusy;
-  $('#ptSend').disabled = S.ptBusy;
-}
-// 쌤 부르기
-$('#ptChanceBtn').addEventListener('click', () => {
-  sound.unlock();
-  if (ptSessionLive()) { openPanel(); return; }
+// ------------------------------------------------------------------ PT: 부르면 내 선생님이 옆에 와서 자세를 말해 주고, 기구를 반납하면 돌아간다
+function ptTalk() {
+  clearTimeout(S.ptTimer);
   const st = stationOf(S.shop, S.me.station);
-  ptAsk(st ? `${st.ex} 자세 좀 봐 주세요.` : '오늘 어떤 운동부터 하면 좋을까요?');
-  renderHud();
-});
-function ptAsk(raw) {
-  const question = cleanText(raw, LIMIT.ask);
-  if (!question || S.ptBusy || !S.shop) return;
-  if (!ptSessionLive()) startPtSession();
-  S.ptBusy = true;
-  updatePtUI();
-  const log = $('#ptLog');
-  const q = document.createElement('li'); q.className = 'msg mine';
-  const qt = document.createElement('span'); qt.className = 'text'; qt.textContent = question;
-  q.append(qt);
-  const a = document.createElement('li'); a.className = 'msg coach';
-  const who = document.createElement('span'); who.className = 'who'; who.textContent = '부리부리 쌤';
-  const at = document.createElement('span'); at.className = 'text';
-  const text = ptAnswer(question, SHOPS[S.shop], stationOf(S.shop, S.me.station));
-  at.textContent = text;
-  a.append(who, at);
-  log.append(q, a);
-  log.scrollTop = log.scrollHeight;
-  S.ptBusy = false;
-  updatePtUI();
-  renderHud();
-  coachSay(text, Math.max(7000, text.length * 110)); // 쌤이 옆에서 말풍선으로도 말해 줌
+  if (!st) return;
+  const speak = (lines, i) => {
+    if (i >= lines.length || !S.ptTeacher) return;
+    const ms = Math.max(4500, lines[i].length * 120);
+    say('pt', lines[i], ms);
+    S.ptTimer = setTimeout(() => speak(lines, i + 1), ms + 300);
+  };
+  speak(ptLines(st), 0);
 }
-$('#ptForm').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const input = $('#ptInput'), v = input.value;
-  input.value = '';
-  ptAsk(v);
-});
-for (const chip of $('#ptChips').children) chip.addEventListener('click', () => ptAsk(chip.textContent));
+function callPt() {
+  const m = S.me;
+  if (!m.on || !S.meA) return;
+  sound.unlock();
+  if (S.ptTeacher) { if (!S.walk.has(S.ptTeacher)) ptTalk(); return; }
+  m.pt = 1 + Math.floor(Math.random() * 1e6);
+  S.ptTeacher = teacherCome(S.meA, m.pt, ptTalk);
+  const tag = tagFor('pt');
+  tag.classList.add('coach');
+  tag.querySelector('.nm').textContent = 'PT 쌤';
+  syncPresence(true);
+  renderHud();
+}
+function ptDismiss() {
+  if (!S.ptTeacher) return;
+  clearTimeout(S.ptTimer);
+  dropTag('pt');
+  teacherGo(S.ptTeacher);
+  S.ptTeacher = null;
+  S.me.pt = 0;
+  syncPresence(true);
+}
+$('#ptChanceBtn').addEventListener('click', callPt);
 
 // ------------------------------------------------------------------ tabs / misc
-function openPanel() {
-  $('#panel').hidden = false;
-  updatePtUI();
-  $('#openPt').setAttribute('aria-pressed', true);
-}
-function closePanel() {
-  $('#panel').hidden = true;
-  $('#openPt').setAttribute('aria-pressed', false);
-}
-$('#openPt').addEventListener('click', () => { if ($('#panel').hidden) openPanel(); else closePanel(); });
-$('#closePanel').addEventListener('click', closePanel);
 // 넓은 화면은 채팅이 늘 보이고, 휴대폰에서만 눌러서 크게 연다
 $('#openChat').addEventListener('click', () => {
   const open = $('#chatFloat').classList.toggle('open');
@@ -2035,13 +2071,11 @@ document.addEventListener('keydown', wakeSound, { once: true });
 (async function boot() {
   S.me.nick = store.get('jg.nick', '') || randomNick();
   store.set('jg.nick', S.me.nick);
-  S.me.color = validColor(store.get('jg.color', 'orange'));
-  S.me.band = validColor(store.get('jg.band', BAND_DEFAULT), BAND_DEFAULT);
-  S.me.pants = validColor(store.get('jg.pants', PANTS_DEFAULT), PANTS_DEFAULT);
+  // 옷 색은 들어올 때마다 랜덤. 직접 고른 색만 기억한다
+  for (const part of Object.values(PARTS)) S.me[part.key] = validColor(store.get(part.store, '') || randomColor());
   renderSoundBtn();
   buildStudio($('#colorPickerGym'), 'g');
   paintStudios(false);
-  buildPayPlans();
   renderLog();
 
   capability('room').then((r) => {
@@ -2059,7 +2093,7 @@ document.addEventListener('keydown', wakeSound, { once: true });
     lobbyCounts();
   });
   setInterval(lobbyCounts, 3000);
-  if (FAST) window.__jg = { S, G, RULES, sound, ambient, music, WORLD, SHOPS, setHover, ptLive: () => ptSessionLive(), PT_KNOW, ptAnswer, shiftClass: (s) => { classShift = s; }, classNow }; // 시험용
+  if (FAST) window.__jg = { S, G, RULES, sound, ambient, music, WORLD, SHOPS, setHover, PT_KNOW, ptLines, drinkWater, shiftClass: (s) => { classShift = s; }, classNow }; // 시험용
 
   try {
     await Promise.all(['jjak', 'buri'].map((id) => G.loadTemplate(id)));

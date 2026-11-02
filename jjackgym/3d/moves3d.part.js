@@ -51,6 +51,14 @@
   add({ id: 'wundaFootwork', cat: 'pilates', name: '운다 체어 풋워크', note: '앉아서 발로 페달 누르기', dur: 3, keys: [
     [0, wundaUp, SEAT], [1.2, wundaDn, SEAT], [1.6, wundaDn, SEAT], [3, wundaUp, SEAT]] });
 
+  // ---- 정수기: 물 받아서 고개 들고 마시기
+  const STAND = { g: 'feet', pl: [1, 1] };
+  const fillCup = J(REST, GRIP, { upperArmR: [-46, 0, -8], forearmR: [-40, 0, 0], upperArmL: [-40, 0, 6], forearmL: [-46, 0, 0], head: [8, 0, 0] });
+  const atMouth = J(REST, GRIP, { upperArmR: [-58, 0, -14], forearmR: [-118, 0, 0], head: [-6, 0, 0] });
+  const sipping = J(atMouth, { upperArmR: [-74, 0, -14], forearmR: [-122, 0, 0], chest: [-5, 0, 0], neck: [-10, 0, 0], head: [-24, 0, 0] });
+  add({ id: 'drinkWater', cat: 'gesture', name: '물 마시기', note: '컵으로 물 마시기', dur: 4.2, keys: [
+    [0, REST, STAND], [0.5, fillCup, STAND], [1.3, fillCup, STAND], [1.8, atMouth, STAND], [2.3, sipping, STAND], [3.3, sipping, STAND], [3.7, atMouth, STAND], [4.2, REST, STAND]] });
+
   // ---- 래더 바렐: 숏 박스 라운드 백. 앉아서 등을 둥글게 말며 뒤로
   const reach = J(OPEN, both('upperArm', -78, 0, 6), both('forearm', 0, 0, 0));
   const boxUp = J(REST, reach, both('thigh', -76, 0, 5), both('shin', 66, 0, 0));

@@ -13,7 +13,7 @@
       <div class="top-right">
         <button id="menuBtn" class="ctl" type="button" aria-pressed="false">메뉴</button>
         <button id="openChat" class="ctl" type="button" aria-pressed="false" aria-label="채팅 열기">채팅<span id="chatBadge" class="badge" hidden></span></button>
-        <button id="openPt" class="ctl" type="button" aria-pressed="false" aria-label="부리부리 쌤 PT 열기">PT</button>
+        <button id="helpBtn" class="ctl" type="button">도움말</button>
       </div>
     </header>
 
@@ -86,7 +86,7 @@
       </div>
       <div class="dock-actions">
         <button id="repBtn" class="rep-btn" type="button" hidden>하나</button>
-        <button id="ptChanceBtn" class="ctl" type="button" hidden>PT 쌤 부르기</button>
+        <button id="ptChanceBtn" class="ctl" type="button" hidden>PT 부르기</button>
         <button id="releaseBtn" class="ctl" type="button" hidden>기구 반납</button>
         <button id="leaveQueueBtn" class="ctl" type="button" hidden>줄에서 나오기</button>
       </div>
@@ -107,42 +107,58 @@
       </form>
     </section>
 
-    <aside id="panel" class="panel" hidden>
-      <div class="panel-head">
-        <b>부리부리 쌤 PT</b>
-        <button id="closePanel" class="panel-close" type="button" aria-label="닫기">닫기</button>
-      </div>
-
-      <div id="ptPane" class="pane">
-        <div class="pt-intro">
-          <img src="buri.png" alt="" />
-          <p>기구와 자세에 대해 물어보세요. 지금 쓰는 기구에 맞춰 알려 줘요.<br /><small id="ptQuota"></small></p>
-        </div>
-        <ol id="ptLog" class="log pt-log"></ol>
-        <div class="chips" id="ptChips">
-          <button type="button">이 기구 자세 좀 봐 주세요</button>
-          <button type="button">이 운동은 어디에 좋아요?</button>
-          <button type="button">허리가 뻐근한데 해도 될까요?</button>
-          <button type="button">더 쉽게 하는 방법 있어요?</button>
-        </div>
-        <form id="ptForm" class="composer">
-          <input id="ptInput" maxlength="300" placeholder="궁금한 걸 물어보세요" aria-label="PT 질문 입력" />
-          <button type="submit" id="ptSend">질문</button>
-        </form>
-      </div>
-    </aside>
   </div>
 </section>
 
 <div id="payModal" class="pay-modal" hidden>
   <div class="pay-box" role="dialog" aria-modal="true" aria-labelledby="payTitle">
     <h2 id="payTitle">온라인짐 후원</h2>
-    <p>이 짐은 누구나 무료로 쓸 수 있어요. 후원은 서버를 유지하는 데 쓰여요.</p>
-    <div id="payPlans" class="plans"></div>
-    <p id="payMsg" class="pay-msg" role="status" hidden></p>
+    <p>이 짐은 누구나 무료로 쓸 수 있어요. 응원하고 싶다면 휴대폰으로 QR을 찍거나 아래 버튼을 눌러 주세요.</p>
+    <div class="pay-qr"><svg viewBox="0 0 35 35" role="img" aria-label="후원 페이지 QR 코드" shape-rendering="crispEdges"><rect width="35" height="35" fill="#fff"/><path fill="#171715" d="M3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM8 3h1v1h-1zM9 3h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM16 3h1v1h-1zM17 3h1v1h-1zM19 3h1v1h-1zM21 3h1v1h-1zM25 3h1v1h-1zM26 3h1v1h-1zM27 3h1v1h-1zM28 3h1v1h-1zM29 3h1v1h-1zM30 3h1v1h-1zM31 3h1v1h-1zM3 4h1v1h-1zM9 4h1v1h-1zM13 4h1v1h-1zM16 4h1v1h-1zM17 4h1v1h-1zM18 4h1v1h-1zM20 4h1v1h-1zM21 4h1v1h-1zM22 4h1v1h-1zM25 4h1v1h-1zM31 4h1v1h-1zM3 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM13 5h1v1h-1zM14 5h1v1h-1zM15 5h1v1h-1zM17 5h1v1h-1zM20 5h1v1h-1zM21 5h1v1h-1zM25 5h1v1h-1zM27 5h1v1h-1zM28 5h1v1h-1zM29 5h1v1h-1zM31 5h1v1h-1zM3 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM9 6h1v1h-1zM11 6h1v1h-1zM13 6h1v1h-1zM21 6h1v1h-1zM25 6h1v1h-1zM27 6h1v1h-1zM28 6h1v1h-1zM29 6h1v1h-1zM31 6h1v1h-1zM3 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM15 7h1v1h-1zM20 7h1v1h-1zM21 7h1v1h-1zM25 7h1v1h-1zM27 7h1v1h-1zM28 7h1v1h-1zM29 7h1v1h-1zM31 7h1v1h-1zM3 8h1v1h-1zM9 8h1v1h-1zM11 8h1v1h-1zM14 8h1v1h-1zM15 8h1v1h-1zM19 8h1v1h-1zM20 8h1v1h-1zM21 8h1v1h-1zM22 8h1v1h-1zM23 8h1v1h-1zM25 8h1v1h-1zM31 8h1v1h-1zM3 9h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM11 9h1v1h-1zM13 9h1v1h-1zM15 9h1v1h-1zM17 9h1v1h-1zM19 9h1v1h-1zM21 9h1v1h-1zM23 9h1v1h-1zM25 9h1v1h-1zM26 9h1v1h-1zM27 9h1v1h-1zM28 9h1v1h-1zM29 9h1v1h-1zM30 9h1v1h-1zM31 9h1v1h-1zM11 10h1v1h-1zM13 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM19 10h1v1h-1zM20 10h1v1h-1zM21 10h1v1h-1zM22 10h1v1h-1zM3 11h1v1h-1zM7 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM16 11h1v1h-1zM23 11h1v1h-1zM24 11h1v1h-1zM25 11h1v1h-1zM26 11h1v1h-1zM27 11h1v1h-1zM28 11h1v1h-1zM31 11h1v1h-1zM5 12h1v1h-1zM10 12h1v1h-1zM11 12h1v1h-1zM12 12h1v1h-1zM16 12h1v1h-1zM17 12h1v1h-1zM19 12h1v1h-1zM20 12h1v1h-1zM25 12h1v1h-1zM27 12h1v1h-1zM28 12h1v1h-1zM29 12h1v1h-1zM30 12h1v1h-1zM31 12h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1zM14 13h1v1h-1zM19 13h1v1h-1zM21 13h1v1h-1zM23 13h1v1h-1zM26 13h1v1h-1zM31 13h1v1h-1zM3 14h1v1h-1zM5 14h1v1h-1zM7 14h1v1h-1zM8 14h1v1h-1zM10 14h1v1h-1zM11 14h1v1h-1zM17 14h1v1h-1zM20 14h1v1h-1zM21 14h1v1h-1zM22 14h1v1h-1zM24 14h1v1h-1zM28 14h1v1h-1zM30 14h1v1h-1zM31 14h1v1h-1zM3 15h1v1h-1zM6 15h1v1h-1zM8 15h1v1h-1zM9 15h1v1h-1zM10 15h1v1h-1zM13 15h1v1h-1zM14 15h1v1h-1zM16 15h1v1h-1zM17 15h1v1h-1zM18 15h1v1h-1zM19 15h1v1h-1zM20 15h1v1h-1zM23 15h1v1h-1zM24 15h1v1h-1zM26 15h1v1h-1zM30 15h1v1h-1zM5 16h1v1h-1zM10 16h1v1h-1zM21 16h1v1h-1zM25 16h1v1h-1zM26 16h1v1h-1zM27 16h1v1h-1zM28 16h1v1h-1zM29 16h1v1h-1zM30 16h1v1h-1zM31 16h1v1h-1zM3 17h1v1h-1zM7 17h1v1h-1zM8 17h1v1h-1zM9 17h1v1h-1zM10 17h1v1h-1zM11 17h1v1h-1zM12 17h1v1h-1zM14 17h1v1h-1zM15 17h1v1h-1zM16 17h1v1h-1zM17 17h1v1h-1zM18 17h1v1h-1zM23 17h1v1h-1zM26 17h1v1h-1zM28 17h1v1h-1zM29 17h1v1h-1zM31 17h1v1h-1zM4 18h1v1h-1zM5 18h1v1h-1zM6 18h1v1h-1zM11 18h1v1h-1zM12 18h1v1h-1zM13 18h1v1h-1zM16 18h1v1h-1zM18 18h1v1h-1zM19 18h1v1h-1zM20 18h1v1h-1zM22 18h1v1h-1zM24 18h1v1h-1zM25 18h1v1h-1zM30 18h1v1h-1zM31 18h1v1h-1zM4 19h1v1h-1zM6 19h1v1h-1zM7 19h1v1h-1zM9 19h1v1h-1zM11 19h1v1h-1zM12 19h1v1h-1zM16 19h1v1h-1zM20 19h1v1h-1zM22 19h1v1h-1zM23 19h1v1h-1zM24 19h1v1h-1zM26 19h1v1h-1zM30 19h1v1h-1zM3 20h1v1h-1zM5 20h1v1h-1zM7 20h1v1h-1zM10 20h1v1h-1zM13 20h1v1h-1zM15 20h1v1h-1zM16 20h1v1h-1zM17 20h1v1h-1zM19 20h1v1h-1zM20 20h1v1h-1zM21 20h1v1h-1zM24 20h1v1h-1zM25 20h1v1h-1zM26 20h1v1h-1zM27 20h1v1h-1zM28 20h1v1h-1zM30 20h1v1h-1zM31 20h1v1h-1zM6 21h1v1h-1zM9 21h1v1h-1zM10 21h1v1h-1zM12 21h1v1h-1zM13 21h1v1h-1zM19 21h1v1h-1zM21 21h1v1h-1zM23 21h1v1h-1zM24 21h1v1h-1zM29 21h1v1h-1zM31 21h1v1h-1zM5 22h1v1h-1zM6 22h1v1h-1zM7 22h1v1h-1zM8 22h1v1h-1zM10 22h1v1h-1zM12 22h1v1h-1zM13 22h1v1h-1zM14 22h1v1h-1zM17 22h1v1h-1zM20 22h1v1h-1zM21 22h1v1h-1zM25 22h1v1h-1zM26 22h1v1h-1zM27 22h1v1h-1zM30 22h1v1h-1zM31 22h1v1h-1zM3 23h1v1h-1zM4 23h1v1h-1zM5 23h1v1h-1zM6 23h1v1h-1zM7 23h1v1h-1zM9 23h1v1h-1zM13 23h1v1h-1zM14 23h1v1h-1zM16 23h1v1h-1zM17 23h1v1h-1zM18 23h1v1h-1zM19 23h1v1h-1zM20 23h1v1h-1zM22 23h1v1h-1zM23 23h1v1h-1zM24 23h1v1h-1zM25 23h1v1h-1zM26 23h1v1h-1zM27 23h1v1h-1zM28 23h1v1h-1zM31 23h1v1h-1zM11 24h1v1h-1zM13 24h1v1h-1zM14 24h1v1h-1zM15 24h1v1h-1zM21 24h1v1h-1zM22 24h1v1h-1zM23 24h1v1h-1zM27 24h1v1h-1zM31 24h1v1h-1zM3 25h1v1h-1zM4 25h1v1h-1zM5 25h1v1h-1zM6 25h1v1h-1zM7 25h1v1h-1zM8 25h1v1h-1zM9 25h1v1h-1zM11 25h1v1h-1zM12 25h1v1h-1zM13 25h1v1h-1zM14 25h1v1h-1zM15 25h1v1h-1zM16 25h1v1h-1zM17 25h1v1h-1zM18 25h1v1h-1zM20 25h1v1h-1zM21 25h1v1h-1zM22 25h1v1h-1zM23 25h1v1h-1zM25 25h1v1h-1zM27 25h1v1h-1zM28 25h1v1h-1zM29 25h1v1h-1zM31 25h1v1h-1zM3 26h1v1h-1zM9 26h1v1h-1zM13 26h1v1h-1zM14 26h1v1h-1zM15 26h1v1h-1zM16 26h1v1h-1zM18 26h1v1h-1zM19 26h1v1h-1zM20 26h1v1h-1zM22 26h1v1h-1zM23 26h1v1h-1zM27 26h1v1h-1zM31 26h1v1h-1zM3 27h1v1h-1zM5 27h1v1h-1zM6 27h1v1h-1zM7 27h1v1h-1zM9 27h1v1h-1zM11 27h1v1h-1zM14 27h1v1h-1zM15 27h1v1h-1zM16 27h1v1h-1zM20 27h1v1h-1zM22 27h1v1h-1zM23 27h1v1h-1zM24 27h1v1h-1zM25 27h1v1h-1zM26 27h1v1h-1zM27 27h1v1h-1zM28 27h1v1h-1zM30 27h1v1h-1zM31 27h1v1h-1zM3 28h1v1h-1zM5 28h1v1h-1zM6 28h1v1h-1zM7 28h1v1h-1zM9 28h1v1h-1zM13 28h1v1h-1zM15 28h1v1h-1zM16 28h1v1h-1zM17 28h1v1h-1zM19 28h1v1h-1zM20 28h1v1h-1zM22 28h1v1h-1zM30 28h1v1h-1zM3 29h1v1h-1zM5 29h1v1h-1zM6 29h1v1h-1zM7 29h1v1h-1zM9 29h1v1h-1zM12 29h1v1h-1zM13 29h1v1h-1zM14 29h1v1h-1zM15 29h1v1h-1zM16 29h1v1h-1zM19 29h1v1h-1zM20 29h1v1h-1zM23 29h1v1h-1zM24 29h1v1h-1zM28 29h1v1h-1zM29 29h1v1h-1zM30 29h1v1h-1zM31 29h1v1h-1zM3 30h1v1h-1zM9 30h1v1h-1zM12 30h1v1h-1zM13 30h1v1h-1zM15 30h1v1h-1zM16 30h1v1h-1zM17 30h1v1h-1zM20 30h1v1h-1zM21 30h1v1h-1zM23 30h1v1h-1zM26 30h1v1h-1zM28 30h1v1h-1zM30 30h1v1h-1zM31 30h1v1h-1zM3 31h1v1h-1zM4 31h1v1h-1zM5 31h1v1h-1zM6 31h1v1h-1zM7 31h1v1h-1zM8 31h1v1h-1zM9 31h1v1h-1zM11 31h1v1h-1zM12 31h1v1h-1zM13 31h1v1h-1zM18 31h1v1h-1zM21 31h1v1h-1zM23 31h1v1h-1zM24 31h1v1h-1zM25 31h1v1h-1zM26 31h1v1h-1zM28 31h1v1h-1zM30 31h1v1h-1z"/></svg></div>
+    <a id="payGo" class="pay-link" href="https://litt.ly/jackjack_body" target="_blank" rel="noopener">후원 페이지 열기</a>
+    <p class="pay-addr">litt.ly/jackjack_body</p>
     <div class="pay-actions">
       <button id="payClose" class="ctl plain" type="button">닫기</button>
-      <button id="payGo" class="ctl pay-go" type="button">후원하기</button>
+    </div>
+  </div>
+</div>
+
+<div id="helpModal" class="pay-modal" hidden>
+  <div class="pay-box help-box" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <h2 id="helpTitle">도움말</h2>
+    <h3>키보드</h3>
+    <dl class="help-keys">
+      <dt><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> · 방향키</dt><dd>걷기</dd>
+      <dt><kbd>스페이스</kbd></dt><dd>운동 한 번, 빠르게, 시작·멈추기</dd>
+      <dt><kbd>1</kbd> ~ <kbd>4</kbd></dt><dd>인사 · 박수 · 엄지척 · 만세</dd>
+      <dt><kbd>5</kbd></dt><dd>앉기, 한 번 더 누르면 일어나기</dd>
+      <dt><kbd>Esc</kbd></dt><dd>열린 창 닫기</dd>
+    </dl>
+    <h3>마우스 · 터치</h3>
+    <dl class="help-keys">
+      <dt>바닥 누르기</dt><dd>그 자리로 걷기</dd>
+      <dt>끌기</dt><dd>시점 돌리기</dd>
+      <dt>휠 · 두 손가락</dt><dd>가까이, 멀리</dd>
+    </dl>
+    <h3>운동하기</h3>
+    <ul class="help-list">
+      <li>비어 있는 기구나 아래 목록을 누르면 기구로 가요. 누가 쓰고 있으면 줄을 서요.</li>
+      <li>근력 운동은 큰 버튼을 누를 때마다 한 번씩 움직여요. 세트가 끝나면 20초 쉬어요.</li>
+      <li>러닝머신, 천국의 계단, 자전거, 로잉은 세트 없이 시간으로 해요. 빠르게를 연타할수록 빨라지고, 손을 떼면 천천히 멈춰요.</li>
+      <li>스트레칭과 헌드레드는 시작을 누르면 멈출 때까지 이어져요.</li>
+      <li>시간 운동은 기구를 반납하면 쉬는 시간이에요. 채팅은 쉬는 시간에만 할 수 있어요.</li>
+      <li>운동 중에 PT 부르기를 누르면 선생님이 옆으로 와서 자세를 알려 줘요. 기구를 반납하면 선생님도 돌아가요.</li>
+      <li>매시 정각과 30분에는 2분 동안 함께 스트레칭을 해요.</li>
+    </ul>
+    <h3>그 밖에</h3>
+    <ul class="help-list">
+      <li>닉네임과 옷 색은 메뉴에서 바꿔요. 고른 색은 다음에도 그대로예요.</li>
+      <li>입구를 누르면 웨이트샵과 필라테스샵을 오가요.</li>
+      <li>정수기를 누르면 걸어가서 물을 마셔요.</li>
+      <li>안내 데스크를 누르면 후원 창이 열려요.</li>
+    </ul>
+    <div class="pay-actions">
+      <button id="helpClose" class="ctl plain" type="button">닫기</button>
     </div>
   </div>
 </div>

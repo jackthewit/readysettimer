@@ -74,13 +74,15 @@ async function testCardio(p, id) {
   await p.click(`#pick-${id}`);
   await mounted(p);
   const lv = () => p.evaluate(() => window.__jg.S.meA._cardio?.lv ?? -1);
-  await p.click('#repBtn'); await p.click('#repBtn');
-  await p.waitForTimeout(100);
+  check(`${id} 버튼은 하나가 아니라 빠르게`, (await p.textContent('#repBtn')) === '빠르게');
+  for (let i = 0; i < 12; i++) { await p.click('#repBtn'); await p.waitForTimeout(40); }
   const a1 = await lv();
-  await p.click('#repBtn', { timeout: 2000 }).catch(() => {});
-  await p.waitForTimeout(100);
+  check(`${id} 연타하면 빨라짐`, a1 > 3, a1.toFixed(1));
+  check(`${id} 세트 표시 없음`, !(await p.textContent('#exName')).includes('세트') && /^\d+:\d\d$/.test(await p.textContent('#clock')), `${await p.textContent('#exName')} ${await p.textContent('#clock')}`);
+  await p.waitForTimeout(2500);
   const a2 = await lv();
-  check(`${id} 누를수록 빨라짐`, a2 >= a1 && a1 >= 1, `${a1.toFixed(1)} → ${a2.toFixed(1)}`);
+  check(`${id} 안 누르면 느려짐`, a2 < a1 && a2 > 0, `${a1.toFixed(1)} → ${a2.toFixed(1)}`);
+  check(`${id} 시간이 흐름`, await p.evaluate(() => window.__jg.S.meA._cardio.sec > 1));
   await p.screenshot({ path: `${SP}/g-${id}.png` });
 }
 // 함께 스트레칭
@@ -109,7 +111,7 @@ async function shootStation(p, id) {
   await p.screenshot({ path: `${SP}/st/${id}.png` });
   const clock = await p.textContent('#clock');
   const pose = await p.evaluate(() => { const J = window.__jg, A = J.S.meA; return { clip: A.clip?.presetId, y: +J.G.wp(A, A.headBone).y.toFixed(2) }; });
-  check(`${id} 기구 동작`, clock.startsWith('1/') && !!pose.clip && pose.y > 0 && pose.y < 4, `${clock} ${pose.clip} 머리높이 ${pose.y}`);
+  check(`${id} 기구 동작`, (clock.startsWith('1/') || /^\d+:\d\d$/.test(clock)) && !!pose.clip && pose.y > 0 && pose.y < 4, `${clock} ${pose.clip} 머리높이 ${pose.y}`);
   await p.evaluate(() => { window.__jg.S.followX = 0.8; });
 }
 
@@ -239,13 +241,6 @@ try {
   check('줄 서는 B는 채팅 잠김', await b.evaluate(() => document.querySelector('#chatInput').disabled));
   await a.screenshot({ path: `${SP}/g4-rest.png` });
 
-  // PT
-  await a.click('#openPt');
-  await a.waitForTimeout(300);
-  await a.click('#ptChips button >> nth=0');
-  check('창을 열어도 기구 목록을 누를 수 있음', await a.evaluate(() => { document.querySelector('#stage'); const c = document.querySelector('#pick-mat'); if (!c.offsetParent) return true; c.scrollIntoView(); const r = c.getBoundingClientRect(); const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return c.contains(el); }));
-  check('PT 답변', ((await a.locator('#ptLog .msg.coach .text').first().textContent()) || '').length > 5);
-
   // A가 반납하면 줄 선 B가 차례대로 시작
   await a.click('#releaseBtn');
   await mounted(b);
@@ -263,22 +258,9 @@ try {
 
   // 오늘 기록
   check('오늘 기록이 쌓임', await a.evaluate(() => JSON.parse(localStorage.getItem('jg.log')).reps > 0), await a.textContent('#todayReps'));
-  // 쌤은 AI 없이 모든 기구를 안다
-  const know = await b.evaluate(() => {
-    const J = window.__jg, out = { missing: [], empty: [] };
-    for (const shop of Object.values(J.SHOPS)) for (const st of shop.stations) {
-      if (!J.PT_KNOW[st.preset]) { out.missing.push(st.id); continue; }
-      for (const q of ['자세 좀 봐 주세요', '이 운동은 어디에 좋아요?', '더 쉽게 하는 방법 있어요?', '흔한 실수가 뭐예요?', '허리가 뻐근한데 해도 될까요?']) if (J.ptAnswer(q, shop, st).length < 10) out.empty.push(`${st.id}:${q}`);
-    }
-    out.pain = J.ptAnswer('무릎이 찌릿하게 아파요', J.SHOPS.weight, null);
-    out.body = J.ptAnswer('등 운동 뭐가 좋아요?', J.SHOPS.weight, null);
-    out.off = J.ptAnswer('오늘 점심 뭐 먹지', J.SHOPS.weight, null);
-    return out;
-  });
-  check('모든 기구에 쌤의 지식이 있음', know.missing.length === 0 && know.empty.length === 0, know.missing.concat(know.empty).join(','));
-  check('통증 질문은 멈추고 병원 안내', know.pain.includes('병원'), know.pain);
-  check('부위로 운동을 찾아 줌', know.body.includes('등 쪽'), know.body);
-  check('운동과 상관없는 말은 받지 않음', know.off.includes('모르겠어'), know.off);
+  // 모든 기구에 쌤의 자세 안내가 있다
+  const noKnow = await b.evaluate(() => { const J = window.__jg, out = []; for (const shop of Object.values(J.SHOPS)) for (const st of shop.stations) { const l = J.ptLines(st); if (l.length !== 3 || l.some((t) => t.length < 8)) out.push(st.id); } return out; });
+  check('모든 기구에 쌤의 자세 안내가 있음', noKnow.length === 0, noKnow.join(','));
 
   // 바닥 눌러 걷기
   await b.waitForTimeout(1500); // 카메라가 멈춘 뒤에 계산
@@ -326,31 +308,75 @@ try {
   check('진짜 마우스로 올려도 표시', !!shown && await b.evaluate(() => !!window.__jg.S.hover), await b.evaluate(() => String(window.__jg.S.hover)));
   await b.mouse.move(5, 5);
 
-  // PT 찬스: 쌤이 옆으로 와서 봐 줌
+  // PT: 사람마다 선생님이 한 명씩 옆으로 오고, 기구를 반납하면 사라진다
+  const actors = (p) => p.evaluate(() => window.__jg.G.actors.length);
+  const teacherAt = (p) => p.evaluate(() => { const J = window.__jg, B = J.S.ptTeacher, A = J.S.meA; return B ? { gap: Math.hypot(B.place.x - A.place.x, B.place.z - A.place.z), shirt: B.inst.meshes.find((m) => m.userData.matName === 'tank_sky').material.color.getHexString(), walking: J.S.walk.has(B) } : null; });
+  check('상단에 PT 메뉴 없음', (await b.locator('#openPt').count()) === 0 && (await b.locator('#panel').count()) === 0);
+  check('운동 안 할 때는 PT 부르기 없음', !(await b.isVisible('#ptChanceBtn')));
   await b.click('#pick-mat');
   await mounted(b);
-  await b.waitForTimeout(1200);
-  const chanceBefore = await b.textContent('#ptChanceBtn');
+  await b.waitForTimeout(800);
+  check('운동 중에는 PT 부르기 있음', (await b.textContent('#ptChanceBtn')) === 'PT 부르기' && await b.isVisible('#ptChanceBtn'));
+  const nA0 = await actors(a), nB0 = await actors(b);
   await b.click('#ptChanceBtn');
-  await b.waitForFunction(() => { const J = window.__jg, B = J.S.coach, A = J.S.meA; return Math.hypot(B.place.x - A.place.x, B.place.z - A.place.z) < 2; }, null, { timeout: 40000 }).catch(() => {});
-  const coachGap = await b.evaluate(() => { const J = window.__jg, B = J.S.coach, A = J.S.meA; return Math.hypot(B.place.x - A.place.x, B.place.z - A.place.z); });
-  check('PT 쌤을 부르면 옆으로 옴', coachGap < 2, coachGap.toFixed(2));
-  await b.waitForFunction(() => !window.__jg.S.ptBusy, null, { timeout: 15000 });
-  check('PT 받는 중으로 바뀜', chanceBefore !== (await b.textContent('#ptChanceBtn')), `${chanceBefore} → ${await b.textContent('#ptChanceBtn')}`);
-  await b.waitForTimeout(600);
-  check('쌤이 말풍선으로 답함', (await b.locator('.tag3.coach .bubble').count()) === 1);
+  await b.waitForFunction(() => { const J = window.__jg; return J.S.ptTeacher && !J.S.walk.has(J.S.ptTeacher); }, null, { timeout: 15000 });
+  const tb = await teacherAt(b);
+  check('PT를 부르면 옆으로 옴', tb.gap < 2.2, tb.gap.toFixed(2));
+  check('자세 안내를 말풍선으로 말함', ((await b.locator('.tag3.coach .bubble').first().textContent()) || '').length > 8);
+  check('버튼이 다시 듣기로 바뀜', (await b.textContent('#ptChanceBtn')) === '자세 다시 듣기');
+  await a.waitForTimeout(1500);
+  check('다른 사람 화면에도 선생님이 나옴', (await actors(a)) === nA0 + 1, `${nA0} → ${await actors(a)}`);
+  // A도 부르면 선생님이 둘
+  await a.evaluate(() => { window.__jg.S.me.state = 'idle'; });
+  await a.click('#releaseBtn').catch(() => {});
+  await phase(a, 'idle');
+  await a.click('#pick-kb').catch(() => {});
+  await mounted(a);
+  await a.click('#ptChanceBtn');
+  await a.waitForTimeout(3500);
+  const ta = await teacherAt(a);
+  check('두 사람이 부르면 선생님도 둘', (await actors(b)) === nB0 + 2, `${nB0} → ${await actors(b)}`);
+  check('선생님 옷 색이 사람마다 다름', ta.shirt !== tb.shirt, `${ta.shirt} ${tb.shirt}`);
+  const shown2 = await b.evaluate(() => { const J = window.__jg; return J.G.actors.filter((x) => x !== J.S.coach && x !== J.S.ptTeacher && x.inst.meshes.some((m) => m.userData.matName === 'tank_sky')).map((x) => x.inst.meshes.find((m) => m.userData.matName === 'tank_sky').material.color.getHexString()); });
+  check('다른 사람 화면에서도 같은 옷 색', shown2.includes(ta.shirt), shown2.join(','));
   await b.screenshot({ path: `${SP}/g5c-pt.png` });
-  await a.waitForTimeout(800);
-  // 후원은 PT와 별개
+  await a.click('#releaseBtn');
+  await a.waitForTimeout(600);
+  check('반납하면 내 선생님 표시가 사라짐', await a.evaluate(() => !window.__jg.S.ptTeacher && window.__jg.S.me.pt === 0 && !document.querySelector('#ptChanceBtn').offsetParent));
+  await a.waitForTimeout(3500);
+  check('반납한 사람의 선생님이 입구로 나가 사라짐', (await actors(b)) === nB0 + 1, `${await actors(b)}`);
+  await b.click('#releaseBtn');
+  await b.waitForTimeout(3500);
+  check('내 선생님도 나가 사라짐', (await actors(b)) === nB0, `${await actors(b)}`);
+  // 후원: 링크와 QR
   check('후원 버튼', (await b.textContent('#joinBtn')) === '온라인짐 후원');
   check('화면 어디에도 PT 결제 표현 없음', await b.evaluate(() => !/PT\s*(회원|이용권|신청|결제)/.test(document.body.innerText + document.querySelector('#payModal').textContent)));
   await b.click('#joinBtn');
   check('후원 창이 열림', await b.isVisible('#payModal'));
-  await b.click('#payGo');
-  check('아직 돈이 나가지 않는다고 안내', (await b.textContent('#payMsg')).includes('돈은 나가지 않았어요'), await b.textContent('#payMsg'));
-  await b.screenshot({ path: `${SP}/g5d-pay.png` });
+  check('후원 링크', (await b.getAttribute('#payGo', 'href')) === 'https://litt.ly/jackjack_body');
+  await b.locator('#payModal .pay-box').screenshot({ path: `${SP}/g5d-pay.png` });
+  await b.locator('.pay-qr').screenshot({ path: `${SP}/g5d-qr.png` });
   await b.click('#payClose');
-  await b.click('#releaseBtn');
+  // 도움말
+  await b.click('#helpBtn');
+  check('도움말이 열림', await b.isVisible('#helpModal') && (await b.textContent('#helpModal')).includes('스페이스'));
+  await b.screenshot({ path: `${SP}/g5e-help.png` });
+  await b.keyboard.press('Escape');
+  check('Esc로 닫힘', !(await b.isVisible('#helpModal')));
+  // 정수기: 걸어가서 마시고, 다른 사람 화면에도 보인다
+  await b.evaluate(() => window.__jg.drinkWater());
+  await b.waitForFunction(() => window.__jg.S.me.gest === 'drink', null, { timeout: 8000 });
+  await b.waitForTimeout(1800);
+  check('정수기 앞에서 물을 마심', await b.evaluate(() => { const J = window.__jg, A = J.S.meA, s = J.WORLD.coolerSpot; return A.clip?.presetId === 'drinkWater' && !!A._cup && Math.hypot(A.place.x - s.x, A.place.z - s.z) < 0.1; }));
+  await b.evaluate(() => { const J = window.__jg, A = J.S.meA; J.G.cam.position.set(A.place.x - 2.2, 1.8, A.place.z + 1.6); J.G.orbit.target.set(A.place.x + 0.3, 1, A.place.z); });
+  await b.waitForTimeout(400);
+  await b.screenshot({ path: `${SP}/g5f-drink.png` });
+  await a.waitForTimeout(2500);
+  check('다른 사람 화면에서도 물을 마심', await a.evaluate(() => [...window.__jg.S.remotes.values()].some((R) => R.A.clip?.presetId === 'drinkWater' || R.A._gest === 'drink')));
+  check('다 마시면 컵이 사라짐', await b.waitForFunction(() => !window.__jg.S.meA._cup, null, { timeout: 40000 }).then(() => true, () => false));
+  // 색은 사람마다 랜덤
+  const looks = await Promise.all([a, b].map((p) => p.evaluate(() => window.__jg.S.me.band)));
+  check('머리띠 색이 랜덤', looks[0] !== looks[1], looks.join(' '));
 
   // 배경음악
   await menu(b);
@@ -368,11 +394,8 @@ try {
   check('거울이 켜져 있음', await a.evaluate(() => window.__jg.WORLD.mirrorOn()));
 
   // 쌤이 자리를 옮김 (간격을 줄여 바로 확인)
-  // PT 찬스가 끝난 뒤에는 다시 자기 일을 하러 감
-  await a.evaluate(() => { const J = window.__jg; J.S.me.ptUntil = 0; J.S.ptSession = null; });
-  await a.click('#gest-clap');
-  await a.waitForTimeout(800);
-  await b.evaluate(() => { window.__jg.S.me.ptUntil = 0; window.__jg.RULES.coachWalkSec = 1; window.__jg.S.coachBusyUntil = 0; });
+  await b.evaluate(() => { const J = window.__jg, every = J.RULES.classEveryMin * 60000; J.shiftClass(every / 2 - (Date.now() % every)); J.RULES.coachWalkSec = 1; J.S.coachBusyUntil = 0; }); // 함께 스트레칭 시간을 피해서
+  await b.waitForTimeout(1500);
   const coachBefore = await b.evaluate(() => { const B = window.__jg.S.coach; return [B.place.x, B.place.z]; });
   await b.waitForTimeout(6000);
   const coachAfter = await b.evaluate(() => { const B = window.__jg.S.coach; return [B.place.x, B.place.z]; });
@@ -383,11 +406,33 @@ try {
   if (!process.env.QUICK) for (const id of await a.evaluate(() => window.__jg.SHOPS.weight.stations.map((s) => s.id))) await shootStation(a, id);
   await testCardio(a, 'run');
   await testCardio(a, 'stair');
+  await testCardio(a, 'bike');
+  await testCardio(a, 'rower');
+  // 20초 넘게 하고 반납하면 쉬는 시간
+  await a.evaluate(() => { window.__jg.S.meA._cardio.sec = 25; });
+  await a.click('#releaseBtn');
+  check('시간 운동을 반납하면 쉬는 시간', await a.evaluate(() => window.__jg.S.me.state === 'rest'));
+  await a.waitForFunction(() => document.querySelector('#stage').dataset.phase !== 'rest', null, { timeout: 30000 });
   await testClass(a);
   await a.close();
   const pp = await open('필라짹', 'mint', 'pilates');
   await pp.waitForTimeout(1500);
   await pp.screenshot({ path: `${SP}/g9-pilates.png` });
+  // 스트레칭: 시작을 누르면 이어지고 멈추기로 멈춘다
+  await pp.click('#pick-mroll1');
+  await mounted(pp);
+  check('스트레칭 버튼은 시작', (await pp.textContent('#repBtn')) === '시작');
+  await pp.click('#repBtn');
+  await pp.waitForTimeout(2000);
+  const hold1 = await pp.evaluate(() => window.__jg.S.meA._cardio.sec);
+  check('시작하면 시간이 이어짐', hold1 > 1 && (await pp.textContent('#repBtn')) === '멈추기', hold1.toFixed(1));
+  await pp.screenshot({ path: `${SP}/g9b-hold.png` });
+  await pp.click('#repBtn');
+  await pp.waitForTimeout(800);
+  const hold2 = await pp.evaluate(() => window.__jg.S.meA._cardio.sec);
+  await pp.waitForTimeout(800);
+  check('멈추기를 누르면 시간도 멈춤', (await pp.evaluate(() => window.__jg.S.meA._cardio.sec)) === hold2);
+  await pp.click('#releaseBtn');
   if (!process.env.QUICK) for (const id of await pp.evaluate(() => window.__jg.SHOPS.pilates.stations.map((s) => s.id))) await shootStation(pp, id);
   await pp.close();
 
@@ -407,6 +452,18 @@ try {
   await mp.click('#repBtn');
   await mp.waitForTimeout(1500);
   check('휴대폰에서 동작 1회', (await mp.textContent('#clock')).startsWith('1/'));
+  await mp.click('#ptChanceBtn');
+  await mp.waitForTimeout(3500);
+  check('휴대폰에서 PT 말풍선', (await mp.locator('.tag3.coach .bubble').count()) >= 1);
+  await mp.screenshot({ path: `${SP}/g8c-mobile-pt.png` });
+  await mp.click('#helpBtn');
+  await mp.waitForTimeout(200);
+  await mp.screenshot({ path: `${SP}/g8d-mobile-help.png` });
+  await mp.click('#helpClose');
+  await mp.click('#joinBtn');
+  await mp.waitForTimeout(200);
+  await mp.screenshot({ path: `${SP}/g8e-mobile-pay.png` });
+  await mp.click('#payClose');
   await mp.screenshot({ path: `${SP}/g8-mobile.png` });
   await mp.click('#menuBtn');
   await mp.waitForTimeout(500);
