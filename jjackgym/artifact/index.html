@@ -1,0 +1,1633 @@
+<title>짹짹이짐 ONLINE</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #2b2b2b;
+  --ink-soft: #5e5a52;
+  --paper: #fff8e7;
+  --card: #ffffff;
+  --line: #2b2b2b;
+  --muted-line: #e7dcc4;
+  --yellow: #ffe45c;
+  --orange: #ff8a3d;
+  --sky: #a9dbee;
+  --mint: #7fcfc3;
+  --lilac: #c9b2f0;
+  --work: #ff6b4a;
+  --rest: #3fb6a8;
+  --break: #8f74e8;
+  --chat-bg: #fffdf6;
+  --me: #fff3b0;
+  --shadow: 4px 4px 0 var(--line);
+  --radius: 18px;
+  --display: 'Jua', 'Noto Sans KR', system-ui, sans-serif;
+  --body: 'Noto Sans KR', system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --ink: #f4efe2;
+    --ink-soft: #c9c1ad;
+    --paper: #1e1c19;
+    --card: #2a2723;
+    --line: #0d0c0b;
+    --muted-line: #3d3933;
+    --chat-bg: #24221e;
+    --me: #4a4220;
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --ink: #f4efe2;
+  --ink-soft: #c9c1ad;
+  --paper: #1e1c19;
+  --card: #2a2723;
+  --line: #0d0c0b;
+  --muted-line: #3d3933;
+  --chat-bg: #24221e;
+  --me: #4a4220;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body.in-gym { overflow: hidden; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+[hidden] { display: none !important; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+code { background: var(--yellow); color: #2b2b2b; padding: 0 6px; border-radius: 6px; font-size: .9em; }
+
+/* ================================================================ LOBBY */
+.lobby {
+  max-width: 980px;
+  margin: 0 auto;
+  padding-block: 24px 48px;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-mark { width: 64px; height: auto; }
+.brand-kicker { margin: 0; font-size: 14px; color: var(--ink-soft); font-weight: 600; }
+.brand h1 { margin: 0; font-family: var(--display); font-size: 34px; font-weight: 400; line-height: 1.1; }
+.brand h1 span {
+  font-size: 14px; vertical-align: middle; background: var(--ink); color: var(--paper);
+  padding: 2px 8px; border-radius: 999px; margin-left: 4px; letter-spacing: .08em;
+}
+
+.hero {
+  display: grid; grid-template-columns: 1.2fr 1fr; align-items: end; gap: 16px;
+  margin: 24px 0 8px;
+}
+.hero h2 { font-family: var(--display); font-weight: 400; font-size: clamp(28px, 5vw, 44px); line-height: 1.2; margin: 0 0 12px; }
+.hero p { margin: 0; font-size: 17px; line-height: 1.6; color: var(--ink-soft); }
+.hero-art { position: relative; height: 220px; }
+.hero-buri { position: absolute; right: 40%; bottom: 0; height: 210px; }
+.hero-jjack { position: absolute; right: 0; bottom: 0; width: 46%; animation: bob 1.4s ease-in-out infinite; }
+
+.card {
+  background: var(--card);
+  border: 3px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+.join { display: grid; gap: 16px; margin-top: 8px; }
+.field { display: grid; gap: 8px; border: 0; padding: 0; margin: 0; }
+.field > span, .field legend, .field-label { font-weight: 800; font-size: 15px; margin: 0; padding: 0; }
+.field input {
+  border: 3px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 17px;
+  background: var(--chat-bg);
+}
+.field input:focus-visible, .composer input:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
+
+.colors { display: flex; flex-wrap: wrap; gap: 10px; }
+.colors label {
+  position: relative; display: grid; place-items: center; width: 74px; height: 64px;
+  border: 3px solid var(--muted-line); border-radius: 14px; background: var(--chat-bg); cursor: pointer;
+}
+.colors input { position: absolute; opacity: 0; pointer-events: none; }
+.colors img { width: 62px; height: auto; }
+.colors label:has(input:checked) { border-color: var(--line); background: var(--me); box-shadow: 3px 3px 0 var(--line); }
+.colors label:has(input:focus-visible) { outline: 3px solid var(--orange); }
+
+.shops { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.shop {
+  position: relative; text-align: left; display: grid; gap: 6px;
+  min-height: 150px; padding: 18px 18px 16px; border: 3px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); color: #2b2b2b; overflow: hidden;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.shop:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--line); }
+.shop:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--line); }
+.shop-pilates { background: linear-gradient(160deg, #fff4d8 0 55%, #ebcb98 55%); }
+.shop-weight { background: linear-gradient(160deg, #fff6df 0 55%, #8e9298 55%); }
+.shop-name { font-family: var(--display); font-size: 28px; }
+.shop-tag { font-size: 14px; font-weight: 600; }
+.shop-live {
+  justify-self: start; margin-top: auto; font-size: 13px; font-weight: 800;
+  background: #fff; border: 2px solid #2b2b2b; border-radius: 999px; padding: 3px 10px;
+}
+.error { margin: 0; color: #d43d1a; font-weight: 700; }
+
+.rules { list-style: none; padding: 0; margin: 20px 0 8px; display: grid; gap: 8px; }
+.rules li { background: var(--card); border: 2px solid var(--muted-line); border-radius: 12px; padding: 10px 14px; line-height: 1.5; }
+.rules b { margin-right: 6px; }
+.fineprint { font-size: 13px; color: var(--ink-soft); }
+
+/* ================================================================ GYM */
+.gym { height: 100%; display: grid; grid-template-rows: auto 1fr; gap: 10px; padding-block: 10px; }
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 6px 12px; border: 3px solid var(--line); border-radius: 16px; background: var(--card);
+}
+.topbar-title { display: grid; text-align: center; }
+.topbar-title span { font-family: var(--display); font-size: 22px; }
+.topbar-title small { font-size: 12px; color: var(--ink-soft); }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.count { font-weight: 800; padding: 4px 10px; border: 2px solid var(--line); border-radius: 999px; background: var(--yellow); color: #2b2b2b; }
+.ghost { background: transparent; border: 2px solid transparent; border-radius: 10px; padding: 6px 10px; font-weight: 700; }
+.ghost:hover { border-color: var(--muted-line); }
+.icon { font-size: 18px; }
+
+.layout { display: grid; grid-template-columns: 1fr 360px; gap: 10px; min-height: 0; }
+
+/* ---------------- stage */
+.stage {
+  position: relative; overflow: hidden; min-height: 0;
+  container-type: size;
+  background: #fff4d8 center 55% / cover no-repeat;
+  border: 3px solid var(--line); border-radius: 18px;
+  --aw: min(10.5cqw, 17cqh);
+}
+.stage[data-shop='pilates'] { background-image: url('assets/pilates-room.svg'); background-position: center bottom; }
+.stage[data-shop='weight'] { background-image: url('assets/weight-room.jpg'); }
+.stage::after { /* 바닥 쪽을 살짝 밝혀 아바타가 잘 보이게 */
+  content: ''; position: absolute; inset: auto 0 0 0; height: 45%;
+  background: linear-gradient(transparent, rgba(255, 255, 255, .18)); pointer-events: none;
+}
+
+.hud {
+  position: absolute; z-index: 30; top: 12px; left: 50%; transform: translateX(-50%);
+  display: grid; grid-template-columns: auto auto; grid-template-areas: 'pill clock' 'ex clock' 'dots dots';
+  column-gap: 16px; row-gap: 4px; align-items: center;
+  background: #fff; color: #2b2b2b; border: 3px solid #2b2b2b; border-radius: 20px; box-shadow: 4px 4px 0 #2b2b2b;
+  padding: 10px 18px; min-width: min(460px, 92cqw);
+}
+.pill {
+  grid-area: pill; justify-self: start; font-weight: 800; font-size: 14px; color: #fff;
+  padding: 3px 12px; border-radius: 999px; background: var(--ink-soft);
+}
+.stage[data-phase='work'] .pill { background: var(--work); }
+.stage[data-phase='rest'] .pill { background: var(--rest); }
+.stage[data-phase='break'] .pill { background: var(--break); }
+.clock {
+  grid-area: clock; font-family: var(--display); font-size: clamp(40px, 9cqh, 76px); line-height: 1;
+  font-variant-numeric: tabular-nums; text-align: right; min-width: 3.3ch;
+}
+.stage[data-phase='work'] .clock { color: var(--work); }
+.stage[data-phase='rest'] .clock { color: var(--rest); }
+.stage[data-phase='break'] .clock { color: var(--break); }
+.clock.hurry { animation: pulse .5s ease-in-out infinite alternate; }
+.hud-ex { grid-area: ex; display: grid; }
+.hud-ex strong { font-size: 20px; font-weight: 800; }
+.hud-ex span { font-size: 13px; color: #6b6458; }
+.dots { grid-area: dots; list-style: none; display: flex; gap: 5px; padding: 0; margin: 4px 0 0; }
+.dots li { flex: 1; height: 7px; border-radius: 4px; background: #eadfca; }
+.dots li.done { background: #2b2b2b; }
+.dots li.now { background: var(--work); }
+.stage[data-phase='rest'] .dots li.now, .stage[data-phase='break'] .dots li.now { background: var(--rest); }
+
+/* ---------------- coach */
+.coach-stand { position: absolute; z-index: 20; left: 2cqw; bottom: 3cqh; width: calc(var(--aw) * 1.25); }
+.coach-stand img { display: block; width: 100%; height: auto; transform-origin: 50% 100%; animation: coach-idle 3s ease-in-out infinite; }
+.coach-stand .coach-tag { position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%); max-width: none; }
+.coach-bubble { left: 70%; bottom: 92%; width: max-content; max-width: min(340px, 44cqw); }
+
+/* ---------------- avatars */
+.floor { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+.av {
+  position: absolute; width: calc(var(--aw) * var(--s, 1));
+  transform: translate(-50%, -100%); transition: left .6s ease, top .6s ease;
+  z-index: var(--z, 1);
+}
+.av .sprite { display: block; width: 100%; height: auto; transform-origin: 50% 100%; }
+.tag {
+  display: inline-block; white-space: nowrap; max-width: 14ch; overflow: hidden; text-overflow: ellipsis;
+  font-size: 12px; font-weight: 800; background: #fff; color: #2b2b2b; border: 2px solid #2b2b2b;
+  border-radius: 999px; padding: 1px 8px; line-height: 1.4;
+}
+.av .tag { position: absolute; left: 50%; top: 100%; transform: translate(-50%, -6px); }
+.av.me .tag { background: var(--yellow); z-index: 3; }
+.av.me { z-index: 60; }
+.av .gear { position: absolute; width: 34%; right: -6%; bottom: 36%; display: none; transform-origin: 50% 50%; }
+
+.bubble {
+  position: absolute; z-index: 40; background: #fff; color: #2b2b2b; border: 2.5px solid #2b2b2b; border-radius: 14px;
+  padding: 6px 10px; font-size: 14px; line-height: 1.45; box-shadow: 2px 2px 0 #2b2b2b;
+  word-break: keep-all; overflow-wrap: anywhere;
+  animation: pop .18s ease-out;
+}
+.av .bubble { left: 50%; bottom: calc(100% + 14px); transform: translateX(-50%); width: max-content; max-width: 220px; }
+.av .bubble::after, .coach-bubble::after {
+  content: ''; position: absolute; left: 50%; bottom: -9px; width: 12px; height: 12px; background: #fff;
+  border-right: 2.5px solid #2b2b2b; border-bottom: 2.5px solid #2b2b2b; transform: translateX(-50%) rotate(45deg);
+}
+.coach-bubble::after { left: 18px; }
+.av .bubble { z-index: 50; }
+
+.float-emoji {
+  position: absolute; left: 50%; bottom: 70%; font-size: 26px; pointer-events: none;
+  animation: float-up 1.4s ease-out forwards;
+}
+
+.overflow {
+  position: absolute; z-index: 25; right: 12px; bottom: 12px; font-weight: 800; font-size: 13px;
+  background: #fff; color: #2b2b2b; border: 2px solid #2b2b2b; border-radius: 999px; padding: 4px 10px;
+}
+
+.cheers {
+  position: absolute; z-index: 30; right: 12px; top: 50%; transform: translateY(-50%);
+  display: grid; gap: 8px;
+}
+.cheers button {
+  width: 46px; height: 46px; font-size: 22px; border-radius: 50%; background: #fff;
+  border: 2.5px solid #2b2b2b; box-shadow: 2px 2px 0 #2b2b2b; display: grid; place-items: center;
+}
+.cheers button:active { transform: translate(2px, 2px); box-shadow: none; }
+
+/* ---------------- avatar animations */
+
+
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7%); } }
+@keyframes breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.04, 1.07); } }
+@keyframes nod { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-4deg); } 70% { transform: rotate(3deg); } }
+@keyframes wave { 0%, 100% { transform: translateY(0) scaleY(1); } 25% { transform: translateY(-4%) scaleY(1.05); } 75% { transform: translateY(2%) scaleY(.94); } }
+@keyframes twist { 0%, 100% { transform: scaleX(1) skewX(0); } 25% { transform: scaleX(.9) skewX(6deg); } 75% { transform: scaleX(.9) skewX(-6deg); } }
+@keyframes stretch { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.08, .93); } }
+@keyframes lift { 0%, 100% { transform: translateY(0); } 45%, 60% { transform: translateY(-12%); } }
+@keyframes hinge { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(10deg); } }
+@keyframes squat { 0%, 100% { transform: scaleY(1); } 50% { transform: scale(1.05, .86); } }
+@keyframes row { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-5deg) translateX(-3%); } }
+@keyframes press { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.08); } }
+@keyframes sway { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
+@keyframes gear-lift { 0%, 100% { transform: translateY(0) rotate(-10deg); } 50% { transform: translateY(-80%) rotate(5deg); } }
+@keyframes coach-idle { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-1.5deg) translateY(-1%); } }
+@keyframes pop { from { transform: translateX(var(--bx, -50%)) scale(.85); opacity: 0; } }
+.coach-bubble { --bx: 0; }
+@keyframes float-up { from { transform: translate(-50%, 0) scale(.8); opacity: 1; } to { transform: translate(-50%, -160%) scale(1.3); opacity: 0; } }
+@keyframes pulse { to { transform: scale(1.06); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .av .sprite, .coach-stand img, .hero-jjack, .av .gear, .clock.hurry { animation: none !important; }
+}
+
+/* ---------------- panel */
+.panel { display: grid; grid-template-rows: auto 1fr; min-height: 0; background: var(--card); border: 3px solid var(--line); border-radius: 18px; overflow: hidden; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 3px solid var(--line); }
+.tabs button {
+  background: transparent; border: 0; padding: 12px 8px; font-weight: 800; font-size: 15px; color: var(--ink-soft);
+  border-bottom: 4px solid transparent; margin-bottom: -3px;
+}
+.tabs button[aria-selected='true'] { color: var(--ink); border-bottom-color: var(--orange); }
+.badge { display: inline-block; min-width: 20px; padding: 0 6px; border-radius: 999px; background: var(--work); color: #fff; font-size: 12px; }
+
+.pane { display: grid; grid-template-rows: 1fr auto; min-height: 0; }
+#ptPane { grid-template-rows: auto 1fr auto auto auto; }
+.log { list-style: none; margin: 0; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: var(--chat-bg); }
+.log li { max-width: 92%; line-height: 1.5; font-size: 14.5px; overflow-wrap: anywhere; }
+.msg { align-self: flex-start; }
+.msg .who { display: block; font-size: 12px; font-weight: 800; color: var(--ink-soft); margin-bottom: 2px; }
+.msg .text { display: inline-block; background: var(--card); border: 2px solid var(--muted-line); border-radius: 4px 14px 14px 14px; padding: 6px 10px; }
+.msg.mine { align-self: flex-end; text-align: right; }
+.msg.mine .text { background: var(--me); border-color: var(--line); border-radius: 14px 4px 14px 14px; }
+.msg.coach .text { background: #eef8f6; color: #2b2b2b; border-color: #7fcfc3; }
+.msg.coach .who::before { content: ''; display: inline-block; width: 16px; height: 16px; margin-right: 4px; vertical-align: -3px; background: url('assets/buri.png') center top / 100% auto no-repeat; }
+.sys { align-self: center; text-align: center; font-size: 13px !important; font-weight: 700; color: var(--ink-soft); background: transparent; }
+.sys.work { color: var(--work); }
+.sys.rest { color: var(--rest); }
+.sys.break { color: var(--break); }
+.typing::after { content: '▍'; animation: blink .9s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.composer { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 10px; border-top: 3px solid var(--line); }
+.composer input { min-width: 0; border: 2.5px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--chat-bg); }
+.composer button { border: 2.5px solid var(--line); border-radius: 12px; background: var(--yellow); color: #2b2b2b; font-weight: 800; padding: 0 16px; box-shadow: 2px 2px 0 var(--line); }
+.composer button:disabled, .composer input:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+.lock {
+  position: absolute; inset: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 6px;
+  background: color-mix(in srgb, var(--card) 92%, transparent); font-size: 14px; text-align: center; padding: 8px;
+}
+.lock span { width: 100%; font-weight: 800; }
+.lock b { font-family: var(--display); font-size: 18px; color: var(--work); font-variant-numeric: tabular-nums; }
+
+.pt-intro { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-bottom: 2px solid var(--muted-line); }
+.pt-intro img { width: 44px; }
+.pt-intro p { margin: 0; font-size: 13.5px; line-height: 1.5; }
+.pt-intro small { color: var(--ink-soft); }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding: 8px 10px 0; scrollbar-width: none; }
+.chips button { flex: none; font-size: 13px; font-weight: 700; border: 2px solid var(--muted-line); background: var(--chat-bg); border-radius: 999px; padding: 5px 10px; }
+.chips button:hover { border-color: var(--line); }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 100;
+  background: #2b2b2b; color: #fff; padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 14px;
+  max-width: calc(100vw - 32px);
+}
+
+/* ================================================================ responsive */
+@media (max-width: 860px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-art { height: 170px; }
+  .hero-buri { height: 160px; right: 46%; }
+  .shops { grid-template-columns: 1fr; }
+  .shop { min-height: 120px; }
+
+  .gym { padding-block: 6px; gap: 6px; }
+  .layout { grid-template-columns: 1fr; grid-template-rows: minmax(300px, 55%) 1fr; gap: 6px; }
+  .stage { --aw: min(14cqw, 20cqh); }
+  .coach-stand .coach-tag { left: 0; transform: none; font-size: 10.5px; }
+  .hud { top: 8px; padding: 6px 12px; column-gap: 10px; border-radius: 16px; }
+  .hud-ex strong { font-size: 16px; }
+  .cheers { top: auto; bottom: 8px; transform: none; right: 6px; gap: 5px; }
+  .cheers button { width: 34px; height: 34px; font-size: 16px; border-width: 2px; box-shadow: 1px 1px 0 #2b2b2b; }
+  .overflow { right: 48px; bottom: 6px; }
+  .coach-bubble { max-width: 60cqw; }
+  .topbar { padding: 6px 8px; }
+  .topbar-title span { font-size: 18px; }
+  .topbar-title small { display: none; }
+}
+
+/* ================================================================ 기구 · 1회씩 동작 */
+.hud { grid-template-areas: 'pill clock' 'ex clock' 'dots dots' 'act act'; }
+.hud-actions { grid-area: act; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; }
+.hud-actions:not(:has(button:not([hidden]))) { display: none; }
+.rep-btn {
+  flex: 1; font: 22px var(--display); color: #2b2b2b; background: var(--yellow);
+  border: 3px solid #2b2b2b; border-radius: 14px; padding: 8px 16px; box-shadow: 3px 3px 0 #2b2b2b;
+  touch-action: manipulation; user-select: none;
+}
+.rep-btn:active, .rep-btn.pressed { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #2b2b2b; }
+.rep-btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+.rep-btn:focus-visible, .station:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+.ghost.small { font-size: 13px; color: #2b2b2b; border-color: #d9cfbb; background: #fff; }
+.dots li { min-width: 0; }
+
+.stations { position: absolute; inset: 0; z-index: 8; pointer-events: none; }
+.station {
+  position: absolute; transform: translate(-50%, -50%); pointer-events: auto;
+  width: calc(var(--aw) * 1.5); height: calc(var(--aw) * 0.42);
+  border: 3px dashed #2b2b2b; border-radius: 50%; background: rgba(255, 255, 255, .55);
+  padding: 0; color: #2b2b2b;
+}
+.station:hover:not(:disabled) { background: rgba(255, 228, 92, .65); }
+.station.busy { border-style: solid; background: rgba(255, 138, 61, .35); cursor: not-allowed; }
+.station.mine { border-style: solid; background: rgba(255, 228, 92, .8); }
+.station .lbl {
+  position: absolute; left: 50%; top: calc(100% + 4px); transform: translateX(-50%);
+  display: grid; justify-items: center; white-space: nowrap; pointer-events: none;
+  font-size: 12px; font-weight: 800; line-height: 1.25;
+  background: #fff; border: 2px solid #2b2b2b; border-radius: 10px; padding: 1px 8px;
+}
+.station .lbl small { font-size: 10.5px; font-weight: 700; color: #6b6458; }
+.station.busy .lbl small { color: #c24a1b; }
+.station.mine .lbl { background: var(--yellow); }
+
+/* 아바타: 자동 반복 대신 누를 때마다 한 번 */
+.stage .av .sprite { animation: none; }
+.av.resting .sprite { animation: sway 3.2s ease-in-out infinite; animation-delay: var(--delay, 0s); }
+.av .sprite.rep { animation: var(--anim, bob) .55s ease-in-out 1 !important; }
+.av.gear-on .gear { display: block; }
+.av .gear.rep { animation: gear-lift .55s ease-in-out 1; }
+.av .st {
+  position: absolute; left: 50%; bottom: calc(100% + 2px); transform: translateX(-50%);
+  white-space: nowrap; font-size: 11px; font-weight: 800; color: #fff; background: #2b2b2b;
+  border-radius: 8px; padding: 0 6px; line-height: 1.5;
+}
+.av .st:empty { display: none; }
+.av.resting .st { background: var(--rest); }
+.av .bubble { bottom: calc(100% + 22px); }
+.stage[data-phase] .pill { background: var(--ink-soft); }
+.stage[data-phase='work'] .pill { background: var(--work); }
+.stage[data-phase='rest'] .pill { background: var(--rest); }
+.stage[data-phase='idle'] .clock { color: #b9ae98; }
+
+.lock { flex-direction: column; gap: 2px; }
+.lock small { font-size: 13px; color: var(--ink-soft); }
+
+.paywall {
+  margin: 0 10px 8px; padding: 12px; display: grid; gap: 6px; text-align: center;
+  border: 2.5px solid var(--line); border-radius: 14px; background: var(--me);
+}
+.paywall strong { font-family: var(--display); font-size: 19px; font-weight: 400; }
+.paywall p { margin: 0; font-size: 13.5px; line-height: 1.5; }
+.buy-btn {
+  justify-self: center; font-weight: 800; color: #2b2b2b; background: var(--yellow);
+  border: 2.5px solid #2b2b2b; border-radius: 12px; padding: 8px 18px; box-shadow: 2px 2px 0 #2b2b2b;
+}
+.buy-note { color: var(--ink-soft); }
+#ptQuota { font-weight: 800; color: var(--ink); }
+
+/* 기구 위 아바타는 기구 이름표가 대신 이름을 보여준다 */
+.av.at-station .tag { display: none; }
+
+@media (max-width: 860px) {
+  .layout { grid-template-rows: minmax(320px, 62%) 1fr !important; }
+  .hud { padding: 6px 10px; row-gap: 2px; }
+  #exMeta { display: none; }
+  .clock { font-size: clamp(30px, 8cqh, 52px); }
+  .hud-ex strong { font-size: 15px; }
+  .cheers button { width: 30px; height: 30px; font-size: 14px; }
+  .coach-bubble { bottom: 128%; max-width: 54cqw; font-size: 13px; padding: 4px 8px; }
+  .rep-btn { font-size: 18px; padding: 6px 12px; }
+  .station { width: calc(var(--aw) * 1.4); }
+  .station .lbl { font-size: 10.5px; padding: 0 5px; }
+  .station .lbl small { font-size: 9.5px; }
+}
+
+</style>
+  <!-- ============================================================ LOBBY -->
+  <div id="lobby" class="screen lobby">
+    <header class="brand">
+      <img src="assets/jjack.png" alt="" class="brand-mark" />
+      <div>
+        <p class="brand-kicker">짹짹이 바른자세 스튜디오</p>
+        <h1>짹짹이짐 <span>ONLINE</span></h1>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-copy">
+        <h2>기구 잡고 한 번씩 꾹,<br />세트 끝나면 수다 타임!</h2>
+        <p>빈 기구를 골라 누를 때마다 한 번씩 운동해요. 세트를 끝내면 1~3분 쉬는 시간 동안 채팅이 열려요. 자세가 궁금하면 <b>AI PT 부리부리 쌤</b>에게.</p>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <img src="assets/buri.png" alt="" class="hero-buri" />
+        <img src="assets/jjack.png" alt="" class="hero-jjack" />
+      </div>
+    </section>
+
+    <form id="joinForm" class="join card" autocomplete="off">
+      <label class="field">
+        <span>닉네임</span>
+        <input id="nick" name="nick" maxlength="12" placeholder="예) 거북목탈출" required />
+      </label>
+      <fieldset class="field">
+        <legend>나시 색깔</legend>
+        <div id="colorPicker" class="colors" role="radiogroup"></div>
+      </fieldset>
+
+      <p class="field-label">샵 고르기</p>
+      <div class="shops" id="shopList">
+        <button type="submit" class="shop shop-pilates" name="room" value="pilates" id="shopPilates">
+          <span class="shop-name">필라테스샵</span>
+          <span class="shop-tag">리포머 · 캐딜락 · 체어 · 매트</span>
+          <span class="shop-live" data-live="pilates">불러오는 중…</span>
+        </button>
+        <button type="submit" class="shop shop-weight" name="room" value="weight" id="shopWeight">
+          <span class="shop-name">웨이트샵</span>
+          <span class="shop-tag">레그프레스 · 랫풀다운 · 케틀벨 외</span>
+          <span class="shop-live" data-live="weight">불러오는 중…</span>
+        </button>
+      </div>
+    </form>
+
+    <ul class="rules">
+      <li><b>🏋️ 기구</b> 한 기구는 한 명만! 누가 쓰고 있으면 비울 때까지 기다려요</li>
+      <li><b>👆 한 번 = 1회</b> 버튼(또는 스페이스바)을 누를 때마다 동작 한 번. 횟수를 채우면 세트 끝</li>
+      <li><b>☕ 쉬는 시간</b> 세트가 끝나면 1~3분 랜덤 휴식. 이때만 채팅할 수 있어요</li>
+      <li><b>🐦 부리부리 쌤 PT</b> 체험 1회 무료, 그다음부터는 PT 이용권이 필요해요</li>
+    </ul>
+    <p class="fineprint">부리부리 쌤은 AI예요. 답변은 보는 사람의 Claude 계정으로 만들어져서 처음 물어볼 때 허용 여부를 한 번 물어봐요. 통증이나 질환은 꼭 전문가와 상담하세요.</p>
+  </div>
+
+  <!-- ============================================================ GYM -->
+  <div id="gym" class="screen gym" hidden>
+    <header class="topbar">
+      <button id="leaveBtn" class="ghost" type="button">← 나가기</button>
+      <div class="topbar-title"><span id="shopName">샵</span><small id="shopTag"></small></div>
+      <div class="topbar-right">
+        <span class="count" title="지금 이 샵에 있는 짹짹이"><span aria-hidden="true">🐥</span> <b id="memberCount">1</b></span>
+        <button id="soundBtn" class="ghost icon" type="button" aria-pressed="true" title="소리 켜기/끄기">🔊</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section id="stage" class="stage" aria-label="운동 공간">
+        <div class="hud" aria-live="polite">
+          <span id="phasePill" class="pill">기구 고르기</span>
+          <div id="clock" class="clock">—</div>
+          <div class="hud-ex">
+            <strong id="exName">빈 기구를 눌러 시작해요</strong>
+            <span id="exMeta">세트를 끝내면 쉬는 시간에 수다 OK</span>
+          </div>
+          <ol id="dots" class="dots" aria-hidden="true"></ol>
+          <div class="hud-actions">
+            <button id="repBtn" class="rep-btn" type="button" hidden>💪 한 번!</button>
+            <button id="releaseBtn" class="ghost small" type="button" hidden>기구 반납</button>
+          </div>
+        </div>
+
+        <div class="coach-stand" id="coach">
+          <div id="coachBubble" class="bubble coach-bubble" hidden></div>
+          <img src="assets/buri.png" alt="부리부리 쌤" />
+          <span class="tag coach-tag">부리부리 쌤 · AI PT</span>
+        </div>
+
+        <div id="stations" class="stations"></div>
+        <div id="floor" class="floor"></div>
+        <div id="overflow" class="overflow" hidden></div>
+
+        <div class="cheers" role="group" aria-label="응원 보내기">
+          <button type="button" data-cheer="💪">💪</button>
+          <button type="button" data-cheer="🔥">🔥</button>
+          <button type="button" data-cheer="👏">👏</button>
+          <button type="button" data-cheer="🐥">🐥</button>
+          <button type="button" data-cheer="💦">💦</button>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="tabs" role="tablist">
+          <button role="tab" id="tabChat" aria-selected="true" aria-controls="chatPane">채팅 <span id="chatBadge" class="badge" hidden></span></button>
+          <button role="tab" id="tabPt" aria-selected="false" aria-controls="ptPane">부리부리 쌤 PT</button>
+        </div>
+
+        <div id="chatPane" class="pane" role="tabpanel">
+          <ol id="chatLog" class="log"></ol>
+          <form id="chatForm" class="composer">
+            <div id="chatLock" class="lock">
+              <span id="chatLockTitle">🔒 세트를 끝내야 수다를 떨 수 있어요</span>
+              <small id="chatLockSub">빈 기구를 골라 세트를 시작해 보세요</small>
+            </div>
+            <input id="chatInput" maxlength="140" placeholder="쉬는 시간! 수다 OK" aria-label="채팅 입력" />
+            <button type="submit" id="chatSend">보내기</button>
+          </form>
+        </div>
+
+        <div id="ptPane" class="pane" role="tabpanel" hidden>
+          <div class="pt-intro">
+            <img src="assets/buri.png" alt="" />
+            <p>자세가 궁금하면 물어봐! 지금 쓰는 기구 기준으로 알려줄게.<br /><small id="ptQuota"></small> <small id="ptMode"></small></p>
+          </div>
+          <ol id="ptLog" class="log pt-log"></ol>
+          <div id="ptPaywall" class="paywall" hidden>
+            <strong>체험 PT가 끝났어요</strong>
+            <p>부리부리 쌤 PT를 계속 받으려면 PT 이용권이 필요해요.</p>
+            <button id="buyBtn" type="button" class="buy-btn">PT 이용권 구매</button>
+            <p id="buyNote" class="buy-note" hidden>결제 시스템을 준비하고 있어요. 열리면 바로 이용할 수 있어요!</p>
+          </div>
+          <div class="chips" id="ptChips">
+            <button type="button">지금 기구 자세 포인트 알려줘</button>
+            <button type="button">이 운동 어디에 좋아?</button>
+            <button type="button">허리가 뻐근한데 괜찮을까?</button>
+            <button type="button">더 쉬운 버전 있어?</button>
+          </div>
+          <form id="ptForm" class="composer">
+            <input id="ptInput" maxlength="300" placeholder="부리부리 쌤에게 질문하기" aria-label="PT 질문 입력" />
+            <button type="submit" id="ptSend">질문</button>
+          </form>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+<script>
+// 짹짹이짐 ONLINE — claude.ai 공유 페이지 버전
+// 규칙: 기구는 한 명씩 / 누를 때마다 동작 1회 / 세트를 끝내면 1~3분 랜덤 휴식, 그때만 채팅 / PT는 체험 1회 후 이용권.
+// 접속자·기구 점유·채팅은 room(실시간), 부리부리 쌤은 sample(보는 사람의 Claude).
+const $ = (s, el = document) => el.querySelector(s);
+
+// ------------------------------------------------------------------ 규칙 숫자 (여기만 바꾸면 됨)
+const RULES = {
+  setsPerStation: 3,
+  restMinSec: 60,
+  restMaxSec: 180,
+  repCooldownMs: 420,
+  trialQuestions: 3, // 체험 PT 1회 = 질문 3개
+};
+
+// ------------------------------------------------------------------ 샵 · 기구
+const SHOPS = {
+  pilates: {
+    id: 'pilates', name: '필라테스샵', tagline: '리포머 · 캐딜락 · 체어 · 매트', reps: 10,
+    stations: [
+      { id: 'r1', name: '리포머 1', ex: '풋워크', anim: 'bob', cue: '발바닥 전체로 밀고, 골반은 중립! 허리 들리지 않게~' },
+      { id: 'r2', name: '리포머 2', ex: '브릿지', anim: 'lift', cue: '허리로 들어 올리지 마! 엉덩이로 밀어 올려~' },
+      { id: 'r3', name: '리포머 3', ex: '롱 스트레치', anim: 'breathe', cue: '엉덩이 들지 말고 몸통 일자로! 숨은 참지 마~' },
+      { id: 'cad', name: '캐딜락', ex: '롤다운', anim: 'wave', cue: '척추 하나씩 굴려 내려가! 목만 까딱하면 안 돼~' },
+      { id: 'chair', name: '체어', ex: '풋워크 업', anim: 'press', cue: '무릎은 발끝 방향, 골반 흔들리지 않게!' },
+      { id: 'mat', name: '매트', ex: '흉추 회전', anim: 'twist', cue: '골반은 고정! 목 말고 등을 돌려봐' },
+    ],
+  },
+  weight: {
+    id: 'weight', name: '웨이트샵', tagline: '레그프레스 · 랫풀다운 · 케틀벨 외', reps: 12,
+    stations: [
+      { id: 'leg', name: '레그프레스', ex: '레그프레스', anim: 'squat', cue: '무릎은 발끝 방향! 허리가 등받이에서 뜨지 않게~' },
+      { id: 'lat', name: '랫풀다운', ex: '랫풀다운', anim: 'row', cue: '어깨 으쓱 말고 날개뼈부터 내려! 팔 말고 등으로 당겨~' },
+      { id: 'chest', name: '체스트프레스', ex: '체스트프레스', anim: 'press', cue: '어깨 말리지 않게 가슴 활짝! 갈비뼈는 닫고 밀어~' },
+      { id: 'smith', name: '스미스머신', ex: '스쿼트', anim: 'squat', cue: '엉덩이를 뒤로 빼면서 앉아! 가슴은 활짝~' },
+      { id: 'kb', name: '케틀벨 존', ex: '케틀벨 데드리프트', anim: 'lift', gear: true, cue: '케틀벨은 몸에 가까이! 엉덩이가 할 일을 허리가 대신 하지 않도록!' },
+      { id: 'bench', name: '덤벨 벤치', ex: '덤벨 로우', anim: 'row', gear: true, cue: '허리 꺾지 말고 날개뼈를 뒤로 모아!' },
+    ],
+  },
+};
+const stationOf = (shopId, id) => SHOPS[shopId]?.stations.find((s) => s.id === id) || null;
+
+// ------------------------------------------------------------------ helpers
+const COLOR_DEFS = {
+  orange: { label: '주황', h: null },
+  pink: { label: '핑크', h: 330, s: 0.55, v: 1.05 },
+  sky: { label: '하늘', h: 200, s: 0.75, v: 1.0 },
+  mint: { label: '민트', h: 162, s: 0.6, v: 0.95 },
+  purple: { label: '보라', h: 268, s: 0.6, v: 0.95 },
+  red: { label: '빨강', h: 356, s: 1.0, v: 0.88 },
+};
+const CHEERS = ['💪', '🔥', '👏', '🐥', '💦'];
+const ANIMS = new Set(['breathe', 'nod', 'wave', 'twist', 'stretch', 'lift', 'hinge', 'squat', 'row', 'press', 'bob']);
+const LIMIT = { nick: 12, chat: 140, ask: 300 };
+
+const BAD_CHARS = new RegExp('[' + [[0, 31], [127, 127], [0x200b, 0x200f], [0x2028, 0x202e], [0x2066, 0x2069]]
+  .map(([a, b]) => String.fromCharCode(a) + '-' + String.fromCharCode(b)).join('') + ']', 'g');
+function cleanText(input, max) {
+  const s = String(input ?? '').replace(BAD_CHARS, ' ').replace(/\s+/g, ' ').trim();
+  return [...s].slice(0, max).join('');
+}
+const num = (v, d = 0) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
+
+const store = {
+  get(k, d) { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch { /* 저장 불가 환경 */ } },
+};
+// 개발용: localStorage 'jg.fast' = '1' 이면 쉬는 시간이 3~6초
+const FAST = store.get('jg.fast', '') === '1';
+const randomRestMs = () => FAST
+  ? 3000 + Math.random() * 3000
+  : (RULES.restMinSec + Math.random() * (RULES.restMaxSec - RULES.restMinSec)) * 1000;
+
+// ------------------------------------------------------------------ sprite recolor
+const sprites = {};
+function rgb2hsv(r, g, b) {
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  let h = 0;
+  if (d) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  return [h, max ? d / max : 0, max / 255];
+}
+function hsv2rgb(h, s, v) {
+  const c = v * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = v - c;
+  const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+  return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
+}
+async function buildSprites() {
+  const img = new Image();
+  img.src = 'assets/jjack.png';
+  await img.decode();
+  const cv = document.createElement('canvas');
+  cv.width = img.naturalWidth;
+  cv.height = img.naturalHeight;
+  const ctx = cv.getContext('2d', { willReadFrequently: true });
+  for (const [key, def] of Object.entries(COLOR_DEFS)) {
+    if (def.h == null) { sprites[key] = img.src; continue; }
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(img, 0, 0);
+    const data = ctx.getImageData(0, 0, cv.width, cv.height);
+    const p = data.data;
+    for (let i = 0; i < p.length; i += 4) {
+      if (!p[i + 3]) continue;
+      const [h, s, v] = rgb2hsv(p[i], p[i + 1], p[i + 2]);
+      if (h >= 5 && h <= 27 && s > 0.35 && v > 0.3) {
+        const [r, g, b] = hsv2rgb(def.h, Math.min(1, s * def.s), Math.min(1, v * def.v));
+        p[i] = r; p[i + 1] = g; p[i + 2] = b;
+      }
+    }
+    ctx.putImageData(data, 0, 0);
+    sprites[key] = cv.toDataURL('image/png');
+  }
+}
+const spriteFor = (color) => sprites[color] || sprites.orange || 'assets/jjack.png';
+
+// ------------------------------------------------------------------ sound
+const sound = {
+  ctx: null,
+  on: store.get('jg.sound', '1') === '1',
+  unlock() {
+    if (!this.ctx) { try { this.ctx = new AudioContext(); } catch { /* 소리 없음 */ } }
+    this.ctx?.resume?.();
+  },
+  beep(freq = 880, dur = 0.12, when = 0, vol = 0.16) {
+    if (!this.on || !this.ctx) return;
+    const t = this.ctx.currentTime + when;
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = 'sine';
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(this.ctx.destination);
+    o.start(t);
+    o.stop(t + dur + 0.02);
+  },
+  rep() { this.beep(620, 0.07, 0, 0.12); },
+  setDone() { this.beep(784, 0.14); this.beep(988, 0.14, 0.13); this.beep(1319, 0.24, 0.26); },
+  restOver() { this.beep(523, 0.14); this.beep(784, 0.22, 0.15); },
+  tick() { this.beep(660, 0.09); },
+};
+
+// ------------------------------------------------------------------ state
+// 내 상태(me)는 room presence로 모두에게 공유된다.
+const S = {
+  shop: null,
+  tab: 'chat',
+  unread: 0,
+  els: new Map(),
+  lastReps: new Map(),
+  lastNicks: new Map(),
+  inShop: new Set(),
+  announce: false,
+  lastChatAt: 0,
+  lastCheerAt: 0,
+  lastRepAt: 0,
+  lastBeep: null,
+  ptTurns: [],
+  ptBusy: false,
+  coachTimer: null,
+  me: {
+    nick: '', color: 'orange',
+    station: null, claimedAt: 0,
+    state: 'idle', // idle | set | rest
+    reps: 0, set: 1, restUntil: 0,
+  },
+};
+let room = null;
+let sample = null;
+const ME = 'me';
+const capability = (name) => (window.claude?.use ? window.claude.use(name).catch(() => null) : Promise.resolve(null));
+
+function syncPresence() {
+  if (!room) return;
+  const m = S.me;
+  room.presence({
+    nick: m.nick, color: m.color, shop: S.shop,
+    station: m.station, claimedAt: m.claimedAt,
+    state: m.state, reps: m.reps, set: m.set, restUntil: m.restUntil,
+  }).catch(() => {});
+}
+
+// ------------------------------------------------------------------ lobby
+function renderColorPicker() {
+  const box = $('#colorPicker');
+  box.textContent = '';
+  for (const [key, def] of Object.entries(COLOR_DEFS)) {
+    const label = document.createElement('label');
+    label.title = def.label;
+    const input = document.createElement('input');
+    input.type = 'radio';
+    input.name = 'color';
+    input.value = key;
+    input.id = `color-${key}`;
+    input.checked = key === S.me.color;
+    input.setAttribute('aria-label', `${def.label} 나시`);
+    input.addEventListener('change', () => { S.me.color = key; store.set('jg.color', key); });
+    const img = document.createElement('img');
+    img.src = spriteFor(key);
+    img.alt = '';
+    label.append(input, img);
+    box.append(label);
+  }
+}
+
+function lobbyCounts() {
+  const counts = { pilates: 0, weight: 0 };
+  const busy = { pilates: new Set(), weight: new Set() };
+  if (room) {
+    for (const p of room.peers()) {
+      const pr = p.presence || {};
+      if (p.kind !== 'viewer' || !counts.hasOwnProperty(pr.shop)) continue;
+      counts[pr.shop]++;
+      if (stationOf(pr.shop, pr.station)) busy[pr.shop].add(pr.station);
+    }
+  }
+  for (const id of Object.keys(SHOPS)) {
+    const el = document.querySelector(`[data-live="${id}"]`);
+    if (!el) continue;
+    const total = SHOPS[id].stations.length;
+    el.textContent = room
+      ? `🐥 ${counts[id]}명 · 빈 기구 ${total - busy[id].size}/${total}`
+      : `기구 ${total}개 · 세트당 ${SHOPS[id].reps}회`;
+  }
+}
+
+function showLobby() {
+  releaseStation(true);
+  S.shop = null;
+  document.body.classList.remove('in-gym');
+  $('#gym').hidden = true;
+  $('#lobby').hidden = false;
+  document.title = '짹짹이짐 ONLINE';
+  room?.presence({ shop: null, station: null, state: 'idle' }).catch(() => {});
+  lobbyCounts();
+}
+
+$('#joinForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const shop = e.submitter?.value;
+  const nick = cleanText($('#nick').value, LIMIT.nick);
+  if (!nick) { $('#nick').focus(); return; }
+  if (!SHOPS[shop]) return;
+  sound.unlock();
+  S.me.nick = nick;
+  store.set('jg.nick', nick);
+  enterGym(shop);
+});
+
+// ------------------------------------------------------------------ gym
+function enterGym(shopId) {
+  S.shop = shopId;
+  Object.assign(S.me, { station: null, claimedAt: 0, state: 'idle', reps: 0, set: 1, restUntil: 0 });
+  S.ptTurns = [];
+  for (const el of S.els.values()) el.remove();
+  S.els.clear();
+  S.inShop.clear();
+  S.lastReps.clear();
+  S.announce = false;
+  setTimeout(() => { S.announce = true; }, 2500);
+  $('#chatLog').textContent = '';
+  $('#ptLog').textContent = '';
+  $('#coachBubble').hidden = true;
+  setTab('chat');
+  const shop = SHOPS[shopId];
+  $('#shopName').textContent = shop.name;
+  $('#shopTag').textContent = shop.tagline;
+  $('#stage').dataset.shop = shopId;
+  buildStations();
+  $('#lobby').hidden = true;
+  $('#gym').hidden = false;
+  document.body.classList.add('in-gym');
+  syncPresence();
+  sysLine(`🐥 ${shop.name}에 입장! 빈 기구를 눌러 시작하세요.`, '');
+  if (!room) sysLine('지금은 혼자 운동 모드예요. claude.ai에 로그인한 상태로 열면 다른 짹짹이들과 함께해요.', '');
+  coachSay(`어서 와 ${S.me.nick}! 빈 기구 하나 골라봐~`, 6000);
+  render();
+  updatePtUI();
+}
+$('#leaveBtn').addEventListener('click', showLobby);
+
+// ------------------------------------------------------------------ stations
+const narrowMQ = matchMedia('(max-width: 860px)');
+function stationPos(i) {
+  const narrow = narrowMQ.matches;
+  const xs = narrow ? [33, 56, 79] : [33, 58, 83];
+  const ys = narrow ? [66, 86] : [70, 88];
+  return { x: xs[i % 3], y: ys[Math.floor(i / 3)], s: i < 3 ? 0.85 : 1 };
+}
+function idlePos(i) {
+  const narrow = narrowMQ.matches;
+  const per = narrow ? 5 : 8;
+  if (i >= per) return null;
+  const x0 = narrow ? 30 : 28, x1 = narrow ? 88 : 90;
+  return { x: x0 + ((x1 - x0) * i) / (per - 1), y: 58, s: 0.6 };
+}
+function buildStations() {
+  const box = $('#stations');
+  box.textContent = '';
+  SHOPS[S.shop].stations.forEach((st, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'station';
+    b.id = `station-${st.id}`;
+    b.dataset.id = st.id;
+    const pos = stationPos(i);
+    b.style.left = `${pos.x}%`;
+    b.style.top = `${pos.y}%`;
+    const lbl = document.createElement('span');
+    lbl.className = 'lbl';
+    const name = document.createElement('b');
+    name.textContent = st.name;
+    const sub = document.createElement('small');
+    lbl.append(name, sub);
+    b.append(lbl);
+    b.addEventListener('click', () => claimStation(st.id));
+    box.append(b);
+  });
+}
+narrowMQ.addEventListener('change', () => { if (S.shop) { buildStations(); render(); } });
+
+/** 이 샵 사람들 (나 포함). 다른 사람 상태는 presence라서 화면 표시용으로만 쓴다. */
+function members() {
+  const me = { peer: ME, me: true, ...S.me };
+  if (!room) return [me];
+  const list = [me];
+  for (const p of room.peers()) {
+    if (p.kind !== 'viewer' || p.sameTab) continue;
+    const pr = p.presence || {};
+    if (pr.shop !== S.shop) continue;
+    list.push({
+      peer: p.peer,
+      me: false,
+      nick: cleanText(pr.nick, LIMIT.nick) || '익명 짹짹이',
+      color: COLOR_DEFS[pr.color] ? pr.color : 'orange',
+      station: stationOf(S.shop, pr.station) ? pr.station : null,
+      claimedAt: num(pr.claimedAt, Infinity),
+      state: ['idle', 'set', 'rest'].includes(pr.state) ? pr.state : 'idle',
+      reps: Math.max(0, Math.min(99, Math.floor(num(pr.reps)))),
+      set: Math.max(1, Math.min(9, Math.floor(num(pr.set, 1)))),
+      restUntil: num(pr.restUntil),
+    });
+  }
+  return list;
+}
+
+/** 기구 주인: 먼저 잡은 사람 (같으면 peer 순). */
+function owners(list) {
+  const map = new Map();
+  for (const m of list) {
+    if (!m.station) continue;
+    const cur = map.get(m.station);
+    const earlier = !cur || m.claimedAt < cur.claimedAt || (m.claimedAt === cur.claimedAt && String(m.peer) < String(cur.peer));
+    if (earlier) map.set(m.station, m);
+  }
+  return map;
+}
+
+function claimStation(id) {
+  if (!S.shop) return;
+  const st = stationOf(S.shop, id);
+  if (!st) return;
+  if (S.me.station === id) return;
+  const own = owners(members()).get(id);
+  if (own && !own.me) { toast(`${own.nick} 님이 쓰는 중이에요. 비면 다시 눌러 주세요.`, 2200); return; }
+  if (S.me.state === 'set' && S.me.station && S.me.reps > 0) {
+    toast('지금 세트 중이에요. 기구 반납 후 옮겨 주세요.', 2200);
+    return;
+  }
+  sound.unlock();
+  const resting = S.me.state === 'rest';
+  Object.assign(S.me, { station: id, claimedAt: Date.now(), reps: 0, set: resting ? 0 : 1 });
+  if (!resting) S.me.state = 'set';
+  syncPresence();
+  coachSay(`${st.name}! ${st.cue}`, 8000);
+  sysLine(`🏋️ ${st.name} 사용 시작 — ${st.ex} ${SHOPS[S.shop].reps}회 × ${RULES.setsPerStation}세트`, 'work');
+  render();
+}
+
+function releaseStation(silent = false) {
+  if (!S.me.station) return;
+  const st = stationOf(S.shop, S.me.station);
+  S.me.station = null;
+  S.me.claimedAt = 0;
+  if (S.me.state === 'set') { S.me.state = 'idle'; S.me.reps = 0; }
+  syncPresence();
+  if (!silent && st) sysLine(`${st.name} 반납`, '');
+  render();
+}
+$('#releaseBtn').addEventListener('click', () => releaseStation());
+
+// ------------------------------------------------------------------ 한 번 = 동작 1회
+function doRep() {
+  const m = S.me;
+  if (!S.shop || m.state !== 'set' || !m.station) return;
+  const now = Date.now();
+  if (now - S.lastRepAt < RULES.repCooldownMs) return;
+  S.lastRepAt = now;
+  const target = SHOPS[S.shop].reps;
+  m.reps = Math.min(target, m.reps + 1);
+  playRep(ME);
+  sound.rep();
+  if (m.reps >= target) finishSet();
+  syncPresence();
+  render();
+}
+function finishSet() {
+  const m = S.me;
+  const st = stationOf(S.shop, m.station);
+  const restMs = randomRestMs();
+  const doneAll = m.set >= RULES.setsPerStation;
+  m.state = 'rest';
+  m.restUntil = Date.now() + restMs;
+  sound.setDone();
+  const secs = Math.round(restMs / 1000);
+  if (doneAll) {
+    sysLine(`🎉 ${st?.name || '기구'} ${RULES.setsPerStation}세트 완료! 쉬는 시간 ${secs}초 — 수다 OK`, 'rest');
+    coachSay('완벽해! 기구는 다음 짹짹이에게 넘겨주고 쉬면서 수다 떨어~', 7000);
+    m.station = null;
+    m.claimedAt = 0;
+  } else {
+    sysLine(`☕ ${m.set}세트 끝! 쉬는 시간 ${secs}초 — 수다 OK`, 'rest');
+    coachSay(`좋아~ ${m.set}세트 끝! 쉬면서 수다 떨어도 돼. 자세 궁금하면 PT 탭에서 물어봐~`, 7000);
+  }
+}
+function endRest() {
+  const m = S.me;
+  sound.restOver();
+  if (m.station) {
+    m.set += 1;
+    m.reps = 0;
+    m.state = 'set';
+    const st = stationOf(S.shop, m.station);
+    sysLine(`🏋️ ${m.set}세트 시작! 채팅은 세트 끝나면 다시 열려요`, 'work');
+    coachSay(st ? st.cue : '다음 세트 가자!', 6000);
+  } else {
+    m.state = 'idle';
+    m.reps = 0;
+    sysLine('쉬는 시간 끝! 다음 기구를 골라 볼까요?', '');
+  }
+  syncPresence();
+  render();
+}
+
+$('#repBtn').addEventListener('click', doRep);
+document.addEventListener('keydown', (e) => {
+  if (e.code !== 'Space' || !S.shop || e.repeat) return;
+  const t = e.target;
+  if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t instanceof HTMLButtonElement) return;
+  e.preventDefault();
+  $('#repBtn').classList.add('pressed');
+  setTimeout(() => $('#repBtn').classList.remove('pressed'), 120);
+  doRep();
+});
+
+function playRep(peer) {
+  const el = S.els.get(peer);
+  if (!el) return;
+  for (const node of [el.querySelector('.sprite'), el.querySelector('.gear')]) {
+    node.classList.remove('rep');
+    void node.offsetWidth;
+    node.classList.add('rep');
+  }
+}
+
+// ------------------------------------------------------------------ render
+function statusText(m, now) {
+  if (m.state === 'rest') return `휴식 ${fmt(m.restUntil - now)}`;
+  if (m.state === 'set' && m.station) return `${m.reps}/${SHOPS[S.shop].reps}`;
+  return '';
+}
+
+function render() {
+  if (!S.shop) return;
+  const now = Date.now();
+  const list = members();
+  const own = owners(list);
+  const shop = SHOPS[S.shop];
+
+  // 나보다 먼저 잡은 사람이 있으면 양보
+  if (S.me.station) {
+    const o = own.get(S.me.station);
+    if (o && !o.me) {
+      const st = stationOf(S.shop, S.me.station);
+      toast(`${o.nick} 님이 ${st?.name || '기구'}를 먼저 잡았어요.`, 2500);
+      releaseStation(true);
+      return;
+    }
+  }
+
+  // 기구 표시
+  shop.stations.forEach((st) => {
+    const b = $(`#station-${st.id}`);
+    if (!b) return;
+    const o = own.get(st.id);
+    b.classList.toggle('busy', !!o && !o.me);
+    b.classList.toggle('mine', !!o && o.me);
+    b.disabled = !!o && !o.me;
+    b.querySelector('small').textContent = !o ? '비어 있음' : o.me ? '사용 중 (나)' : `사용 중 · ${o.nick}`;
+    b.setAttribute('aria-label', `${st.name}, ${!o ? '비어 있음 — 눌러서 사용' : o.me ? '내가 사용 중' : `${o.nick} 님 사용 중`}`);
+  });
+
+  // 아바타
+  const seen = new Set();
+  let idleIdx = 0;
+  let hidden = 0;
+  for (const m of list) {
+    const o = m.station ? own.get(m.station) : null;
+    const atStation = o && o.peer === m.peer;
+    let pos;
+    if (atStation) {
+      const i = shop.stations.findIndex((s) => s.id === m.station);
+      const sp = stationPos(i);
+      pos = { x: sp.x, y: sp.y + 2, s: sp.s };
+    } else {
+      pos = idlePos(idleIdx++);
+    }
+    if (!pos) { hidden++; continue; }
+    seen.add(m.peer);
+    if (S.announce && !m.me && !S.inShop.has(m.peer)) sysLine(`${m.nick} 님이 들어왔어요`, '');
+    let el = S.els.get(m.peer);
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'av';
+      el.style.setProperty('--delay', `${-(Math.random() * 1.5).toFixed(2)}s`);
+      const img = document.createElement('img');
+      img.className = 'sprite';
+      img.alt = '';
+      img.addEventListener('animationend', () => img.classList.remove('rep'));
+      const gear = document.createElement('img');
+      gear.className = 'gear';
+      gear.src = 'assets/dumbbell.svg';
+      gear.alt = '';
+      gear.addEventListener('animationend', () => gear.classList.remove('rep'));
+      const st = document.createElement('span');
+      st.className = 'st';
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      el.append(st, img, gear, tag);
+      if (m.me) el.addEventListener('click', doRep);
+      $('#floor').append(el);
+      S.els.set(m.peer, el);
+    }
+    el.classList.toggle('me', m.me);
+    el.classList.toggle('at-station', !!atStation);
+    el.classList.toggle('resting', m.state === 'rest');
+    const station = atStation ? stationOf(S.shop, m.station) : null;
+    el.classList.toggle('gear-on', !!station?.gear);
+    el.style.setProperty('--anim', ANIMS.has(station?.anim) ? station.anim : 'bob');
+    const img = el.querySelector('.sprite');
+    const src = spriteFor(m.color);
+    if (img.getAttribute('src') !== src) img.src = src;
+    el.querySelector('.tag').textContent = m.me ? `나 · ${m.nick}` : m.nick;
+    el.querySelector('.st').textContent = statusText(m, now);
+    el.style.left = `${pos.x}%`;
+    el.style.top = `${pos.y}%`;
+    el.style.setProperty('--s', pos.s);
+    el.style.setProperty('--z', Math.round(pos.y) + (m.me ? 1 : 0));
+    // 다른 사람이 한 번 누를 때마다 같이 움직인다
+    if (!m.me) {
+      const prev = S.lastReps.get(m.peer);
+      if (prev != null && m.reps > prev && m.state !== 'idle') playRep(m.peer);
+      S.lastReps.set(m.peer, m.reps);
+    }
+  }
+  for (const [peer, el] of S.els) {
+    if (!seen.has(peer)) { el.remove(); S.els.delete(peer); }
+  }
+  if (S.announce) {
+    for (const peer of S.inShop) {
+      if (!list.some((m) => m.peer === peer)) {
+        const nick = S.lastNicks.get(peer);
+        if (nick) sysLine(`${nick} 님이 나갔어요`, '');
+      }
+    }
+  }
+  S.inShop = new Set(list.filter((m) => !m.me).map((m) => m.peer));
+  S.lastNicks = new Map(list.map((m) => [m.peer, m.nick]));
+  $('#memberCount').textContent = list.length;
+  $('#overflow').hidden = hidden === 0;
+  $('#overflow').textContent = `+${hidden}명 더 있어요`;
+
+  renderHud(now);
+}
+
+function renderHud(now) {
+  const m = S.me;
+  const shop = SHOPS[S.shop];
+  const st = stationOf(S.shop, m.station);
+  const stage = $('#stage');
+  const repBtn = $('#repBtn');
+  const dots = $('#dots');
+  dots.textContent = '';
+  if (m.state === 'set' && st) {
+    stage.dataset.phase = 'work';
+    $('#phasePill').textContent = `세트 중 · ${m.set}/${RULES.setsPerStation}세트`;
+    $('#clock').textContent = `${m.reps}/${shop.reps}`;
+    $('#exName').textContent = `${st.name} · ${st.ex}`;
+    $('#exMeta').textContent = '한 번 누를 때마다 1회 · 스페이스바도 OK';
+    for (let i = 0; i < shop.reps; i++) {
+      const li = document.createElement('li');
+      if (i < m.reps) li.className = 'done';
+      else if (i === m.reps) li.className = 'now';
+      dots.append(li);
+    }
+    repBtn.hidden = false;
+    repBtn.disabled = false;
+  } else if (m.state === 'rest') {
+    stage.dataset.phase = 'rest';
+    $('#phasePill').textContent = '쉬는 시간 · 채팅 열림';
+    $('#clock').textContent = fmt(m.restUntil - now);
+    $('#exName').textContent = st ? `다음: ${st.name} ${m.set + 1}세트` : '기구 완료! 푹 쉬어요';
+    $('#exMeta').textContent = '쉬는 시간은 세트마다 1~3분 랜덤';
+    repBtn.hidden = !st;
+    repBtn.disabled = true;
+  } else {
+    stage.dataset.phase = 'idle';
+    $('#phasePill').textContent = '기구 고르기';
+    $('#clock').textContent = '—';
+    $('#exName').textContent = '빈 기구를 눌러 시작해요';
+    $('#exMeta').textContent = `세트당 ${shop.reps}회 × ${RULES.setsPerStation}세트 · 세트 끝나면 수다 OK`;
+    repBtn.hidden = true;
+  }
+  $('#releaseBtn').hidden = !m.station;
+  updateChatLock();
+}
+
+function fmt(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+let lastSecond = 0;
+function frame() {
+  const now = Date.now();
+  if (S.shop) {
+    const m = S.me;
+    if (m.state === 'rest') {
+      const left = m.restUntil - now;
+      const sec = Math.ceil(left / 1000);
+      if (sec <= 3 && sec > 0 && S.lastBeep !== `${m.restUntil}:${sec}`) {
+        S.lastBeep = `${m.restUntil}:${sec}`;
+        sound.tick();
+      }
+      if (left <= 0) endRest();
+    }
+    const second = Math.floor(now / 1000);
+    if (second !== lastSecond) {
+      lastSecond = second;
+      render();
+      document.title = m.state === 'rest' ? `☕ ${fmt(m.restUntil - now)} · 짹짹이짐` : m.state === 'set' ? `💪 ${m.reps}/${SHOPS[S.shop].reps} · 짹짹이짐` : '짹짹이짐 ONLINE';
+    }
+  } else if (Math.floor(now / 2000) !== lastSecond) {
+    lastSecond = Math.floor(now / 2000);
+    lobbyCounts();
+  }
+  requestAnimationFrame(frame);
+}
+
+// ------------------------------------------------------------------ effects
+function showBubble(el, text) {
+  if (!el) return;
+  el.querySelector('.bubble')?.remove();
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  b.textContent = text;
+  el.append(b);
+  setTimeout(() => b.remove(), 6000);
+}
+function floatEmoji(el, emoji) {
+  if (!el) return;
+  const f = document.createElement('span');
+  f.className = 'float-emoji';
+  f.textContent = emoji;
+  f.style.marginLeft = `${(Math.random() * 40 - 20).toFixed(0)}px`;
+  el.append(f);
+  setTimeout(() => f.remove(), 1500);
+}
+function coachSay(text, ms = 7000) {
+  const b = $('#coachBubble');
+  b.textContent = text;
+  b.hidden = !text;
+  clearTimeout(S.coachTimer);
+  if (ms) S.coachTimer = setTimeout(() => (b.hidden = true), ms);
+}
+
+// ------------------------------------------------------------------ chat (쉬는 시간에만)
+function scrollKeeper(log) {
+  const nearBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 80;
+  return () => { if (nearBottom) log.scrollTop = log.scrollHeight; };
+}
+function trimLog(log) { while (log.children.length > 200) log.firstElementChild.remove(); }
+function sysLine(text, kind) {
+  const log = $('#chatLog');
+  const done = scrollKeeper(log);
+  const li = document.createElement('li');
+  li.className = `sys ${kind || ''}`;
+  li.textContent = text;
+  log.append(li);
+  trimLog(log);
+  done();
+}
+function chatLine(who, text, mine) {
+  const log = $('#chatLog');
+  const done = scrollKeeper(log);
+  const li = document.createElement('li');
+  li.className = 'msg' + (mine ? ' mine' : '');
+  const w = document.createElement('span');
+  w.className = 'who';
+  w.textContent = who;
+  const t = document.createElement('span');
+  t.className = 'text';
+  t.textContent = text;
+  li.append(w, t);
+  log.append(li);
+  trimLog(log);
+  if (mine) log.scrollTop = log.scrollHeight; else done();
+  if (S.tab !== 'chat') bumpUnread();
+}
+
+function updateChatLock() {
+  const m = S.me;
+  const open = m.state === 'rest';
+  $('#chatLock').hidden = open;
+  $('#chatInput').disabled = !open;
+  $('#chatSend').disabled = !open;
+  if (!open) {
+    if (m.state === 'set') {
+      const left = SHOPS[S.shop].reps - m.reps;
+      $('#chatLockTitle').textContent = '🔒 세트 중엔 운동에 집중!';
+      $('#chatLockSub').textContent = `${left}회만 더 하면 채팅이 열려요`;
+    } else {
+      $('#chatLockTitle').textContent = '🔒 세트를 끝내야 수다를 떨 수 있어요';
+      $('#chatLockSub').textContent = '빈 기구를 골라 세트를 시작해 보세요';
+    }
+  }
+}
+
+function onChat(msg) {
+  const d = msg.data || {};
+  if (!S.shop || d.shop !== S.shop) return;
+  const text = cleanText(d.text, LIMIT.chat);
+  if (!text) return;
+  if (!msg.sameTab) {
+    // 받는 쪽 규칙: 보낸 사람이 쉬는 중일 때 보낸 것만 보여준다
+    const p = room?.peers().find((x) => x.peer === msg.peer);
+    if (!p || p.presence?.state !== 'rest') return;
+  }
+  const nick = msg.sameTab ? S.me.nick : S.lastNicks.get(msg.peer) || '짹짹이';
+  chatLine(nick, text, msg.sameTab);
+  showBubble(S.els.get(msg.sameTab ? ME : msg.peer), text);
+}
+
+function onCheer(msg) {
+  const d = msg.data || {};
+  if (!S.shop || d.shop !== S.shop || !CHEERS.includes(d.emoji)) return;
+  floatEmoji(S.els.get(msg.sameTab ? ME : msg.peer), d.emoji);
+}
+
+async function sendChat(text) {
+  if (S.me.state !== 'rest') return;
+  const now = Date.now();
+  if (now - S.lastChatAt < 800) { toast('조금 천천히 보내 주세요.', 1500); return; }
+  S.lastChatAt = now;
+  if (room && room.connected()) {
+    try {
+      await room.emit('chat', { shop: S.shop, text });
+    } catch (e) {
+      if (e?.code === 'not_permitted') toast('이 링크 권한으로는 채팅을 보낼 수 없어요. 공유한 분께 참여 권한을 요청해 주세요.', 4000);
+      else toast('메시지를 보내지 못했어요. 잠시 후 다시 보내 주세요.', 2500);
+    }
+  } else {
+    chatLine(S.me.nick, text, true);
+    showBubble(S.els.get(ME), text);
+  }
+}
+$('#chatForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = $('#chatInput');
+  const text = cleanText(input.value, LIMIT.chat);
+  if (!text) return;
+  input.value = '';
+  sendChat(text);
+});
+
+for (const btn of document.querySelectorAll('[data-cheer]')) {
+  btn.addEventListener('click', () => {
+    const emoji = btn.dataset.cheer;
+    const now = Date.now();
+    if (now - S.lastCheerAt < 1200) return;
+    S.lastCheerAt = now;
+    if (room && room.connected()) {
+      room.emit('cheer', { shop: S.shop, emoji }).catch((e) => {
+        if (e?.code === 'not_permitted') toast('이 링크 권한으로는 응원을 보낼 수 없어요.', 2500);
+      });
+    } else {
+      floatEmoji(S.els.get(ME), emoji);
+    }
+  });
+}
+
+// ------------------------------------------------------------------ 부리부리 쌤 PT (체험 1회, 이후 이용권)
+// 결제 시스템이 생기면 hasPtPass()가 실제 이용권을 확인하게 바꾸면 된다.
+function hasPtPass() { return false; }
+function trialUsed() { return Math.max(0, parseInt(store.get('jg.ptTrialUsed', '0'), 10) || 0); }
+function trialLeft() { return Math.max(0, RULES.trialQuestions - trialUsed()); }
+function canAskPt() { return hasPtPass() || trialLeft() > 0; }
+
+function updatePtUI() {
+  const pass = hasPtPass();
+  const left = trialLeft();
+  $('#ptQuota').textContent = pass ? 'PT 이용권 사용 중' : left > 0 ? `체험 PT · 남은 질문 ${left}/${RULES.trialQuestions}` : '체험 PT 끝';
+  $('#ptMode').textContent = sample ? '' : '(지금은 오프라인 모드 — 기본 답변만 해줘요)';
+  const can = canAskPt();
+  $('#ptPaywall').hidden = can;
+  $('#ptChips').hidden = !can;
+  $('#ptInput').disabled = !can || S.ptBusy;
+  $('#ptSend').disabled = !can || S.ptBusy;
+}
+$('#buyBtn').addEventListener('click', () => { $('#buyNote').hidden = false; });
+
+function coachRules() {
+  const shop = SHOPS[S.shop];
+  const list = shop.stations.map((s) => `- ${s.name}: ${s.ex} — "${s.cue}"`).join('\n');
+  return `너는 온라인 헬스장 '짹짹이 바른자세 스튜디오'의 PT 쌤 '부리부리'야.
+흰 새 캐릭터에 뾰족한 검은 머리, 늘 팔짱을 끼고 있지만 회원들을 진심으로 아끼는 트레이너야.
+회원들은 '짹짹이'라고 불러. 지금 너는 ${shop.name}에서 1:1 PT 중이야.
+
+이 샵의 기구와 운동 (세트당 ${shop.reps}회 × ${RULES.setsPerStation}세트, 세트 사이 1~3분 휴식):
+${list}
+
+스튜디오 철학:
+- 아픈 곳만 주무르지 말고 직접 움직이게 한다. ("목이 뻣뻣하다고 목만 주무르지 마!")
+- 허리가 할 일을 대신하지 않게 고관절·엉덩이를 쓰고, 목 대신 등(흉추)을 움직인다.
+- 무리해서 억지로 하지 않는다. 가동 범위 안에서 천천히, 호흡은 참지 않는다.
+
+답하는 방식:
+- 반말로 친근하고 짧게. 2~4문장, 길어도 250자 안쪽. 채팅 말풍선에 그대로 뜨니까 마크다운·목록 기호·이모지 남발 금지.
+- 동작 질문엔 핵심 자세 포인트 1~2개와 흔한 실수 1개를 짚어 줘. 쉬운 대체 동작이 있으면 알려 줘.
+- 질문 앞의 [지금 상황]은 스튜디오가 붙여 주는 정보야. 지금 쓰는 기구와 연결해서 답하면 좋아.
+- 날카로운 통증, 저림, 부상, 수술 이력, 임신, 질환 같은 얘기가 나오면 진단하지 말고 그 동작은 멈추라고 한 뒤 병원·전문가 상담을 권해.
+- 운동·자세·건강 습관과 상관없는 질문은 가볍게 한마디 받아 주고 운동 얘기로 데려와.
+- 너는 AI 트레이너라는 걸 숨기지 않아. 물어보면 솔직하게 말해.
+이 규칙을 지키면서 아래 짹짹이의 메시지에 부리부리 쌤으로서 답만 써.`;
+}
+function contextNote(question) {
+  const m = S.me;
+  const st = stationOf(S.shop, m.station);
+  const where = st ? `${st.name}에서 ${st.ex}` : '기구 고르는 중';
+  const state = m.state === 'set' ? `${m.set}세트 ${m.reps}/${SHOPS[S.shop].reps}회` : m.state === 'rest' ? '세트 사이 휴식 중' : '대기 중';
+  return `[지금 상황] ${SHOPS[S.shop].name} · ${where} · ${state} · 질문한 짹짹이: ${m.nick}\n\n${question}`;
+}
+
+const OFFLINE_RULES = [
+  [/통증|아파|아프|저려|저림|찌릿|부상|다쳤/, '아픈 데가 있으면 그 동작은 바로 멈추자! 날카롭게 아프거나 저리면 참지 말고 병원에서 꼭 확인받아. 오늘은 통증 없는 범위에서만 천천히~'],
+  [/허리/, '허리가 할 일을 대신하지 않게 하는 게 핵심이야! 허리를 숙이는 게 아니라 고관절을 접는 느낌, 엉덩이로 움직여봐.'],
+  [/목|뒷목|거북/, '목이 뻣뻣하다고 목만 주무르지 마! 목부터 등까지 같이 움직여야 해. 흉추 회전이랑 롤다운 같이 해보자~'],
+  [/무릎/, '무릎은 발끝 방향이랑 같이 가야 해. 안으로 모이면 안 돼! 엉덩이를 뒤로 빼면서 앉으면 무릎 부담이 줄어~'],
+  [/어깨|승모|날개/, '어깨가 귀 쪽으로 으쓱 올라가면 안 돼! 날개뼈를 살짝 아래 뒤로 모은 상태로 움직여봐.'],
+  [/호흡|숨/, '숨은 절대 참지 마! 힘 쓸 때 내쉬고 돌아올 때 들이마셔. 갈비뼈를 옆으로 넓히는 느낌~'],
+  [/몇\s*(번|개|회|세트)|횟수|반복/, '횟수보다 자세가 먼저야! 마지막 2~3회가 살짝 힘든 정도면 딱 좋아. 자세 무너지면 바로 쉬어.'],
+  [/쉬운|대체|못\s*하/, '힘들면 범위를 반으로 줄이거나 무게를 내려! 자세가 지켜지는 만큼만 하는 게 진짜 운동이야~'],
+  [/안녕|하이|반가/, '어서 와 짹짹이! 오늘도 바른 자세로 같이 움직여보자~ 궁금한 거 있으면 언제든 물어봐!'],
+  [/누구|ai|AI|사람|로봇/, '나는 짹짹이 스튜디오의 AI PT 부리부리야! 팔짱은 끼고 있지만 질문은 다 받아줄게~'],
+];
+function offlineAnswer(question) {
+  for (const [re, ans] of OFFLINE_RULES) if (re.test(question)) return ans;
+  const st = stationOf(S.shop, S.me.station);
+  if (st) return `지금 ${st.name}에서 ${st.ex} 하고 있지? 포인트는 이거! "${st.cue}" 더 궁금한 건 구체적으로 물어봐~`;
+  return '먼저 빈 기구 하나 골라봐! 기구를 잡으면 그 운동 기준으로 자세 포인트 알려줄게~';
+}
+const SAMPLE_COPY = {
+  rate_limited: '쌤한테 질문이 몰려서 잠깐 숨 고르는 중! 조금 있다가 다시 물어봐~',
+  refused: '음… 그건 내가 답하기 어려운 질문이야. 우리 자세 얘기로 돌아가 볼까?',
+  session_expired: 'claude.ai에 다시 로그인하면 이어서 답해줄게!',
+};
+
+async function askBuri(turns, question, onText) {
+  if (!sample) {
+    const t = offlineAnswer(question);
+    onText(t);
+    return t;
+  }
+  try {
+    const { text } = await sample(turns, { modelTier: 'quick', cache: false, onText: ({ text }) => onText(text) });
+    return text.trim();
+  } catch (e) {
+    const code = e?.code;
+    if (['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed'].includes(code)) {
+      sample = null;
+      updatePtUI();
+      const t = offlineAnswer(question);
+      onText(t);
+      return t;
+    }
+    if (e?.text && code === 'upstream_error') return e.text + ' …앗, 쌤 말이 끊겼네! 다시 물어봐 줄래?';
+    return SAMPLE_COPY[code] || offlineAnswer(question);
+  }
+}
+
+async function ptAsk(raw) {
+  const question = cleanText(raw, LIMIT.ask);
+  if (!question || S.ptBusy || !S.shop) return;
+  if (!canAskPt()) { updatePtUI(); return; }
+  if (!hasPtPass()) store.set('jg.ptTrialUsed', String(trialUsed() + 1));
+  S.ptBusy = true;
+  updatePtUI();
+  const log = $('#ptLog');
+  const q = document.createElement('li');
+  q.className = 'msg mine';
+  const qt = document.createElement('span');
+  qt.className = 'text';
+  qt.textContent = question;
+  q.append(qt);
+  const a = document.createElement('li');
+  a.className = 'msg coach';
+  const who = document.createElement('span');
+  who.className = 'who';
+  who.textContent = '부리부리 쌤';
+  const at = document.createElement('span');
+  at.className = 'text typing';
+  at.textContent = '생각 중…';
+  a.append(who, at);
+  log.append(q, a);
+  log.scrollTop = log.scrollHeight;
+
+  const userTurn = { role: 'user', content: contextNote(question) };
+  const turns = [{ role: 'user', content: coachRules() }, ...S.ptTurns.slice(-12), userTurn];
+  const text = await askBuri(turns, question, (txt) => {
+    const keep = scrollKeeper(log);
+    at.textContent = txt;
+    keep();
+  });
+  at.classList.remove('typing');
+  at.textContent = text;
+  S.ptTurns.push(userTurn, { role: 'assistant', content: text || '…' });
+  S.ptBusy = false;
+  updatePtUI();
+  if (!canAskPt()) log.scrollTop = log.scrollHeight;
+}
+$('#ptForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = $('#ptInput');
+  const v = input.value;
+  input.value = '';
+  ptAsk(v);
+});
+for (const chip of $('#ptChips').children) chip.addEventListener('click', () => ptAsk(chip.textContent));
+
+// ------------------------------------------------------------------ tabs / misc
+function setTab(tab) {
+  S.tab = tab;
+  $('#tabChat').setAttribute('aria-selected', tab === 'chat');
+  $('#tabPt').setAttribute('aria-selected', tab === 'pt');
+  $('#chatPane').hidden = tab !== 'chat';
+  $('#ptPane').hidden = tab !== 'pt';
+  if (tab === 'chat') {
+    S.unread = 0;
+    $('#chatBadge').hidden = true;
+    const log = $('#chatLog');
+    log.scrollTop = log.scrollHeight;
+  } else {
+    updatePtUI();
+  }
+}
+function bumpUnread() {
+  S.unread++;
+  const b = $('#chatBadge');
+  b.textContent = S.unread > 99 ? '99+' : S.unread;
+  b.hidden = false;
+}
+$('#tabChat').addEventListener('click', () => setTab('chat'));
+$('#tabPt').addEventListener('click', () => setTab('pt'));
+
+function renderSoundBtn() {
+  const b = $('#soundBtn');
+  b.textContent = sound.on ? '🔊' : '🔇';
+  b.setAttribute('aria-pressed', sound.on);
+}
+$('#soundBtn').addEventListener('click', () => {
+  sound.on = !sound.on;
+  store.set('jg.sound', sound.on ? '1' : '0');
+  sound.unlock();
+  renderSoundBtn();
+});
+
+let toastTimer = null;
+function toast(text, ms = 0) {
+  const t = $('#toast');
+  t.textContent = text;
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  if (ms) toastTimer = setTimeout(() => (t.hidden = true), ms);
+}
+
+// ------------------------------------------------------------------ boot
+(async function boot() {
+  S.me.nick = store.get('jg.nick', '');
+  const c = store.get('jg.color', 'orange');
+  S.me.color = COLOR_DEFS[c] ? c : 'orange';
+  $('#nick').value = S.me.nick;
+  renderSoundBtn();
+  try { await buildSprites(); } catch { /* 원본 이미지 사용 */ }
+  renderColorPicker();
+  showLobby();
+  requestAnimationFrame(frame);
+
+  capability('sample').then((s) => { sample = s; updatePtUI(); });
+  capability('room').then((r) => {
+    if (!r) return;
+    room = r;
+    const dead = () => { room = null; lobbyCounts(); render(); };
+    r.onPeers(() => { lobbyCounts(); render(); }, dead);
+    r.on('chat', onChat, dead);
+    r.on('cheer', onCheer, dead);
+    if (S.shop) syncPresence();
+    lobbyCounts();
+  });
+})();
+
+</script>
