@@ -1048,6 +1048,7 @@ function claimStation(id) {
   if (S.me.on) dismount(true);
   standUp();
   const resting = S.me.state === 'rest';
+  VISIT.st.add(id);
   Object.assign(S.me, { station: id, claimedAt: Date.now(), on: false, reps: 0, set: resting ? 0 : 1, queue: null, queuedAt: 0, lastActAt: Date.now() });
   if (!resting) S.me.state = 'set';
   syncPresence(true);
@@ -1215,6 +1216,7 @@ for (const btn of document.querySelectorAll('[data-gesture]')) {
     sound.gesture();
     m.gest = id;
     m.gestN += 1;
+    VISIT.gest++;
     playGesture(S.meA, 'me', id, !!m.station, m.gestN);
     syncPresence(true);
   });
@@ -1296,20 +1298,23 @@ function loadLog() {
   return l;
 }
 let LOG = loadLog();
+// 이번 방문에서 한 것 (Vercel판 접속 통계로 보냄. 이름이나 대화는 담지 않는다)
+const VISIT = { reps: 0, sets: 0, sec: 0, pt: 0, gest: 0, st: new Set() };
+window.__gymVisit = () => ({ shop: S.shop, reps: VISIT.reps, sets: VISIT.sets, work: Math.round(VISIT.sec), pt: VISIT.pt, gest: VISIT.gest, stations: [...VISIT.st] });
 function saveLog() { store.set('jg.log', JSON.stringify(LOG)); renderLog(); }
 const routineOf = (st) => { const tags = PT_KNOW[st.preset]?.tags || []; return tags[0] === '유산소' || st.cardio ? 'cardio' : tags[0] === '스트레칭' ? 'stretch' : 'strength'; };
 function noteRep() {
   if (LOG.date !== todayKey()) LOG = loadLog();
-  LOG.reps++; LOG.total = (LOG.total || 0) + 1;
+  LOG.reps++; LOG.total = (LOG.total || 0) + 1; VISIT.reps++;
   saveLog();
 }
 function noteTime(st, sec) {
-  LOG.sec = (LOG.sec || 0) + sec;
+  LOG.sec = (LOG.sec || 0) + sec; VISIT.sec += sec;
   if (sec >= RULES.durationRestSec) noteSet(st, false); else saveLog();
   renderLog();
 }
 function noteSet(st, isSet = true) {
-  if (isSet) LOG.sets++;
+  if (isSet) { LOG.sets++; VISIT.sets++; }
   if (st) LOG.routine[routineOf(st)] = true;
   if (LOG.routine.cardio && LOG.routine.strength && LOG.routine.stretch) {
     LOG.routine = {};
@@ -1985,6 +1990,7 @@ function callPt() {
   sound.unlock();
   if (S.ptTeacher) { if (!S.walk.has(S.ptTeacher)) ptTalk(); return; }
   m.pt = 1 + Math.floor(Math.random() * 1e6);
+  VISIT.pt++;
   S.ptTeacher = teacherCome(S.meA, m.pt, ptTalk);
   const tag = tagFor('pt');
   tag.classList.add('coach');

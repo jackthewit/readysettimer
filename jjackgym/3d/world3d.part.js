@@ -229,6 +229,43 @@ const WORLD = (() => {
     put(f, rbox(0.04, 1.9, 0.05, 0.01), frame, { p: [0, 0, 0.02], ol: 0.003 });
   }
 
+  // 뒤 벽 위쪽에 붙인 큰 벽보: 종이에 굵은 글씨, 모서리에 테이프, 살짝 비뚤게
+  function banner(g, text, o) {
+    const c = document.createElement('canvas');
+    c.width = 2048;
+    c.height = Math.round(2048 * o.h / o.w);
+    const tex = new T.CanvasTexture(c);
+    tex.encoding = T.sRGBEncoding;
+    tex.anisotropy = 8;
+    const draw = () => {
+      const x = c.getContext('2d'), W = c.width, H = c.height;
+      x.fillStyle = o.paper; x.fillRect(0, 0, W, H);
+      x.strokeStyle = o.edge; x.lineWidth = 14; x.strokeRect(34, 34, W - 68, H - 68);
+      x.fillStyle = o.fg; x.textAlign = 'center'; x.textBaseline = 'middle';
+      let size = H * 0.56;
+      x.font = `${size}px 'Black Han Sans', 'IBM Plex Sans KR', sans-serif`;
+      const fit = (W - 220) / x.measureText(text).width;
+      if (fit < 1) { size *= fit; x.font = `${size}px 'Black Han Sans', 'IBM Plex Sans KR', sans-serif`; }
+      x.fillText(text, W / 2, H * 0.53);
+      // 테이프
+      x.fillStyle = 'rgba(236, 226, 196, 0.85)';
+      for (const [tx, ty, r] of [[70, 40, -0.6], [W - 70, 40, 0.6], [70, H - 40, 0.6], [W - 70, H - 40, -0.6]]) {
+        x.save(); x.translate(tx, ty); x.rotate(r); x.fillRect(-90, -26, 180, 52); x.restore();
+      }
+      tex.needsUpdate = true;
+    };
+    draw();
+    try { document.fonts.load("64px 'Black Han Sans'", text).then(draw).catch(() => {}); } catch { /* 기본 글꼴로 */ }
+    const f = new T.Group();
+    f.position.set(o.p[0], o.p[1], ROOM.back + 0.03);
+    f.rotation.z = (o.tilt || 0) * Math.PI / 180;
+    g.add(f);
+    put(f, plane(o.w, o.h), 0x000000, { flat: true, ol: false, mo: { transparent: true, opacity: 0.12 }, p: [0.05, -0.06, -0.008] }); // 종이 그림자
+    const m = new T.Mesh(plane(o.w, o.h), new T.MeshBasicMaterial({ map: tex }));
+    f.add(m);
+    return f;
+  }
+
   // 벽에 거는 부리부리 포즈 사진 (posters.part.js: 3D로 포즈를 잡아 찍은 것)
   const posterTex = {};
   function poster(g, s, z, i) {
@@ -353,6 +390,7 @@ const WORLD = (() => {
       plant(g, 5.3, -8.4, 1, C.cream);
       for (const z of [-5.6, -0.8, 4]) windowOnSide(g, -1, z, C.white, 0xCFE9F5);
       hangPosters(g, [0, 1, 2, 3]);
+      banner(g, '당신도 건강해질 수 있습니다!', { w: 10.6, h: 1.75, p: [-1.4, 4.3], tilt: -1.2, paper: '#FBF7EC', edge: '#E04848', fg: '#1F1F22' });
       g.userData = { id: 'gymWide', floorY: 0, stage: { cx: 0, cz: 0, w: 18, d: 12 }, sky: '#2B2E33', cam: { pos: [0, 6, 11], target: [0, 0.8, -2] } };
       return g;
     },
@@ -379,6 +417,7 @@ const WORLD = (() => {
         put(g, cyl(0.04, 0.3, 0.22, 20), C.cream, { p: [x, 2.82, -3.6], ol: 0.006 });
       }
       hangPosters(g, [2, 3, 0, 1]);
+      banner(g, '아름다움은 바른 자세로부터', { w: 10.6, h: 1.75, p: [-1.4, 4.3], tilt: 1, paper: '#FFFDF8', edge: '#9CC3A8', fg: '#2F5E46' });
       g.userData = { id: 'pilatesWide', floorY: 0, stage: { cx: 0, cz: 0, w: 18, d: 12 }, sky: '#F3EEE6', cam: { pos: [0, 6, 11], target: [0, 0.8, -2] } };
       return g;
     },

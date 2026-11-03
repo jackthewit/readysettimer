@@ -7,3 +7,5 @@ buri.png
 web/
 supabase.config.json
 jjack.png
+admin.local.json
+stats-setup.local.sql

@@ -35,8 +35,9 @@ sup=''
 if os.path.exists('supabase.config.json'):
     c=json.load(open('supabase.config.json',encoding='utf-8'))
     room=open('room-supabase.part.js',encoding='utf-8').read()
+    stats=open('stats-supabase.part.js',encoding='utf-8').read()
     sup=('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>\n'
-         f'<script>window.ONLINE_GYM_SUPABASE={json.dumps({"url":c["url"],"anonKey":c["anonKey"]})};</script>\n<script>{room}</script>\n')
+         f'<script>window.ONLINE_GYM_SUPABASE={json.dumps({"url":c["url"],"anonKey":c["anonKey"]})};</script>\n<script>{room}</script>\n<script>{stats}</script>\n')
 doc=f"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>[hidden]{{display:none!important}}img{{max-width:100%}}</style><meta name="description" content="말 없이 함께 운동하는 3D 온라인 헬스장. 회원가입 없이 바로 들어와요."><meta property="og:title" content="ONLINE GYM"><meta property="og:description" content="운동하는 삶. 말 없이 함께 운동하는 3D 온라인 헬스장"><meta property="og:type" content="website"><meta property="og:url" content="https://onlinegym.vercel.app"><meta property="og:image" content="https://onlinegym.vercel.app/og.png"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23171715'/%3E%3Cpath d='M6 12v8M10 9v14M22 9v14M26 12v8M10 16h12' stroke='%23f2cf1d' stroke-width='3'/%3E%3C/svg%3E">{sup}</head><body>{out}</body></html>"""
 open('web/index.html','w',encoding='utf-8').write(doc)
 for f in ['assets.js','presets1.js','presets2.js','engine.js']: shutil.copy(f,'web/'+f)
