@@ -363,13 +363,16 @@ try {
   await b.screenshot({ path: `${SP}/g5e-help.png` });
   await b.keyboard.press('Escape');
   check('Esc로 닫힘', !(await b.isVisible('#helpModal')));
-  // 비밀의 바디프로필 촬영장: J J A K 로 들어감
+  // 비밀의 바디프로필 촬영장: jackjackbody 로 들어감 (예전 J J A K 로는 안 들어감)
   const inSt = async () => (await a.evaluate(() => [...window.__jg.S.remotes.values()].length));
   const nSt0 = await inSt();
   await b.evaluate(() => document.activeElement?.blur());
   for (const k of ['KeyJ', 'KeyJ', 'KeyA', 'KeyK']) await b.keyboard.press(k);
+  await b.waitForTimeout(300);
+  check('예전 키 J J A K 로는 안 들어감', !(await b.evaluate(() => window.__studio.studio.on)));
+  for (const c of 'jackjackbody') await b.keyboard.press('Key' + c.toUpperCase());
   await b.waitForTimeout(800);
-  check('J J A K 로 촬영장에 들어감', await b.isVisible('#studio') && await b.evaluate(() => window.__studio.studio.on && !!window.__studio.studio.A));
+  check('jackjackbody 로 촬영장에 들어감', await b.isVisible('#studio') && await b.evaluate(() => window.__studio.studio.on && !!window.__studio.studio.A));
   check('촬영장에선 짐 화면이 숨음', !(await b.isVisible('#menuBtn')));
   await a.waitForTimeout(1500);
   check('촬영장에 간 사람은 다른 사람 짐에서 빠짐', (await inSt()) === nSt0 - 1, `${nSt0}→${await inSt()}`);
@@ -412,10 +415,10 @@ try {
   check('돌아오면 다른 사람 짐에 다시 보임', (await inSt()) === nSt0, `${await inSt()}`);
   await b.click('#menuBtn').catch(() => {});
   await b.evaluate(() => { document.querySelector('#menu').hidden = false; });
-  await b.fill('#codeInput', '짹짹');
+  await b.fill('#codeInput', 'ㅓㅁ차ㅓㅁ차ㅠㅐ요');
   await b.press('#codeInput', 'Enter');
   await b.waitForTimeout(600);
-  check('메뉴의 비밀 코드로도 들어감', await b.evaluate(() => window.__studio.studio.on));
+  check('메뉴의 비밀 코드로도 들어감 (한글 자판으로 쳐도)', await b.evaluate(() => window.__studio.studio.on));
   await b.click('#studioExit');
   await b.waitForTimeout(500);
   // 정수기: 걸어가서 마시고, 다른 사람 화면에도 보인다

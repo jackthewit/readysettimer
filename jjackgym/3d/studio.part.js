@@ -1,11 +1,12 @@
 // ------------------------------------------------------------------ 비밀의 바디프로필 촬영장
-// 들어가는 법: 키보드로 J J A K (짹)을 차례로 누르거나, 메뉴의 「비밀 코드」에 jjak 또는 짹짹을 넣는다.
+// 들어가는 법: 키보드로 jackjackbody 를 차례로 누르거나, 메뉴의 「비밀 코드」에 jackjackbody 를 넣는다.
 // 짐에서 멀리 떨어진 곳에 촬영 배경을 만들고, 내 짹짹이를 하나 더 세워 포즈를 잡는다.
 // 사진은 4:5(1080×1350)로 찍어 휴대폰은 공유 창(사진 저장), 컴퓨터는 파일로 내려받는다. 안 되면 사진을 길게 눌러 저장.
 const STUDIO = {
   at: { x: 40, z: 0 },   // 짐과 떨어진 곳
   vfov: 30,              // 사진 틀 안에서 보이는 세로 시야(도)
-  code: ['KeyJ', 'KeyJ', 'KeyA', 'KeyK'],
+  word: 'jackjackbody',
+  code: [...'jackjackbody'].map((c) => 'Key' + c.toUpperCase()),
   backs: [
     { id: 'cream', label: '크림', wall: 0xEFE4D2, glow: 'rgba(255,255,255,.55)', ink: '#2B2B2F' },
     { id: 'coral', label: '코랄', wall: 0xE87A5D, glow: 'rgba(255,226,190,.55)', ink: '#FFF6E8' },
@@ -474,6 +475,21 @@ async function saveStudioPhoto() {
   $('#studioNote').textContent = touch ? '저장이 안 되면 사진을 길게 눌러 저장해 주세요.' : '저장이 안 되면 사진에서 오른쪽 클릭 → 이미지 저장을 눌러 주세요.';
 }
 
+// 한글 자판으로 친 글자를 영문 자판 키로 바꾼다 (예: ㅓㅁ차 → jack)
+function toQwerty(s) {
+  const CHO = 'r R s e E f a q Q t T d w W c z x v g'.split(' ');
+  const JUNG = 'k o i O j p u P h hk ho hl y n nj np nl b m ml l'.split(' ');
+  const JONG = ['', ...'r R rt s sw sg e f fr fa fq ft fx fv fg a q qt t T d w c z x v g'.split(' ')];
+  const JAMO = 'r R rt s sw sg e E f fr fa fq ft fx fv fg a q Q qt t T d w W c z x v g'.split(' ').concat(JUNG); // ㄱ(U+3131)부터 ㅣ까지
+  let out = '';
+  for (const ch of s) {
+    const c = ch.charCodeAt(0);
+    if (c >= 0xAC00 && c <= 0xD7A3) { const n = c - 0xAC00; out += CHO[Math.floor(n / 588)] + JUNG[Math.floor((n % 588) / 28)] + JONG[n % 28]; }
+    else if (c >= 0x3131 && c <= 0x3163) out += JAMO[c - 0x3131];
+    else out += ch;
+  }
+  return out;
+}
 // 화면 만들기 (버튼 목록)
 (function studioUi() {
   $('#studioPoses').innerHTML = STUDIO_POSES.map((q, i) => `<button type="button" data-i="${i}">${q.label}</button>`).join('');
@@ -497,10 +513,10 @@ async function saveStudioPhoto() {
     e.preventDefault();
     const v = $('#codeInput').value.trim().toLowerCase().replace(/\s+/g, '');
     $('#codeInput').value = '';
-    if (v === 'jjak' || v === '짹짹' || v === '짹') openStudio();
+    if (toQwerty(v).toLowerCase() === STUDIO.word) openStudio();
     else toast('코드가 맞지 않아요.', 1800);
   });
-  // 키보드: J J A K 차례로 (한글 입력 상태여도 키 위치로 알아본다)
+  // 키보드: j a c k j a c k b o d y 차례로 (한글 입력 상태여도 키 위치로 알아본다)
   document.addEventListener('keydown', (e) => {
     const t = e.target;
     if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement) return;
