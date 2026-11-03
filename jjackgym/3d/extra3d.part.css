@@ -30,7 +30,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--signal); ou
 .tag3.resting .st { background: var(--rest); }
 .tag3 .bubble { position: relative; max-width: 240px; width: max-content; white-space: normal; margin-bottom: 6px; padding: 5px 9px; background: #fff; color: var(--ink); font-size: 13px; line-height: 1.45; word-break: keep-all; border: 1px solid var(--ink); }
 .tag3 .bubble::after { content: ''; position: absolute; left: 50%; bottom: -5px; width: 8px; height: 8px; background: #fff; border-right: 1px solid var(--ink); border-bottom: 1px solid var(--ink); transform: translateX(-50%) rotate(45deg); }
-.tag3 .float-word { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); padding: 1px 7px; font: 15px var(--display); color: var(--ink); background: var(--signal); animation: word-up 1.5s ease-out forwards; }
+.tag3 .float-word { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); padding: 1px 7px; font: 15px var(--display); color: var(--ink); background: var(--signal); white-space: nowrap; animation: word-up 2.6s ease-out forwards; }
 @keyframes word-up { 0% { opacity: 0; margin-bottom: 0; } 15% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; margin-bottom: 34px; } }
 .tag3.hidden { display: none; }
 @media (prefers-reduced-motion: reduce) { .tag3 .float-word { animation-timing-function: steps(1); } }

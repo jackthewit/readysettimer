@@ -75,7 +75,7 @@ async function testCardio(p, id) {
   await mounted(p);
   const lv = () => p.evaluate(() => window.__jg.S.meA._cardio?.lv ?? -1);
   check(`${id} 버튼은 하나가 아니라 빠르게`, (await p.textContent('#repBtn')) === '빠르게');
-  for (let i = 0; i < 12; i++) { await p.click('#repBtn'); await p.waitForTimeout(40); }
+  await p.evaluate(async () => { for (let i = 0; i < 12; i++) { document.querySelector('#repBtn').click(); await new Promise((r) => setTimeout(r, 120)); } }); // 사람이 연타하는 빠르기로
   const a1 = await lv();
   check(`${id} 연타하면 빨라짐`, a1 > 3, a1.toFixed(1));
   check(`${id} 세트 표시 없음`, !(await p.textContent('#exName')).includes('세트') && /^\d+:\d\d$/.test(await p.textContent('#clock')), `${await p.textContent('#exName')} ${await p.textContent('#clock')}`);
@@ -374,6 +374,15 @@ try {
   await a.waitForTimeout(2500);
   check('다른 사람 화면에서도 물을 마심', await a.evaluate(() => [...window.__jg.S.remotes.values()].some((R) => R.A.clip?.presetId === 'drinkWater' || R.A._gest === 'drink')));
   check('다 마시면 컵이 사라짐', await b.waitForFunction(() => !window.__jg.S.meA._cup, null, { timeout: 40000 }).then(() => true, () => false));
+  // 몸짓은 말로 나온다
+  const said = async (id) => { await b.waitForTimeout(1000); await b.click(`#gest-${id}`); await b.waitForTimeout(200); return b.locator('.tag3.me .float-word').textContent(); };
+  const hi = await said('wave');
+  check('인사는 인사말로 나옴', hi !== '인사' && hi.length >= 4, hi);
+  check('박수는 짝짝짝', (await said('clap')) === '짝짝짝');
+  await b.waitForTimeout(1000);
+  await b.click('#gest-stretch');
+  await b.waitForTimeout(300);
+  check('스트레칭 버튼을 누르면 스트레칭함', await b.evaluate(() => ['sideBend', 'crossArm', 'neck', 'twist', 'shrug', 'forwardFold'].includes(window.__jg.S.meA.clip?.presetId)), await b.evaluate(() => window.__jg.S.meA.clip?.presetId));
   // 색은 사람마다 랜덤
   const looks = await Promise.all([a, b].map((p) => p.evaluate(() => window.__jg.S.me.band)));
   check('머리띠 색이 랜덤', looks[0] !== looks[1], looks.join(' '));

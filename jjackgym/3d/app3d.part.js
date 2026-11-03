@@ -127,13 +127,15 @@ const validColor = (c, fallback = 'orange') => (isPreset(c) || (typeof c === 'st
 const BAND_DEFAULT = 'sky', PANTS_DEFAULT = '#7cc243';
 const colorHex = (c) => (isPreset(c) ? COLOR_DEFS[c].hex : parseInt(validColor(c).slice(1), 16));
 const GESTURES = {
-  wave: { label: '인사', preset: 'wave' },
-  clap: { label: '박수', preset: 'clap' },
-  thumbs: { label: '엄지척', preset: 'thumbs' },
-  hooray: { label: '만세', preset: 'hooray' },
-  rest: { label: '앉기', preset: 'butterfly', stay: true },
-  stand: { label: '', preset: 'idle' },
-  drink: { label: '꿀꺽', preset: 'drinkWater' },
+  // say: 머리 위에 뜨는 말. 여럿이면 번갈아 나온다 (몸짓 번호로 골라서 모두에게 같은 말로 보임)
+  wave: { say: ['안녕하세요', '운동 좋아하시나봐요', '반가워요', '오늘도 오셨네요', '같이 힘내요', '자세 좋은데요'], preset: 'wave' },
+  clap: { say: ['짝짝짝'], preset: 'clap' },
+  thumbs: { say: ['최고예요', '멋져요', '잘하시네요'], preset: 'thumbs' },
+  hooray: { say: ['해냈다', '오늘도 끝까지', '가볍다'], preset: 'hooray' },
+  stretch: { say: ['쭉쭉', '아, 시원하다', '몸 좀 풀게요'], presets: ['sideBend', 'crossArm', 'neck', 'twist', 'shrug', 'forwardFold'], preset: 'sideBend' },
+  rest: { say: ['잠깐 쉴게요', '숨 좀 고를게요'], preset: 'butterfly', stay: true },
+  stand: { say: [], preset: 'idle' },
+  drink: { say: ['꿀꺽'], preset: 'drinkWater' },
 };
 const LIMIT = { nick: 12, chat: 140, ask: 300 };
 const BAD_CHARS = new RegExp('[' + [[0, 31], [127, 127], [0x200b, 0x200f], [0x2028, 0x202e], [0x2066, 0x2069]]
@@ -980,7 +982,7 @@ function syncScene() {
     if (m.gestN !== R.lastGestN && !drinkWait) {
       R.lastGestN = m.gestN;
       if (m.gest) {
-        playGesture(R.A, m.peer, m.gest, !!R.mounted);
+        playGesture(R.A, m.peer, m.gest, !!R.mounted, m.gestN);
         if (['wave', 'clap', 'thumbs', 'hooray'].includes(m.gest)) noteGreeting(m.nick, m.gest);
       }
     }
@@ -1143,18 +1145,18 @@ function noteGreeting(nick, id) {
   sysLine(`${nick} 님이 ${word}`, '');
 }
 /** 기구 위에서는 몸이 묶여 있으니 머리 위 그림만 띄운다 */
-function playGesture(A, tagKey, id, busy) {
+function playGesture(A, tagKey, id, busy, n = 0) {
   const g = GESTURES[id];
   if (!g || !A) return;
   if (id === 'drink') { faceTo(A, WORLD.cooler.x, WORLD.cooler.z); holdCup(A); }
-  if (g.label) floatWord(tagKey, g.label);
+  if (g.say.length) floatWord(tagKey, g.say[n % g.say.length]);
   A._gest = id;
   if (busy) return;
   S.walk.delete(A);
   A.speed = 1;
   if (id === 'stand') { A._gestUntil = 0; setIdle(A); return; }
   if (g.stay) { G.setClip(A, presetClip(g.preset), { blend: 0.3 }); A._gestUntil = Infinity; return; }
-  G.playOnce(A, g.preset, 'idle', { blend: 0.2 });
+  G.playOnce(A, g.presets ? g.presets[n % g.presets.length] : g.preset, 'idle', { blend: 0.2 }); // 스트레칭은 누를 때마다 다른 동작
   A._gestUntil = G.clock.t + G.clipDur(A.clip) + 0.1;
 }
 // 정수기: 걸어가서 컵으로 물을 마신다 (모두에게 보임)
@@ -1194,7 +1196,7 @@ function drinkWater() {
     m.gest = 'drink';
     m.gestN += 1;
     sound.gesture();
-    playGesture(A, 'me', 'drink', false);
+    playGesture(A, 'me', 'drink', false, m.gestN);
     syncPresence(true);
   }, 2.5);
   syncPresence(true);
@@ -1213,7 +1215,7 @@ for (const btn of document.querySelectorAll('[data-gesture]')) {
     sound.gesture();
     m.gest = id;
     m.gestN += 1;
-    playGesture(S.meA, 'me', id, !!m.station);
+    playGesture(S.meA, 'me', id, !!m.station, m.gestN);
     syncPresence(true);
   });
 }
@@ -1417,7 +1419,7 @@ document.addEventListener('keydown', (e) => {
   const t = e.target;
   if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement) return;
   if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) { heldKeys.add(e.code); if (e.code.startsWith('Arrow')) e.preventDefault(); }
-  const n = { Digit1: 'wave', Digit2: 'clap', Digit3: 'thumbs', Digit4: 'hooray', Digit5: 'rest' }[e.code];
+  const n = { Digit1: 'wave', Digit2: 'clap', Digit3: 'thumbs', Digit4: 'hooray', Digit5: 'rest', Digit6: 'stretch' }[e.code];
   if (n && !e.repeat) document.querySelector(`[data-gesture="${n}"]`)?.click();
 });
 document.addEventListener('keyup', (e) => heldKeys.delete(e.code));
@@ -1884,7 +1886,7 @@ function floatWord(tagKey, word) {
   f.className = 'float-word';
   f.textContent = word;
   el.append(f);
-  setTimeout(() => f.remove(), 1500);
+  setTimeout(() => f.remove(), 2600);
 }
 
 // ------------------------------------------------------------------ chat (쉬는 시간에만)
