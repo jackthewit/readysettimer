@@ -213,7 +213,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--signal); ou
 .stage:has(.menu:not([hidden])) .join-btn { display: none; }
 
 /* 오늘의 루틴: 몸짓 아래 */
-.routine { position: absolute; z-index: 21; left: env(safe-area-inset-left, 0px); top: calc(44px + 5 * 39px + env(safe-area-inset-top, 0px)); display: grid; gap: 1px; font-size: 12px; color: var(--paper); }
+.routine { position: absolute; z-index: 21; left: env(safe-area-inset-left, 0px); top: calc(44px + 6 * 39px + 8px + env(safe-area-inset-top, 0px)); display: grid; gap: 1px; font-size: 12px; color: var(--paper); }
 .routine b { padding: 3px 8px; font-weight: 600; color: var(--ink); background: var(--paper); font-variant-numeric: tabular-nums; }
 .routine span { padding: 2px 8px; background: rgba(23, 23, 21, .55); color: #d8d4c8; }
 .routine span.done { color: var(--ink); background: var(--signal); }
