@@ -1,7 +1,7 @@
 import re
 extra=open('extra3d.part.css',encoding='utf-8').read()
 body=open('body.part.html',encoding='utf-8').read()
-js=''.join(open(f,encoding='utf-8').read()+'\n' for f in ['posters.part.js','world3d.part.js','moves3d.part.js','pt-knowledge.part.js','app3d.part.js'])
+js=''.join(open(f,encoding='utf-8').read()+'\n' for f in ['posters.part.js','world3d.part.js','moves3d.part.js','pt-knowledge.part.js','app3d.part.js','studio.part.js'])
 CDN=['https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js',
  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js',

@@ -443,7 +443,7 @@ function syncPresence(force = false) {
   S.lastPresenceAt = now;
   const m = S.me, A = S.meA;
   room.presence({
-    nick: m.nick, color: m.color, band: m.band, pants: m.pants, shop: S.shop,
+    nick: m.nick, color: m.color, band: m.band, pants: m.pants, shop: S.studio ? 'studio' : S.shop, // 촬영장에 있는 동안은 다른 사람 화면에서 빠진다
     station: m.station, claimedAt: m.claimedAt, on: m.on,
     queue: m.queue, queuedAt: m.queuedAt, gest: m.gest, gestN: m.gestN, pt: m.pt, lv: A?._cardio ? Math.round(A._cardio.lv * 10) / 10 : 0, cls: !!m.classOn,
     state: m.state, reps: m.reps, set: m.set, restUntil: m.restUntil,
@@ -761,6 +761,7 @@ function buildShop(shopId) {
 // 카메라·그림자가 내 짹짹이를 따라감
 const _tgt = new T.Vector3();
 function followCam(dt) {
+  if (S.studio) return; // 촬영장은 카메라를 따로 쓴다
   const A = S.meA;
   if (!A || !A.root.parent) return;
   _tgt.set(A.place.x * S.followX, 0.6, A.place.z - 1.6);
@@ -1410,7 +1411,7 @@ function endRest() {
 
 $('#repBtn').addEventListener('click', doRep);
 document.addEventListener('keydown', (e) => {
-  if (e.code !== 'Space' || !S.shop || e.repeat) return;
+  if (e.code !== 'Space' || !S.shop || e.repeat || S.studio) return;
   const t = e.target;
   if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t instanceof HTMLButtonElement) return;
   e.preventDefault();
@@ -1424,6 +1425,7 @@ document.addEventListener('keydown', (e) => {
   const t = e.target;
   if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement) return;
   if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) { heldKeys.add(e.code); if (e.code.startsWith('Arrow')) e.preventDefault(); }
+  if (S.studio) return;
   const n = { Digit1: 'wave', Digit2: 'clap', Digit3: 'thumbs', Digit4: 'hooray', Digit5: 'rest', Digit6: 'stretch' }[e.code];
   if (n && !e.repeat) document.querySelector(`[data-gesture="${n}"]`)?.click();
 });
@@ -1431,7 +1433,7 @@ document.addEventListener('keyup', (e) => heldKeys.delete(e.code));
 addEventListener('blur', () => heldKeys.clear());
 function stepKeys() {
   const A = S.meA;
-  if (!A || !heldKeys.size || S.me.on) return;
+  if (!A || !heldKeys.size || S.me.on || S.studio) return;
   const f = (heldKeys.has('KeyW') || heldKeys.has('ArrowUp') ? 1 : 0) - (heldKeys.has('KeyS') || heldKeys.has('ArrowDown') ? 1 : 0);
   const s = (heldKeys.has('KeyD') || heldKeys.has('ArrowRight') ? 1 : 0) - (heldKeys.has('KeyA') || heldKeys.has('ArrowLeft') ? 1 : 0);
   if (!f && !s) return;

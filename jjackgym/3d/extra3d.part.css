@@ -250,3 +250,47 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--signal); ou
   .gestures button { height: 34px; min-width: 52px; padding: 0 6px; font-size: 12px; }
     .rep-btn { min-width: 120px; padding: 0 14px; font-size: 21px; }
 }
+
+/* 비밀의 바디프로필 촬영장 */
+body.in-studio #gymUi, body.in-studio #tags, body.in-studio #hoverTag { display: none !important; }
+.studio { position: fixed; z-index: 60; inset: 0; color: var(--paper); font-family: 'IBM Plex Sans KR', sans-serif; }
+.studio-frame { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 100vmax rgba(23, 23, 21, .55); pointer-events: none; }
+.studio-frame i { position: absolute; width: 26px; height: 26px; border: 3px solid var(--paper); }
+.studio-frame i:nth-child(1) { left: -3px; top: -3px; border-right: 0; border-bottom: 0; }
+.studio-frame i:nth-child(2) { right: -3px; top: -3px; border-left: 0; border-bottom: 0; }
+.studio-frame i:nth-child(3) { left: -3px; bottom: -3px; border-right: 0; border-top: 0; }
+.studio-frame i:nth-child(4) { right: -3px; bottom: -3px; border-left: 0; border-top: 0; }
+.studio-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.studio-flash.go { animation: studio-flash .45s ease-out; }
+@keyframes studio-flash { from { opacity: .9; } to { opacity: 0; } }
+.studio-top { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: calc(12px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); }
+.studio-top b { display: block; font: 22px var(--display); color: var(--signal); }
+.studio-top small { font-size: 13px; opacity: .85; }
+.studio-bottom { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 8px 16px; padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: linear-gradient(transparent, rgba(23, 23, 21, .7)); }
+.studio-row { grid-column: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-width: 0; }
+.studio-row > span { font-size: 12px; opacity: .8; }
+.studio-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.studio-chips button { height: 32px; padding: 0 11px; font: 500 13px 'IBM Plex Sans KR', sans-serif; color: var(--paper); background: rgba(23, 23, 21, .75); border: 1px solid rgba(244, 242, 236, .3); touch-action: manipulation; }
+.studio-chips button[aria-pressed='true'] { color: var(--ink); background: var(--signal); border-color: var(--signal); }
+.studio-chips.backs button { position: relative; width: 32px; padding: 0; background: var(--c); border: 2px solid rgba(244, 242, 236, .5); }
+.studio-chips.backs button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.studio-chips.backs button[aria-pressed='true'] { border: 3px solid var(--signal); background: var(--c); }
+.studio-snap { grid-column: 2; grid-row: 1 / span 2; width: 74px; height: 74px; border-radius: 50%; border: 5px solid var(--paper); background: transparent; display: grid; place-items: center; touch-action: manipulation; }
+.studio-snap i { width: 54px; height: 54px; border-radius: 50%; background: var(--paper); transition: transform .1s; }
+.studio-snap:active i { transform: scale(.88); background: var(--signal); }
+.studio-shot { max-width: min(420px, 92vw); }
+.studio-shot img { display: block; width: 100%; height: auto; max-height: 64vh; object-fit: contain; -webkit-touch-callout: default; user-select: auto; }
+.studio-note { min-height: 1.2em; margin: 8px 0 0; font-size: 13px; color: var(--ink-soft); }
+.studio-save { background: var(--signal); color: var(--ink); }
+@media (max-width: 860px) {
+  .studio-top b { font-size: 18px; }
+  .studio-bottom { grid-template-columns: 1fr; justify-items: center; gap: 6px; padding-top: 6px; }
+  .studio-row { grid-column: 1; width: 100%; flex-wrap: nowrap; justify-content: flex-start; }
+  .studio-row > span { display: none; }
+  .studio-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .studio-chips button { flex: none; height: 30px; padding: 0 9px; font-size: 12px; }
+  .studio-chips.backs button { width: 30px; }
+  .studio-row .studio-chips:first-of-type { flex: 1 1 auto; min-width: 0; }
+  .studio-snap { grid-column: 1; grid-row: auto; width: 60px; height: 60px; border-width: 4px; }
+  .studio-snap i { width: 44px; height: 44px; }
+}
