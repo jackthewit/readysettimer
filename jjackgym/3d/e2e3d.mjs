@@ -406,7 +406,10 @@ try {
   await b.click('#studioPoses [data-i="8"]');
   await b.click('#studioSnap');
   await b.waitForTimeout(1200);
-  check('여자 다이어트를 고르면 날씬한 몸·여자 옷', await b.evaluate(() => { const S = window.__studio.studio; return S.A.lean > 0.99 && S.A.buff < 0.01 && S.dressed?.look.id === window.__studio.LOOKS.f[0].id && S.A.clip?.presetId === 'bpSky'; }));
+  const fem = await b.evaluate(() => { const W = window.__studio, S = W.studio, B = W.BODY.f.diet, L = W.LOOKS.f[0];
+    const leg = S.A.inst.meshes.find((m) => m.userData.matName === 'leg_orange').material.color.getHex();
+    return { body: Math.abs(S.A.lean - B.lean) < 0.01 && Math.abs(S.A.buff - B.buff) < 0.01, look: S.dressed?.look.id === L.id, leggings: leg === L.legs, tail: S.dressed?.items.some((h) => h.userData.inner.userData.sway), pose: S.A.clip?.presetId }; });
+  check('여자 다이어트: 날씬한 몸·레깅스·포니테일', fem.body && fem.look && fem.leggings && fem.tail && fem.pose === 'bpSky', JSON.stringify(fem));
   await b.keyboard.press('Escape');
   await b.keyboard.press('Escape');
   await b.waitForTimeout(800);

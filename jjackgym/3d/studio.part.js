@@ -26,7 +26,7 @@ const STUDIO_SEXES = [{ id: 'm', label: '남자' }, { id: 'f', label: '여자' }
 const STUDIO_TYPES = [{ id: 'muscle', label: '근육질' }, { id: 'diet', label: '다이어트' }];
 const STUDIO_BODY = {
   m: { muscle: { buff: 1.3, lean: 0 }, diet: { buff: 0.35, lean: 0.8 } },   // 우락부락 · 잔근육 있는 마른 몸
-  f: { muscle: { buff: 0.6, lean: 0.55 }, diet: { buff: 0, lean: 1 } },     // 탄탄하고 허리 잘록 · 날씬
+  f: { muscle: { buff: 0.7, lean: 0.5 }, diet: { buff: 0.2, lean: 0.9 } },   // 탄탄하고 허리 잘록 · 날씬하지만 건강하게
 };
 const STUDIO_LOOKS = {
   m: [
@@ -35,9 +35,9 @@ const STUDIO_LOOKS = {
     { id: 'neon', label: '네온 스포티', shirt: 0x2FB5A0, pants: 0x232C66, band: 0xF4F1EA, wrist: 0x7CEB5E, glasses: 0x2E7BE0 },
   ],
   f: [
-    { id: 'pink', label: '핑크 필라테스', shirt: 0xFF9EC4, pants: 0x2E3150, band: 0xFFFFFF, wrist: 0xFF9EC4, bow: 0xFF5C9E, pearls: true },
-    { id: 'gold', label: '블랙 앤 골드', shirt: 0x24242A, pants: 0x24242A, band: 0xE9B92B, wrist: 0xE9B92B, glasses: 0x141519, chain: true },
-    { id: 'lavender', label: '라벤더', shirt: 0xB9A3F0, pants: 0xF4F1EA, band: 0xB9A3F0, wrist: 0xFFFFFF, bow: 0xFFFFFF, glasses: 0x8E6BD8 },
+    { id: 'leggingsBlack', label: '블랙 레깅스', shirt: 0xF4F1EA, pants: 0x26262C, legs: 0x26262C, band: 0x26262C, wrist: 0xF4F1EA, tail: 0xF4F1EA },
+    { id: 'coral', label: '코랄 운동복', shirt: 0xF07A6A, pants: 0x3B3552, legs: 0x3B3552, band: 0xF07A6A, wrist: 0x3B3552, tail: 0xF07A6A },
+    { id: 'sage', label: '세이지 요가복', shirt: 0xB5CFA8, pants: 0x55735C, legs: 0x55735C, band: 0xF4F1EA, wrist: 0x55735C, tail: 0x55735C },
   ],
 };
 const studio = { on: false, group: null, A: null, wallMat: null, glowTex: null, back: 0, angle: 0, pose: 0, sex: 'm', type: 'muscle', saved: null, keyBuf: [], look: -1, dressed: null, anim: null, busy: false };
@@ -227,29 +227,29 @@ function chainPath(body, n) {
   }
   return { pts, path };
 }
-// 진주 목걸이
-function makePearls(body) {
-  const { path } = chainPath(body, 15), g = new T.Group(), mat = new T.MeshStandardMaterial({ color: 0xFFF8F0, roughness: 0.25, metalness: 0.1, emissive: 0x2A2622 });
-  const geo = new T.SphereGeometry(0.0105, 14, 10);
-  for (const p of path.slice(1, -1)) { const s = new T.Mesh(geo, mat); s.position.copy(p).add(new T.Vector3(0, 0, 0.004)); s.castShadow = true; g.add(inkShell(s, 0.002), s); }
-  return g;
-}
-// 머리 리본: 머리 오른쪽 위 겉면에 붙인다
-function makeBow(color) {
-  const m = G.templates.jjak.meshes.find((x) => x.userData.matName === 'yellow'), P = m.geometry.attributes.position;
-  const c = new T.Vector3(FACE_X, 0.76, -0.05), dir = new T.Vector3(0.62, 0.62, 0.3).normalize();
-  let best = -9; const at = new T.Vector3(), v = new T.Vector3();
-  for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i); if (v.y < 0.7) continue; const d = v.clone().sub(c), L = d.length(); const s = d.dot(dir) - 0.6 * d.clone().addScaledVector(dir, -d.dot(dir)).length(); if (s > best && L > 0) { best = s; at.copy(v); } }
-  const g = new T.Group(), mat = new T.MeshStandardMaterial({ color, roughness: 0.6 });
-  for (const sd of [-1, 1]) {
-    const lp = new T.Mesh(new T.SphereGeometry(1, 18, 12), mat);
-    lp.scale.set(0.05, 0.034, 0.018); lp.position.set(sd * 0.042, 0, 0); lp.rotation.z = sd * 0.35; lp.castShadow = true;
-    g.add(inkShell(lp, 0.12), lp);
+// 포니테일: 정수리 뒤쪽 높이 머리끈으로 묶고, 한쪽 옆으로 흘러내려 정면에서도 보인다 (머리와 같은 노랑). 살짝 흔들린다
+const TAIL_DIR = new T.Vector3(0.86, -0.28, -0.42).normalize();
+function makePonytail(tie) {
+  const head = G.templates.jjak.meshes.find((x) => x.userData.matName === 'yellow'), P = head.geometry.attributes.position;
+  const c = new T.Vector3(FACE_X, 0.76, -0.05), dir = new T.Vector3(0.3, 0.85, -0.6).normalize();
+  let best = -9; const at = new T.Vector3(), v = new T.Vector3(), d = new T.Vector3();
+  for (let i = 0; i < P.count; i++) {
+    v.fromBufferAttribute(P, i); if (v.y < 0.7) continue;
+    d.copy(v).sub(c); const along = d.dot(dir), off = d.addScaledVector(dir, -along).length();
+    if (along - 2 * off > best) { best = along - 2 * off; at.copy(v); }
   }
-  const knot = new T.Mesh(new T.SphereGeometry(0.018, 14, 10), mat); knot.scale.z = 0.8; g.add(inkShell(knot, 0.003), knot);
-  g.position.copy(at).addScaledVector(dir, 0.006);
-  g.quaternion.setFromUnitVectors(new T.Vector3(0, 0, 1), dir);
-  g.rotateZ(-0.5);
+  const hair = new T.MeshLambertMaterial({ color: 0xFFEA3C, emissive: 0x6E5F00 }); // 만화 머리색과 비슷하게 밝게
+  // 물방울 모양 다발: 묶은 곳은 가늘고, 가운데가 통통하고, 끝은 뾰족 (아래로 뻗은 모양을 TAIL_DIR 쪽으로 돌린다)
+  const prof = [[0.001, 0], [0.03, -0.012], [0.052, -0.07], [0.058, -0.13], [0.046, -0.21], [0.024, -0.28], [0.001, -0.32]].reverse().map(([r, y]) => new T.Vector2(r, y)); // 아래→위 순서라야 겉면이 바깥을 향한다
+  const tail = new T.Mesh(new T.LatheGeometry(prof, 20), hair); tail.castShadow = true; tail.scale.set(1.1, 1.25, 1.1);
+  const sway = new T.Group(); sway.add(inkShell(tail, 0.004), tail);
+  sway.quaternion.setFromUnitVectors(new T.Vector3(0, -1, 0), TAIL_DIR);
+  sway.userData.base = sway.quaternion.clone();
+  const tieM = new T.Mesh(new T.TorusGeometry(0.028, 0.01, 10, 20), new T.MeshStandardMaterial({ color: tie, roughness: 0.6 }));
+  tieM.quaternion.setFromUnitVectors(new T.Vector3(0, 0, 1), TAIL_DIR); tieM.position.copy(TAIL_DIR).multiplyScalar(0.012);
+  const g = new T.Group(); g.add(sway, inkShell(tieM, 0.003), tieM);
+  g.position.copy(at).addScaledVector(dir, 0.004);
+  g.userData.sway = sway;
   return g;
 }
 function makeChain(body) {
@@ -285,38 +285,57 @@ function makeWristband(color, sd) {
   const g = new T.Group(); g.add(inkShell(m, 0.003), m);
   return g;
 }
+// 변신 옷: 바뀌는 부위와 색 (레깅스는 다리까지 칠한다)
+const lookParts = (look) => [['shirt_orange', look.shirt], ['shorts_green', look.pants], ['band_sky', look.band], ['leg_orange', look.legs]].filter((p) => p[1] != null);
+function partHex(A, mat) { const m = A.inst.meshes.find((x) => x.userData.matName === mat); return m ? m.material.color.getHex() : null; }
 function dressStudio(look, body) {
   const A = studio.A; if (!A) return;
-  undressStudio(false);
-  paintPart(A, 'shirt_orange', look.shirt); paintPart(A, 'shorts_green', look.pants); paintPart(A, 'band_sky', look.band);
+  dropItems();
+  // 원래 옷 색은 처음 변신할 때 한 번만 기억 (돌아오는 중에 다시 찍어도 진짜 원래 색으로 돌아가게)
+  if (!studio.orig) studio.orig = Object.fromEntries(['shirt_orange', 'shorts_green', 'band_sky', 'leg_orange'].map((m) => [m, partHex(A, m)]));
+  for (const [m] of lookParts(look)) paintPart(A, m, partHex(A, m)); // 칠할 재질을 사람마다 따로 갖게
   const items = [];
-  const put = (bone, obj) => { const h = boneHolder(A, bone); h.add(obj); items.push(h); };
+  const put = (bone, obj) => { const h = boneHolder(A, bone); h.add(obj); h.userData.inner = obj; obj.scale.setScalar(0.001); items.push(h); };
   if (look.glasses) put('Head', makeGlasses(look.glasses));
   if (look.chain) put('Spine', makeChain(body));
-  if (look.pearls) put('Spine', makePearls(body));
   if (look.belt) put('Hips', makeBelt(body));
-  if (look.bow) put('Head', makeBow(look.bow));
+  if (look.tail) put('Head', makePonytail(look.tail));
   put('LeftHand', makeWristband(look.wrist, 1)); put('RightHand', makeWristband(look.wrist, -1));
   studio.dressed = { look, items };
 }
-function undressStudio(repaint = true) {
+function dropItems() {
   const d = studio.dressed; studio.dressed = null;
   if (d) for (const h of d.items) h.parent && h.parent.remove(h);
-  const A = studio.A;
-  if (A && repaint) { A._shirt = A._band = A._pants = null; paint(A, S.me.color, S.me.band, S.me.pants); }
 }
-// 몸 바꾸기 (변신할 때는 살짝 넘쳤다 돌아오는 탄력, 돌아올 때는 부드럽게)
-function bodyTo(to, dur) {
+// 몸·옷 색·소품 크기를 함께 바꾸는 모핑. 변신은 짧고 통통 튀게, 돌아올 때는 천천히 녹아내리듯
+function morphTo(to, dur, pop) {
   const A = studio.A; if (!A) return;
-  studio.anim = { from: { buff: A.buff || 0, lean: A.lean || 0 }, to, t0: performance.now(), dur, pop: to.buff + to.lean > 0 };
+  const colors = to.colors.map(([m, hex]) => ({ m, from: new T.Color(partHex(A, m)), to: new T.Color(hex) }));
+  const items = studio.dressed ? studio.dressed.items : [];
+  studio.anim = { from: { buff: A.buff || 0, lean: A.lean || 0, item: items[0] ? items[0].userData.inner.scale.x : 0 }, to, colors, items, t0: performance.now(), dur, pop, done: to.done };
 }
+const _mc = new T.Color();
 G.hooks.push(() => {
   const an = studio.anim, A = studio.A;
   if (!an || !A) return;
   const u = Math.min(1, (performance.now() - an.t0) / an.dur);
-  const e = an.pop ? 1 + 2.2 * Math.pow(u - 1, 3) + 1.2 * Math.pow(u - 1, 2) : u * u * (3 - 2 * u);
+  const sm = u * u * (3 - 2 * u);
+  const e = an.pop ? 1 + 2.2 * Math.pow(u - 1, 3) + 1.2 * Math.pow(u - 1, 2) : sm * sm * (3 - 2 * sm); // 돌아올 때는 더 부드럽게
   G.setBody(A, an.from.buff + (an.to.buff - an.from.buff) * e, Math.max(0, an.from.lean + (an.to.lean - an.from.lean) * e));
-  if (u >= 1) { G.setBody(A, an.to.buff, an.to.lean); studio.anim = null; }
+  // 색: 변신은 빠르게, 돌아올 때는 몸이 줄어드는 내내 천천히 섞인다
+  const ec = an.pop ? Math.min(1, u * 1.6) : sm;
+  for (const c of an.colors) { _mc.copy(c.from).lerp(c.to, ec); for (const m of A.inst.meshes) if (m.userData.matName === c.m) m.material.color.copy(_mc); }
+  // 소품: 변신 때는 뿅 커지고, 돌아올 때는 앞쪽 절반에서 작아져 사라진다
+  const ei = an.pop ? e : Math.min(1, sm * 1.8);
+  const sc = Math.max(0.001, an.from.item + (an.to.item - an.from.item) * ei);
+  for (const h of an.items) h.userData.inner.scale.setScalar(sc);
+  if (u >= 1) { studio.anim = null; if (an.done) an.done(); }
+});
+// 포니테일 살랑살랑
+const _sw = new T.Euler(), _swq = new T.Quaternion();
+G.hooks.push((dt, t) => {
+  const d = studio.dressed; if (!d) return;
+  for (const h of d.items) { const sw = h.userData.inner.userData.sway; if (sw) { _sw.set(Math.sin(t * 2.4) * 0.07, 0, Math.sin(t * 1.7) * 0.09); sw.quaternion.copy(sw.userData.base).multiply(_swq.setFromEuler(_sw)); } }
 });
 const studioBody = () => STUDIO_BODY[studio.sex][studio.type];
 function setStudioBody(sex, type) {
@@ -357,7 +376,7 @@ function closeStudio() {
   closeStudioShot();
   $('#studio').hidden = true;
   document.body.classList.remove('in-studio');
-  studio.anim = null; studio.dressed = null; studio.busy = false;
+  studio.anim = null; studio.dressed = null; studio.orig = null; studio.busy = false;
   if (studio.A) { G.removeActor(studio.A); studio.A = null; }
   studio.group.visible = false;
   const sv = studio.saved;
@@ -415,8 +434,9 @@ function snapStudio() {
   studio.busy = true;
   const looks = STUDIO_LOOKS[studio.sex], body = studioBody();
   studio.look = (studio.look + 1) % looks.length;
-  dressStudio(looks[studio.look], body);
-  bodyTo(body, 520);
+  const look = looks[studio.look];
+  dressStudio(look, body);
+  morphTo({ ...body, item: 1, colors: lookParts(look) }, 520, true);
   [520, 660, 880].forEach((f, i) => sound.beep(f, 0.08, i * 0.07, 0.09));
   const fl = $('#studioFlash'); fl.classList.remove('go', 'puff'); void fl.offsetWidth; fl.classList.add('puff');
   setTimeout(shutterStudio, 680);
@@ -441,7 +461,17 @@ function shutterStudio() {
 // 사진 창을 닫으면 원래 몸·옷으로 돌아온다
 function closeStudioShot() {
   $('#studioShot').hidden = true;
-  if (studio.dressed && !studio.busy) { undressStudio(); bodyTo({ buff: 0, lean: 0 }, 380); }
+  if (studio.dressed && !studio.busy && studio.orig && !studio.anim?.back) backToReal();
+}
+// 현실로 돌아오기: 근육·옷 색·소품이 1.4초 동안 천천히 원래대로 녹아든다
+function backToReal() {
+  const o = studio.orig;
+  morphTo({ buff: 0, lean: 0, item: 0, colors: Object.entries(o).filter(([, h]) => h != null), done: () => {
+    dropItems(); studio.orig = null;
+    const A = studio.A; if (A) { A._shirt = A._band = A._pants = null; paint(A, S.me.color, S.me.band, S.me.pants); }
+  } }, 1400, false);
+  studio.anim.back = true;
+  [880, 660, 520, 390].forEach((f, i) => sound.beep(f, 0.12, i * 0.12, 0.05));
 }
 // 반짝이(네 갈래 별)
 function sparkle(x, cx, cy, r) {
@@ -532,5 +562,5 @@ function toQwerty(s) {
     if (studio.keyBuf.length > STUDIO.code.length) studio.keyBuf.shift();
     if (studio.keyBuf.join() === STUDIO.code.join()) { studio.keyBuf = []; openStudio(); }
   });
-  if (FAST) window.__studio = { studio, openStudio, closeStudio, takeStudioPhoto, snapStudio, setStudioPose, saveStudioPhoto, dressStudio, undressStudio, closeStudioShot, LOOKS: STUDIO_LOOKS, BODY: STUDIO_BODY, setStudioBody }; // 시험용
+  if (FAST) window.__studio = { studio, openStudio, closeStudio, takeStudioPhoto, snapStudio, setStudioPose, saveStudioPhoto, dressStudio, closeStudioShot, LOOKS: STUDIO_LOOKS, BODY: STUDIO_BODY, setStudioBody }; // 시험용
 })();
