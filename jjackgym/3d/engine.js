@@ -248,6 +248,96 @@ function buildBlinkMorph(tpl){
     mesh.updateMorphTargets();
   }
 }
+/* ---------- 바디프로필 몸: 촬영장에서 찍는 순간 몸이 바뀌는 모프 두 개 (번호 6 근육 · 7 날씬) ----------
+   근육: 알통·어깨를 굵게, 어깨는 넓게·가슴은 앞으로·허리와 배는 안으로, 허벅지·종아리는 조금
+   날씬: 팔다리를 가늘게, 허리를 잘록하게, 배는 납작하게. 두 개를 섞어 남녀·근육질·다이어트를 만든다. 뼈 길이는 그대로 */
+const BUFF_IDX = 6, LEAN_IDX = 7;
+function buildBuffMorph(tpl){
+  if (tpl.def.kind === 'human') return;
+  const H = mapFor('meshy').handle, skip = /^(black|beak|band|shoe)/;
+  const bump = (x, c, w) => { const u = (x - c) / w; return Math.exp(-u * u); };
+  for (const mesh of tpl.meshes){
+    const g = mesh.geometry, pos = g.attributes.position, si = g.attributes.skinIndex, sw = g.attributes.skinWeight;
+    if (!pos || !si || !g.morphAttributes.position) continue;
+    const n = pos.count, tg = new Float32Array(n*3), tl = new Float32Array(n*3);
+    if (!skip.test(mesh.userData.matName || '')){
+      const sk = mesh.skeleton, names = sk.bones.map(b => b.name), idx = nm => names.indexOf(nm);
+      const bp = sk.boneInverses.map(m => new T.Vector3().setFromMatrixPosition(new T.Matrix4().copy(m).invert()));
+      const desc = nm => { const out = new Set(); const b = sk.bones[idx(nm)]; if (b) b.traverse(o => { if (o.isBone) out.add(idx(o.name)); }); return out; };
+      const segs = [];
+      for (const [sd, a, b, c, arm] of [['L','upperArm','forearm','hand',1],['R','upperArm','forearm','hand',1],['L','thigh','shin','foot',0],['R','thigh','shin','foot',0]]){
+        const ia = idx(H[a+sd]), ib = idx(H[b+sd]), ic = idx(H[c+sd]); if (ia < 0 || ib < 0 || ic < 0) continue;
+        const end = desc(H[c+sd]);
+        segs.push({arm, set:new Set([...desc(H[a+sd])].filter(i => !end.has(i))), p:[bp[ia], bp[ib], bp[ic]]});
+      }
+      const head = desc(H.neck);
+      const ih = idx(H.hips), iN = idx(H.neck), y0 = bp[ih].y - 0.06 * tpl.def.H, y1 = bp[iN].y;
+      const zc = y => bp[ih].z + (bp[iN].z - bp[ih].z) * Math.max(0, Math.min(1, (y - bp[ih].y) / (y1 - bp[ih].y)));
+      const lin = new T.Matrix3().setFromMatrix4(mesh.bindMatrixInverse), bm = mesh.bindMatrix;
+      const v = new T.Vector3(), q = new T.Vector3(), r = new T.Vector3(), d = new T.Vector3(), e = new T.Vector3(), ab = new T.Vector3();
+      for (let i = 0; i < n; i++){
+        v.fromBufferAttribute(pos, i).applyMatrix4(bm);
+        const wOf = set => { let w = 0; for (let j = 0; j < 4; j++){ if (set.has(gc(si,i,j))) w += gc(sw,i,j); } return w; };
+        const wHead = wOf(head); if (wHead > 0.98) continue;
+        d.set(0, 0, 0); e.set(0, 0, 0);
+        let wLimb = 0;
+        for (const S_ of segs){
+          const w = wOf(S_.set); if (w < 0.02) continue;
+          wLimb += w;
+          // 축 위의 가장 가까운 점과 그 자리(0 어깨·엉덩이 → 1 팔꿈치·무릎 → 2 손목·발목)
+          let best = 1e9, s = 0;
+          for (let j = 0; j < 2; j++){
+            const a = S_.p[j], b = S_.p[j+1]; ab.copy(b).sub(a);
+            const t = Math.max(0, Math.min(1, r.copy(v).sub(a).dot(ab) / Math.max(1e-9, ab.lengthSq())));
+            const qq = a.clone().addScaledVector(ab, t), dist = qq.distanceTo(v);
+            if (dist < best){ best = dist; q.copy(qq); s = j + t; }
+          }
+          r.copy(v).sub(q);
+          let k, kl;
+          if (S_.arm){
+            // 알통(앞쪽이 더 불룩) · 어깨 · 아래팔
+            const front = 1 + 0.45 * Math.max(0, r.z / Math.max(1e-6, r.length()));
+            k = 0.55 * bump(s, 0.05, 0.25) + 1.1 * bump(s, 0.55, 0.3) * front + 0.55 * bump(s, 1.3, 0.35);
+            k *= 1 - smooth01((s - 1.65) / 0.35);
+            kl = -0.36 * (1 - smooth01((s - 1.55) / 0.4));
+          } else {
+            k = 0.45 * bump(s, 0.45, 0.4) + 0.45 * bump(s, 1.3, 0.25) * (1 - smooth01((s - 1.6) / 0.3));
+            kl = -0.26 * (1 - smooth01((s - 1.5) / 0.4));
+          }
+          d.addScaledVector(r, k * w); e.addScaledVector(r, kl * w);
+        }
+        // 몸통
+        const wT = Math.max(0, 1 - wLimb - wHead);
+        if (wT > 0.02){
+          const t = Math.max(0, Math.min(1.15, (v.y - y0) / (y1 - y0))), z0 = zc(v.y);
+          // 근육: 어깨는 넓게, 허리는 가늘게, 가슴은 앞으로, 배는 안으로
+          const sx = 0.3 * smooth01((t - 0.4) / 0.45) - 0.16 * bump(t, 0.35, 0.2);
+          let dz = 0;
+          if (v.z > z0) dz = (v.z - z0) * (0.3 * bump(t, 0.85, 0.13) - 0.4 * bump(t, 0.45, 0.18));
+          d.x += v.x * sx * wT; d.z += dz * wT;
+          // 날씬: 허리는 잘록하게, 몸 전체는 조금 가늘게, 배는 납작하게
+          const lx = -0.07 - 0.22 * bump(t, 0.42, 0.2);
+          const lz = (v.z - z0) * (v.z > z0 ? -0.08 - 0.45 * bump(t, 0.42, 0.22) : -0.12 * bump(t, 0.45, 0.3));
+          e.x += v.x * lx * wT; e.z += lz * wT;
+        }
+        d.applyMatrix3(lin); e.applyMatrix3(lin);
+        tg[i*3] = d.x; tg[i*3+1] = d.y; tg[i*3+2] = d.z;
+        tl[i*3] = e.x; tl[i*3+1] = e.y; tl[i*3+2] = e.z;
+      }
+      tpl.buff = true;
+    }
+    while (g.morphAttributes.position.length < BUFF_IDX) g.morphAttributes.position.push(new T.BufferAttribute(new Float32Array(n*3), 3));
+    g.morphAttributes.position[BUFF_IDX] = new T.BufferAttribute(tg, 3);
+    g.morphAttributes.position[LEAN_IDX] = new T.BufferAttribute(tl, 3);
+    if (g.userData.slim){ while (g.userData.slim.length < BUFF_IDX) g.userData.slim.push(new Float32Array(n*3)); g.userData.slim[BUFF_IDX] = tg; g.userData.slim[LEAN_IDX] = tl; }
+    mesh.updateMorphTargets();
+  }
+}
+// 바디프로필 몸 세기: buff 근육(0~1.3), lean 날씬(0~1)
+function setBody(A, buff, lean = 0){
+  A.buff = buff; A.lean = lean;
+  for (const m of A.inst.all){ const inf = m.morphTargetInfluences; if (inf && inf.length > LEAN_IDX){ inf[BUFF_IDX] = buff; inf[LEAN_IDX] = lean; } }
+}
 // 저절로 깜박임: 약 3~5초마다 한 번 (가끔 두 번 연속). 시간만으로 정해져서 영상으로 뽑아도 항상 같음
 const EYES = {auto:true, t:0};
 function hash01(n){ const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
@@ -399,7 +489,7 @@ async function loadTemplate(id){
     }
   }
   if (def.kind === 'human') paintHuman(tpl, 'sport');
-  buildSlimMorphs(tpl); buildBlinkMorph(tpl); buildJiggle(tpl);
+  buildSlimMorphs(tpl); buildBlinkMorph(tpl); if (id === 'jjak') buildBuffMorph(tpl); buildJiggle(tpl);
   for (const mesh of meshes) if (!(mesh.material.isMeshBasicMaterial)) outlineSkinned(mesh, def.outline);
   templates[id] = tpl; return tpl;
 }
@@ -2381,5 +2471,5 @@ new ResizeObserver(resize).observe(view); resize();
 requestAnimationFrame(frame);
 function tick(A, t){ A._ct = t; sampleClip(A.clip, t, A.pose, A.meta); updateActor(A); updateEquip(A); }
 window.GymEngine = {tick, hooks:HOOKS, ang2, actorTime, sampleClip, updateActor, THREE:T, AS, PRS, scene, cam, orbit, renderer, world, propLayer, actorLayer, sun, hemi, rim, actors, templates, CHAR_BUF, MODEL_DEF, HUMAN_LOOK, paintHuman,
-  loadTemplate, createActor, addActor, removeActor, applyPlace, presetClip, presetById, setClip, playOnce, clipDur, setSet, stations, mountStation, leaveStation, recolor, floorAt, clock, BODY, JIG, EYES, PHYS, wp};
+  loadTemplate, createActor, addActor, removeActor, setBody, applyPlace, presetClip, presetById, setClip, playOnce, clipDur, setSet, stations, mountStation, leaveStation, recolor, floorAt, clock, BODY, JIG, EYES, PHYS, wp};
 })();

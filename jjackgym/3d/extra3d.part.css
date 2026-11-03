@@ -263,6 +263,8 @@ body.in-studio #gymUi, body.in-studio #tags, body.in-studio #hoverTag { display:
 .studio-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
 .studio-flash.go { animation: studio-flash .45s ease-out; }
 @keyframes studio-flash { from { opacity: .9; } to { opacity: 0; } }
+.studio-flash.puff { background: radial-gradient(circle at 50% 55%, #fff 0, rgba(255, 246, 200, .8) 30%, rgba(255, 255, 255, 0) 65%); animation: studio-puff .6s ease-out; }
+@keyframes studio-puff { 0% { opacity: 0; transform: scale(.6); } 25% { opacity: .85; } 100% { opacity: 0; transform: scale(1.25); } }
 .studio-top { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: calc(12px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); }
 .studio-top b { display: block; font: 22px var(--display); color: var(--signal); }
 .studio-top small { font-size: 13px; opacity: .85; }
@@ -275,7 +277,7 @@ body.in-studio #gymUi, body.in-studio #tags, body.in-studio #hoverTag { display:
 .studio-chips.backs button { position: relative; width: 32px; padding: 0; background: var(--c); border: 2px solid rgba(244, 242, 236, .5); }
 .studio-chips.backs button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .studio-chips.backs button[aria-pressed='true'] { border: 3px solid var(--signal); background: var(--c); }
-.studio-snap { grid-column: 2; grid-row: 1 / span 2; width: 74px; height: 74px; border-radius: 50%; border: 5px solid var(--paper); background: transparent; display: grid; place-items: center; touch-action: manipulation; }
+.studio-snap { grid-column: 2; grid-row: 1 / span 3; width: 74px; height: 74px; border-radius: 50%; border: 5px solid var(--paper); background: transparent; display: grid; place-items: center; touch-action: manipulation; }
 .studio-snap i { width: 54px; height: 54px; border-radius: 50%; background: var(--paper); transition: transform .1s; }
 .studio-snap:active i { transform: scale(.88); background: var(--signal); }
 .studio-shot { max-width: min(420px, 92vw); }
